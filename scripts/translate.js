@@ -102,8 +102,10 @@ const locales = JSON.parse(readFileSync(join(root, 'locales.json'), 'utf8'));
 let failed = 0;
 let done = 0;
 let budget = limit;
-for (const { code, name } of locales) {
+for (const { code, name: native } of locales) {
   if (only && only !== code) continue;
+  // The code tells the model which variant: zh-TW is Traditional Chinese as written in Taiwan.
+  const name = `${native} (${code})`;
   const todo = [];
   for (const section of SECTIONS) {
     const dir = join(source, section);

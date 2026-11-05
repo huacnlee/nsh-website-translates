@@ -1,3 +1,10 @@
 [
-  { "code": "ko", "name": "한국어" }
+  { "code": "ko", "name": "한국어" },
+  { "code": "ja", "name": "日本語" },
+  { "code": "zh-TW", "name": "繁體中文" },
+  { "code": "hi", "name": "हिन्दी" },
+  { "code": "ru", "name": "Русский" },
+  { "code": "ar", "name": "العربية", "dir": "rtl" },
+  { "code": "it", "name": "Italiano" },
+  { "code": "fr", "name": "Français" }
 ]

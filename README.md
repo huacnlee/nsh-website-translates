@@ -7,7 +7,9 @@ change there never has to touch this repository.
 
 - `<code>/docs`, `<code>/elements`, `<code>/modules`: the translated pages.
 - `<code>/ui.json`: the strings around them.
-- `locales.json`: the languages. To add one, add a line here.
+- `locales.json`: the languages, each a BCP 47 `code` and the language's own `name`;
+  `"dir": "rtl"` marks one written right to left (Arabic), which nsh.dev lays out
+  mirrored. To add a language, add a line here and its `ui.json`.
 
 ## How it runs
 
