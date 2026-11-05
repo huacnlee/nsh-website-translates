@@ -1,0 +1,7 @@
+{
+  "name": "nsh-website-translates",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "bun test tests" },
+  "dependencies": { "github-slugger": "^2.0.0" }
+}
