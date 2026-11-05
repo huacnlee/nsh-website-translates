@@ -26,6 +26,13 @@ variable it does nothing. With the optional `NSH_WEBSITE_TOKEN` secret (allowed 
 run workflows on longbridge/nsh) a change publishes right away; without it, the
 change waits for the next nsh.dev build.
 
+## Korean
+
+The first 14 Korean pages (`ko/docs`, `ko/elements/index.md`, `ko/modules/index.md`)
+are the hand translation by [@andongmin94](https://github.com/andongmin94) from
+[longbridge/nsh#948](https://github.com/longbridge/nsh/pull/948), adjusted to NSH
+v0.4.0's pages. Like any page here, each is retranslated once its English changes.
+
 ## Corrections
 
 Pages here are generated and overwritten, so please do not send translation pull
