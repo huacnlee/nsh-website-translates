@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chunks, keepAnchors, mask, reject, splitPage, unmask } from '../lib/translate.js';
+import { chunks, keepAnchors, mask, reject, splitPage, takeTitle, unmask } from '../lib/translate.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const flag = (name, fallback) => {
@@ -43,17 +43,20 @@ const UI = {
 };
 const usage = { input: 0, output: 0 };
 
-async function complete(system, user) {
+async function complete(system, ...turns) {
+  const messages = [{ role: 'system', content: system }, ...turns.map((content, at) => ({ role: at % 2 ? 'assistant' : 'user', content }))];
   for (let attempt = 0; ; attempt++) {
     const response = await fetch(`${api.replace(/\/$/, '')}/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ model, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }),
+      // Endpoints cap an answer at their own default without it, which cuts a long page short.
+      body: JSON.stringify({ model, max_tokens: 32000, messages }),
     });
     if (response.ok) {
       const data = await response.json();
       usage.input += data.usage?.prompt_tokens ?? 0;
       usage.output += data.usage?.completion_tokens ?? 0;
+      if (data.choices[0].finish_reason === 'length') throw new Error('answer cut off at the token limit');
       return data.choices[0].message.content.trim();
     }
     if (attempt >= 3) throw new Error(`${response.status} ${await response.text()}`);
@@ -70,10 +73,17 @@ Keep in English: Native Shell, NSH, and names of APIs, components, platforms and
 async function translatePage(name, content) {
   const { front, body } = splitPage(content);
   const { text, kept } = mask(body);
+  const { lead, titled, rest } = takeTitle(text);
   const parts = [];
-  for (const piece of chunks(text)) {
+  for (const piece of chunks(rest)) {
+    // A long piece now and then loses or repeats a token: the model is shown
+    // what its answer got wrong and mends it, then a fresh answer is tried.
     let answer = await complete(system(name), piece);
     let why = reject(piece, answer);
+    if (why) {
+      answer = await complete(system(name), piece, answer, `Your translation is wrong (${why}). Answer again with the whole corrected translation: every token exactly as often as in the input, the same heading levels.`);
+      why = reject(piece, answer);
+    }
     if (why) {
       answer = await complete(system(name), piece);
       why = reject(piece, answer);
@@ -85,7 +95,8 @@ async function translatePage(name, content) {
   const lines = ['---', `title: ${JSON.stringify(fields.title)}`, `description: ${JSON.stringify(fields.description)}`];
   for (const field of ['order', 'group', 'demo']) if (front[field] !== undefined) lines.push(`${field}: ${front[field]}`);
   lines.push(`source_hash: ${hash(content)}`, '---', '');
-  return `${lines.join('\n')}\n${unmask(keepAnchors(text, parts.join('\n')), kept)}\n`;
+  const title = titled ? `${lead}# ${fields.title}\n\n` : '';
+  return `${lines.join('\n')}\n${title}${unmask(keepAnchors(rest, parts.join('\n')), kept)}\n`;
 }
 
 const stripFence = (text) => text.replace(/^```(?:json)?\s*|\s*```$/g, '');
