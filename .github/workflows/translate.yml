@@ -34,12 +34,19 @@ jobs:
           mkdir "$RUNNER_TEMP/source"
           git archive "$tag" website/docs website/elements website/modules | tar -x --strip-components=1 -C "$RUNNER_TEMP/source"
 
+      # The home page is the site's own, built from main rather than a release.
+      - name: Take main's home page words
+        run: git -C "$RUNNER_TEMP/nsh" show HEAD:website/src/home/en.json > "$RUNNER_TEMP/home.json" || rm -f "$RUNNER_TEMP/home.json"
+
       - name: Translate
         env:
           TRANSLATE_API_KEY: ${{ secrets.TRANSLATE_API_KEY }}
           TRANSLATE_API_URL: ${{ vars.TRANSLATE_API_URL }}
           TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL }}
-        run: bun scripts/translate.js --source "$RUNNER_TEMP/source"
+        run: |
+          home=()
+          if [ -f "$RUNNER_TEMP/home.json" ]; then home=(--home "$RUNNER_TEMP/home.json"); fi
+          bun scripts/translate.js --source "$RUNNER_TEMP/source" "${home[@]}"
 
       - name: Publish
         env:

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { chunks, keepAnchors, mask, reject, takeTitle, unmask } from '../lib/translate.js';
+import { chunks, keepAnchors, mask, reject, rejectStrings, takeTitle, unmask } from '../lib/translate.js';
 
 const page = '# Title\n\nUse `foo` in [List](../elements/list.md).\n\n> [!NOTE]\n> Hi\n\n```rust\n// a comment\nlet a = 1;\n```\n\n<!-- demo: x -->\n\n## Signals\n';
 
@@ -55,5 +55,25 @@ describe('takeTitle', () => {
   });
   test('leaves a page without a leading title alone', () => {
     expect(takeTitle('Text.\n# Later\n')).toEqual({ lead: '', titled: false, rest: 'Text.\n# Later\n' });
+  });
+});
+
+describe('rejectStrings', () => {
+  const source = { title: 'Home', stats: ['FPS', 'first frame'], cols: ['', 'TSX'], ways: [{ label: 'Apps', cta: 'Start' }] };
+  test('accepts the same keys and lists, translated', () => {
+    expect(rejectStrings(source, { title: 'ホーム', stats: ['FPS', '最初のフレーム'], cols: ['', 'TSX'], ways: [{ label: 'アプリ', cta: '始める' }] })).toBeUndefined();
+  });
+  test('rejects a missing or added key', () => {
+    expect(rejectStrings(source, { ...source, title: undefined })).toBe('title is not a string');
+    expect(rejectStrings({ a: 'x' }, {})).toBe('a is missing');
+    expect(rejectStrings({ a: 'x' }, { a: 'y', b: 'z' })).toBe('the top has keys the input does not: b');
+  });
+  test('rejects a list of another length and a nested change', () => {
+    expect(rejectStrings(source, { ...source, stats: ['FPS'] })).toBe('stats has 1 items instead of 2');
+    expect(rejectStrings(source, { ...source, ways: [{ label: 'アプリ' }] })).toBe('ways[0].cta is missing');
+  });
+  test('rejects an emptied string and keeps an empty one empty', () => {
+    expect(rejectStrings(source, { ...source, title: ' ' })).toBe('title is empty');
+    expect(rejectStrings({ a: '' }, { a: '' })).toBeUndefined();
   });
 });

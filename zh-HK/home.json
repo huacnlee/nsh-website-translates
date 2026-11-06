@@ -1,0 +1,182 @@
+{
+  "source_hash": "0f236d200996769b",
+  "strings": {
+    "title": "Native Shell — 一次構建，原生運行於各平台 | Rust UI 框架",
+    "description": "Native Shell 是以 Rust 為先的原生 UI 框架：只需構建一個應用程式，即可在 iOS、Android、macOS、Windows、Linux 及網頁上運行，並使用各平台自身的 UI 與互動方式。",
+    "slogan": "一次構建，原生運行於各平台",
+    "lead": "只需編寫 TSX，即可發佈與 Rust 同步的原生客戶端。一套程式碼可在 8 個平台上運行，各自使用系統原生的 UI 與互動方式。",
+    "idle": "你的應用程式位於中央，周圍每道弧形代表一個平台。",
+    "start": "開始使用",
+    "gallery": "作品集",
+    "try": "Playground",
+    "heroStats": [
+      "FPS",
+      "首幀",
+      "平台"
+    ],
+    "numbersTitle": "以 TSX 編寫的客戶端，效能緊貼 Rust",
+    "numbersLead": "在 NSH 中，只有你應用程式的程式碼是 JS。響應式圖、渲染器、佈局及每個模組都是 Rust。TSX 應用程式與 Rust 應用程式共用同一條原生執行管線。",
+    "stats": [
+      "22 條即時迷你走勢圖、一個訂單簿及一個成交記錄同步更新，幀 p95 低於 4 ms",
+      "引擎啟動（75–155 µs）",
+      "計數器應用程式的首幀",
+      "一次點按，由事件到提交",
+      "Hello world 的應用程式碼",
+      "TSX 應用程式在網頁上的下載量（Wasm runtime）"
+    ],
+    "compareHead": "小型應用程式實測：僅比系統空白視窗多出數 MB",
+    "compareCols": [
+      "",
+      "TSX",
+      "Rust",
+      "系統空白視窗"
+    ],
+    "compareRows": [
+      "記憶體佔用，macOS",
+      "私有髒記憶體，Linux（GTK、GL）",
+      "比系統視窗多出的部分，macOS / Linux",
+      "私有工作集，Windows"
+    ],
+    "sizeHead": "各平台的大小：nsh init 的 hello world",
+    "sizeCols": [
+      "",
+      "TSX 可執行檔",
+      "TSX 套件",
+      "Rust 可執行檔",
+      "Rust 套件"
+    ],
+    "sizeRows": [
+      "macOS (Apple silicon)",
+      "Linux (x86_64)",
+      "Windows (x86_64)",
+      "Web"
+    ],
+    "sizeWeb": "下載約 1.1 MB",
+    "numbersNote": "均為 release 構建。靜止時的記憶體：macOS 佔用量於 Apple M3 上量度（計數器應用程式及 Rust 範本為 1200 × 800；系統視窗放置一個標籤，為 480 × 640）；Linux 私有髒記憶體於 NVIDIA RTX 3060 Ti 上量度（nsh init 的 TSX 與 Rust 範本，以及放置一個標籤的 GTK 視窗，均為 480 × 640）；Windows 為私有工作集。各平台的量度方法，連同 RSS 與 USS，均載於報告中。大小：取自 nsh package 的 release 構建，已啟用連結時最佳化並移除符號；TSX 可執行檔內含 QuickJS runtime，應用程式碼不足 1 KB；套件在 macOS 上是壓縮後的 .app，在 Linux 上是 .tar.gz，在 Windows 上是 .zip；網頁則為瀏覽器所下載的內容，包括 runtime 與應用程式。",
+    "numbersCta": "完整效能報告",
+    "zeroTitle": "TSX，零依賴",
+    "zeroLead": "一個應用程式就只有下面這些檔案。nsh 命令列自帶打包器與工具鏈，而你匯入的模組都是原生的。",
+    "zeroPoints": [
+      "一個 nsh 可執行檔即可建立、運行、測試及打包",
+      "由儲存檔案到新版本運行，約 120 ms",
+      "nsh check 使用 TypeScript 7 的原生 tsc 進行型別檢查"
+    ],
+    "viewsTitle": "8 個平台，各用系統原生控件",
+    "viewsLead": "NSH 以各平台現有的元件構建每個 UI。文字輸入、選取、輸入法及無障礙功能均來自系統，新版作業系統為這些功能帶來的改進，也會隨之惠及你的應用程式。",
+    "cols": [
+      "平台",
+      "視圖",
+      "文字",
+      "文字輸入",
+      "需求"
+    ],
+    "embedNote": "地圖、網頁視圖、影片，以及宿主註冊的任何原生視圖，都只是同一視圖層級中的另一個子視圖：它們與應用程式其餘部分一同佈局、裁剪、捲動及接收觸控。",
+    "embedCta": "各平台的後端",
+    "formTitle": "一個應用程式，適應每種裝置的形態",
+    "formLead": "同一份編譯後的程式碼在此運行兩次，只有裝置不同。使用指標裝置時，它是一個視窗，對話列表在側邊；在手機上，按鈕與輸入框以 Liquid Glass 效果浮於其上，對話串在下方捲動；在終端機中，它則位於字元網格上。應用程式只需編寫一次。",
+    "desktop": "桌面",
+    "phone": "手機",
+    "terminal": "終端機",
+    "formHint": "即時體驗：輸入一則訊息",
+    "formCaption": "桌面與手機版本在你的瀏覽器中，透過 Native Shell 的網頁 runtime 即時運行。終端機版本是 nsh run --target tui 的真實輸出。",
+    "pending": "即時預覽尚未構建：請運行 bun run dev（或 cargo xtask web）。",
+    "tuiCta": "探索 TUI",
+    "langTitle": "需要時，同一引擎也可用 Rust",
+    "langLead": "Rust 是編寫完整應用程式的一等語言：UI、邏輯及元件均編譯為原生程式碼，足以應付要求嚴苛的業務邏輯。兩者使用相同的元素與 signal，而 TSX 畫面可匯入你的 Rust 元件。",
+    "langCta": "使用 Rust 構建",
+    "fastTitle": "只更新有變動的視圖",
+    "fastLead": "每個元素都是平台所保留的一個視圖。當 signal 變動，只會執行讀取該 signal 的表達式，並於每幀以單一批次處理。主執行緒從不等待 JS，原生動畫亦無須 JS 即可運行，因此捲動與動畫能維持 120 FPS，應用程式靜止時幾近閒置。",
+    "fastPress": "按下 +1",
+    "fastLegend": "讀取這些 signal 的兩段文字會更新，歷史記錄新增一行；其他視圖完全不受影響。",
+    "fastIdle": "24 個節點，靜止中",
+    "fastTouched": "本次按下所更新的部分",
+    "fastKept": "保持不變",
+    "fastStat": "1 次提交 · 7 個掛載項目",
+    "fastCta": "如何保持高速",
+    "shipTitle": "發佈之後，你的應用程式仍可加入新的 UI",
+    "shipLead": "可由你的團隊編寫，也可由模型按每次請求生成。它以已簽署模組的形式送達裝置，在宿主設定的沙盒中運行，並以原生方式顯示。",
+    "trust": "信任邊界",
+    "flow": [
+      {
+        "title": "編寫",
+        "body": "由你的團隊或模型編寫 TSX 模組。"
+      },
+      {
+        "title": "檢查",
+        "body": "先進行型別檢查，再以無頭模式運行其測試。"
+      },
+      {
+        "title": "簽署",
+        "body": "以 Ed25519 簽署的 .nshpkg，其發佈金鑰由離線根金鑰認證。"
+      },
+      {
+        "title": "運行",
+        "body": "裝置會驗證簽章、證書及撤銷記錄。每個視圖獲分配一個 VM，設有記憶體、呼叫時間及節點上限，並只擁有宿主授予的能力。"
+      }
+    ],
+    "waysHead": "三種發佈方式，同一個引擎",
+    "foundTitle": "行為由 NSH 提供，外觀由你決定",
+    "foundLead": "nsh/base 提供無樣式的基礎元件，負責狀態、焦點、鍵盤操作及無障礙功能，而應用程式可為每個部分設定樣式。其餘工作都由一個 nsh 命令列完成。",
+    "closeTitle": [
+      "原生的視圖與互動，",
+      "由你設計外觀"
+    ],
+    "closeBody": "安裝 nsh，一分鐘內運行你的第一個 TSX 應用程式。",
+    "closeCta": "開始構建",
+    "platforms": "平台",
+    "chat": "聊天",
+    "terminalLabel": "終端機中的聊天",
+    "surfaces": {
+      "Windows": {
+        "input": "NSH 的編輯器、IMM32"
+      },
+      "Web": {
+        "text": "瀏覽器自身的文字",
+        "needs": "現代瀏覽器"
+      },
+      "Android": {
+        "views": "Android 視圖"
+      },
+      "TUI": {
+        "text": "終端機的字體",
+        "input": "Readline 按鍵、輸入法"
+      },
+      "GPUI": {
+        "text": "GPUI 的文字系統",
+        "input": "NSH 的編輯器",
+        "needs": "內嵌於 GPUI Kit 應用程式"
+      }
+    },
+    "ways": [
+      {
+        "label": "獨立應用程式",
+        "body": "以 Rust、TSX 或兩者混合編寫，並打包成可安裝的 iOS、Android、macOS、Windows 或 Linux 應用程式，或靜態網站。",
+        "cta": "開始使用"
+      },
+      {
+        "label": "動態 UI 與外掛",
+        "body": "在任何畫面嵌入一個視圖，並在運行時載入已簽署的 TSX 模組，與宿主自身的原生元件並存。",
+        "cta": "各平台的嵌入方式"
+      },
+      {
+        "label": "AI 生成的 UI",
+        "body": "模型按每次請求編寫一個模組，讓應用程式以介面作出回應，並由你的伺服器檢查及簽署。",
+        "cta": "簽署與沙盒"
+      }
+    ],
+    "found": [
+      {
+        "title": "無樣式的基礎元件",
+        "body": "導覽、對話框、選單、彈出層、分頁、下拉選擇、資料表格、程式碼編輯器及富文字核心。可使用 Tailwind class 或具型別的樣式，為每個部分設定外觀。"
+      },
+      {
+        "title": "一套工具鏈，同時適用於人與 agent",
+        "body": "一個 nsh 可執行檔即可建立、構建、型別檢查、熱重載、測試、打包及簽署。型別宣告由 Rust 原始碼生成，文件則以 llms.txt 提供，讓 agent 以相同的命令完成整個流程。"
+      },
+      {
+        "title": "每個目標平台都經過驗證",
+        "body": "相同的測試可以無頭模式運行，亦可在真實視窗、iOS 模擬器、Android 裝置或瀏覽器中，以該平台自身的輸入方式運行。"
+      }
+    ]
+  }
+}
