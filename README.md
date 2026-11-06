@@ -7,15 +7,20 @@ change there never has to touch this repository.
 
 - `<code>/docs`, `<code>/elements`, `<code>/modules`: the translated pages.
 - `<code>/ui.json`: the strings around them.
-- `locales.json`: the languages. To add one, add a line here.
+- `locales.json`: the languages, each a BCP 47 `code` and the language's own `name`;
+  `"dir": "rtl"` marks one written right to left (Arabic), which nsh.dev lays out
+  mirrored. To add a language, add a line here and its `ui.json`.
 
 ## How it runs
 
 `.github/workflows/translate.yml` runs daily and on demand. It takes the English
 pages of NSH's latest release and translates the pages whose source hash changed,
 so a day with no release calls no model. Code, HTML, link targets and callout
-markers are masked first; an answer that loses one or changes the headings is
-retried once, then that page keeps its previous translation.
+markers are masked first, and a page's leading `# Title` is written back from
+its translated frontmatter title. An answer that loses or repeats a masked part
+or changes the headings is sent back to the model with what it got wrong, then
+asked for once more from scratch; after that the page keeps its previous
+translation.
 
 The nsh.dev build reads this repository, for the latest release only. A page with
 no translation shows the English, not indexed.
