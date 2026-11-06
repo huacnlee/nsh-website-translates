@@ -1,10 +1,13 @@
 [
   { "code": "zh-HK", "name": "繁體中文" },
-  { "code": "ja", "name": "日本語" },
-  { "code": "ko", "name": "한국어" },
-  { "code": "fr", "name": "Français" },
+  { "code": "es", "name": "Español" },
+  { "code": "pt-BR", "name": "Português (Brasil)" },
   { "code": "ru", "name": "Русский" },
+  { "code": "de", "name": "Deutsch" },
+  { "code": "ja", "name": "日本語" },
+  { "code": "fr", "name": "Français" },
+  { "code": "ko", "name": "한국어" },
   { "code": "it", "name": "Italiano" },
-  { "code": "hi", "name": "हिन्दी" },
-  { "code": "ar", "name": "العربية", "dir": "rtl" }
+  { "code": "ar", "name": "العربية", "dir": "rtl" },
+  { "code": "hi", "name": "हिन्दी" }
 ]
