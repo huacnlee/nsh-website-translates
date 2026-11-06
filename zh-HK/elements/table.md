@@ -1,13 +1,15 @@
 ---
 title: "Table"
-description: "Table 元件及其各個部分：用於呈現應用程式自有資料列與儲存格的表格，螢幕閱讀器能將其識別為表格，且每個部分的外觀皆由應用程式決定。"
+description: "Table 元件及其組成部分：用於呈現應用程式自身資料列與儲存格的表格，螢幕閱讀器可將其識別為表格，而每個部分的外觀則由應用程式自行決定。"
 group: base
 demo: el-table
+source_hash: b35a56c82dadd942
 ---
+
 
 # Table
 
-`Table` 會將應用程式以子元素寫入的少量列(發票、摘要、比較)排版，並為螢幕閱讀器提供表格：表格本身、列群組、列、欄標題與儲存格，各自帶有其角色。其組成部分為 `TableHeader`、`TableBody` 與 `TableFooter`(列群組)、`TableRow`(並排的儲存格)、`TableHead`(欄的標題儲存格)、`TableCell` 與 `TableCaption`。外觀由應用程式決定：各部分本身都沒有顏色、邊框、內距或寬度，且每個部分都接受應用程式的 `class` 與 `style`。若需處理大量列、排序、選取與可調整大小的欄，[`DataTable`](./data-table.md) 就是對應的表格。
+`Table` 會排列應用程式以子元素寫入的數列內容(發票、摘要、比較),並為螢幕閱讀器提供一個表格:表格本身、列群組、列、欄標題和儲存格,各有其角色。它的部件包括 `TableHeader`、`TableBody` 和 `TableFooter`(列群組)、`TableRow`(並排顯示其儲存格)、`TableHead`(欄的標題儲存格)、`TableCell` 和 `TableCaption`。外觀由應用程式決定:各部件本身沒有顏色、邊框、內距或寬度,並各自接受應用程式的 `class` 和 `style`。如果需要處理大量列、排序、選取及可調整大小的欄,請使用 [`DataTable`](./data-table.md)。
 
 ```rust tabs
 use nsh_base::{table, table_body, table_cell, table_head, table_header, table_row, theme};
@@ -56,36 +58,36 @@ function App() {
 mount(App);
 ```
 
-`Table` 及其組成部分來自 [`nsh/base`](../modules/nsh-base.md)，也就是 Rust 中的 `nsh-base` crate，其中 `table()`、`table_header()`、`table_body()`、`table_footer()`、`table_row()`、`table_head()`、`table_cell()` 與 `table_caption()` 負責建立這些部分，並提供具型別的樣式方法與 `.child(..)`。一列會將其儲存格並排排版；儲存格的寬度由應用程式指定，因此各欄得以對齊。
+`Table` 及其部件來自 [`nsh/base`](../modules/nsh-base.md),即 Rust 中的 `nsh-base` crate,並由 `table()`、`table_header()`、`table_body()`、`table_footer()`、`table_row()`、`table_head()`、`table_cell()` 和 `table_caption()` 建立,同時配合具型別的樣式方法和 `.child(..)`。每一列會將其儲存格並排顯示;儲存格的寬度由應用程式指定,因此各欄會對齊。
 
 ## Props
 
-| Prop | Rust | 型別 | 預設值 | 說明 |
+| 屬性 | Rust | 類型 | 預設值 | 說明 |
 |---|---|---|---|---|
-| `accessibilityLabel` | `.accessibility_label(..)` | `string` | 無 | 僅限 `Table`：螢幕閱讀器對該表格的稱呼。 |
-| `children` | `.child(..)` | `JSX.Element` | 無 | 該部分所包含的內容：`Table` 中的群組與標題、群組中的列、列中的儲存格、儲存格中的內容。 |
-| `class`、`style` | 樣式方法 | `string`、`StyleProp<ViewStyle>` | 無 | 該部分的外觀與版面配置。 |
+| `accessibilityLabel` | `.accessibility_label(..)` | `string` | 無 | 只適用於 `Table`:螢幕閱讀器如何稱呼該表格。 |
+| `children` | `.child(..)` | `JSX.Element` | 無 | 該部件所包含的內容:`Table` 中的群組和標題、群組中的列、列中的儲存格、儲存格中的內容。 |
+| `class`、`style` | 樣式方法 | `string`、`StyleProp<ViewStyle>` | 無 | 部件的外觀和版面配置。 |
 
 <a id="parts"></a>
 
-## 組成部分
+## 部件
 
-| 部分 | 位於 | 螢幕閱讀器的角色 |
+| 部件 | 位於 | 螢幕閱讀器的角色 |
 |---|---|---|
 | `Table` | | 表格 |
-| `TableHeader` | `Table` | 列群組：欄標題所在的列 |
-| `TableBody` | `Table` | 列群組：資料列 |
-| `TableFooter` | `Table` | 列群組：合計、摘要列 |
-| `TableRow` | 群組，或 `Table` | 列；其儲存格並排排列 |
+| `TableHeader` | `Table` | 列群組:欄標題所在的列 |
+| `TableBody` | `Table` | 列群組:資料所在的列 |
+| `TableFooter` | `Table` | 列群組:總計、摘要列 |
+| `TableRow` | 某個群組,或 `Table` | 列;其儲存格並排顯示 |
 | `TableHead` | 標題的 `TableRow` | 欄標題 |
 | `TableCell` | `TableRow` | 儲存格 |
-| `TableCaption` | `Table` | 應用程式顯示的有關該表格的內容 |
+| `TableCaption` | `Table` | 應用程式顯示的、關於該表格的內容 |
 
-各平台會將這些角色提供給其螢幕閱讀器：Linux (AT-SPI)、Web (ARIA)、Android 與 GPUI 後端使用表格、列、儲存格與欄標題角色；macOS 與 Windows 使用網格與群組；iOS 則將標題視為標題。
+各平台會將這些角色提供給其螢幕閱讀器:Linux (AT-SPI)、網頁 (ARIA)、Android 和 GPUI 後端提供表格、列、儲存格和欄標題角色;macOS 和 Windows 提供網格和群組;iOS 則將標題視為標題。
 
 <a id="see-also"></a>
 
 ## 另請參閱
 
-- [DataTable](./data-table.md)：可容納任意數量的列與欄的表格，支援選取、排序，以及可調整大小、可移動的欄。
-- [Accessibility](../docs/accessibility.md)：其中包含 `accessibilityRole` 的值，以及 `table`、`row`、`cell`、`columnheader` 與 `rowgroup`。
+- [DataTable](./data-table.md):可容納任意數量的列和欄的表格,支援選取、排序,以及可調整大小和可移動的欄。
+- [無障礙功能](../docs/accessibility.md):當中包括 `accessibilityRole` 的值、`table`、`row`、`cell`、`columnheader` 和 `rowgroup`。

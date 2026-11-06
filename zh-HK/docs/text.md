@@ -1,13 +1,15 @@
 ---
 title: "文字"
-description: "使用 Rust 與 TSX 中的 text 元素顯示文字：巢狀 span 與連結、行內檢視、字型與裝飾、截斷、系統文字大小、選取，以及 onTextLayout。"
+description: "在 Rust 和 TSX 中使用 text 元素顯示文字：巢狀 span 與連結、內嵌視圖、字型與裝飾、截斷、系統文字大小、文字選取及 onTextLayout。"
 order: 35
 group: ui
+source_hash: 9d528fcdc65c1a8c
 ---
+
 
 # 文字
 
-所有文字都由 text 元素顯示:Rust 中使用 `text(..)`,TSX 中使用 `<Text>`。一個 text 元素就是一個段落,在佈局時由平台的文字引擎(Apple 平台為 CoreText,Android 為 `StaticLayout`)於引擎執行緒上排版,並且只在主執行緒上繪製。巢狀的 text 元素是同一段落中的 span,而不是獨立的 view。
+所有文字都由 text 元素顯示:Rust 中用 `text(..)`,TSX 中用 `<Text>`。一個 text 元素就是一個段落,在佈局時由平台的文字引擎(Apple 平台為 CoreText,Android 為 `StaticLayout`)在引擎線程上排版,只在主線程上繪製。巢狀的 text 元素是同一段落的 span,並非獨立的視圖。
 
 ```rust tabs
 text("By continuing you agree to the ")
@@ -36,13 +38,13 @@ text("By continuing you agree to the ")
 > [!IMPORTANT]
 > 字串由 text 元素顯示。在 TSX 中,直接放在 `<View>` 內的字串不會顯示:請用 `<Text>` 包起來。
 
-元素本身記載於 [text](../elements/text.md);本頁說明如何使用它。
+元素本身的說明見 [text](../elements/text.md);本頁介紹其用法。
 
 <a id="strings-and-whitespace"></a>
 
 ## 字串與空白
 
-在 Rust 中,text 的內容是字串,並按原樣顯示:`\n` 會換行。讀取 signal 的內容則是閉包(closure),當 signal 改變時文字會隨之更新。在 TSX 中,JSX 文字遵循與 React 相同的規則:每一行都會去除前後空白,僅含空白的行會被捨棄,其餘各行以單一空格連接。單行內的空白會保留,因此 `{first} {last}` 會保留其空格。若要在行首或行尾加入空格,請使用 `{" "}`;若要換行,請使用 `{"\n"}`:
+在 Rust 中,text 的內容是字串,按原樣顯示:`\n` 會換行。讀取 signal 的內容則是閉包(closure),signal 變化時文字會更新。在 TSX 中,JSX 文字遵循與 React 相同的規則:每行會去除首尾空白,只含空白的行會被丟棄,其餘各行以單一空格連接。同一行內的空白會保留,因此 `{first} {last}` 會保留其空格。行首或行尾的空格請用 `{" "}`,換行請用 `{"\n"}`:
 
 ```rust tabs
 text(move || format!("Hello, {}!\nWelcome back.", name.get()))
@@ -56,13 +58,13 @@ text(move || format!("Hello, {}!\nWelcome back.", name.get()))
 </Text>
 ```
 
-文字中的運算式會跟隨其所讀取的值:當 `count` 改變時,`text(move || format!("{} items", count.get()))` 與 `<Text>{count()} items</Text>` 會更新。
+text 中的表達式會跟隨其所讀取的內容:`count` 變化時,`text(move || format!("{} items", count.get()))` 和 `<Text>{count()} items</Text>` 會更新。
 
 <a id="spans-and-inheritance"></a>
 
 ## Span 與繼承
 
-text 內的 text 就是 span。它會繼承父層的文字樣式,並覆寫自己設定的部分:
+放在 text 內的 text 就是 span。它會繼承父元素的文字樣式,並覆寫自己設定的部分:
 
 ```rust tabs
 text("")
@@ -83,13 +85,13 @@ text("")
 </Text>
 ```
 
-文字樣式也會像 CSS 一樣由 view 向下傳遞:Rust 中的 `view().text_color(white()).text_sm()` 與 TSX 中的 `<View class="text-white text-sm">` 會為其內部的 text 與 input 元素設定樣式。
+文字樣式也會像 CSS 一樣從 view 向下傳遞:Rust 中的 `view().text_color(white()).text_sm()` 與 TSX 中的 `<View class="text-white text-sm">` 會為其內的 text 和 input 元素設定樣式。
 
 <a id="links"></a>
 
 ### 連結
 
-帶有按壓處理函式的 span(`.on_press(..)` 或 `.on_long_press(..)`;`onPress` 或 `onLongPress`)就是連結:按壓其文字字元時由該 span 接收,按壓其他位置則由段落接收。巢狀 span 中的連結同樣有效。
+設有按壓處理器(`.on_press(..)` 或 `.on_long_press(..)`;`onPress` 或 `onLongPress`)的 span 就是連結:按在其字元上的按壓會交給該 span,按在其他位置則交給段落。巢狀 span 中的連結同樣有效。
 
 ```rust tabs
 text("Read the ")
@@ -108,7 +110,7 @@ text("Read the ")
 
 ### Span 的背景
 
-span 的背景顏色與圓角半徑會在其涵蓋的每一行字元後方繪製一個方框,高度與其字型相同;文字的排版方式不變,複製時也會完整複製,因此行內程式碼就是一個 span([文字元素](../elements/text.md#span-backgrounds)):
+span 的背景色和圓角半徑會在其所跨越的每一行字元後面繪製一個方框,高度與其字體相同;文字的排版不變,複製時也保持完整,因此行內程式碼可以用 span 實現([text 元素](../elements/text.md#span-backgrounds)):
 
 ```rust tabs
 text("Run ")
@@ -124,9 +126,9 @@ text("Run ")
 
 <a id="views-and-images-inside-text"></a>
 
-### 文字內的 view 與圖片
+### text 內的 view 與圖片
 
-text 內除了 text 以外的任何元素都會以行內方式佈局,位於基線上,並隨文字一起換行。它也可以自行接收按壓:
+text 內除 text 以外的任何元素都會以行內方式排版,位於基線上,並隨文字一同換行。它可以自行接收按壓:
 
 ```rust tabs
 text("Made with ")
@@ -154,9 +156,9 @@ text("Made with ")
 </Text>
 ```
 
-被 `numberOfLines` 或省略號截掉的行內元素會被隱藏;複製文字時也不會包含它們。行內元素內的文字會採用周圍文字的顏色,就像 CSS 的 `color` 會作用到 inline block 一樣,除非它自行設定了顏色(上方的 `LIVE` 徽章即是如此);其字型與行高仍維持自己的設定。
+被 `numberOfLines` 或省略號截斷的行內元素會被隱藏;複製文字時也不會包含它們。行內元素內的文字會採用周圍文字的顏色,就像 CSS 的 `color` 會作用於 inline block 一樣,除非它自行設定顏色(上面的 `LIVE` 徽章就是如此);其字體和行高則保持自身設定。
 
-樣式鍵 `verticalAlign` 用來決定行內元素在行中的位置,就像 CSS 的 `vertical-align` 決定圖片的位置一樣:`"baseline"`(預設)讓元素底部站在基線上,`"text-top"` 與 `"text-bottom"` 讓元素的頂部或底部對齊文字字型的頂端或底端,`"middle"` 則讓元素置中於基線上方半個字型 x 高度處。無論元素超出字型多少,該行都會增高以容納它,即使設定了固定的 `lineHeight` 也一樣。若要讓段落開頭的圖示對齊文字底部(如同 Android 的 `ImageSpan` 繪製方式),請使用 `"text-bottom"`。對應的 class 為 `align-baseline`、`align-text-top`、`align-text-bottom` 與 `align-middle`;在 Rust 中則是 `.align_text_bottom()` 及其他同名的項目。
+樣式鍵 `verticalAlign` 決定行內元素在行中的位置,就像 CSS 的 `vertical-align` 決定圖片的位置一樣:`"baseline"`(預設)將其底部放在基線上,`"text-top"` 和 `"text-bottom"` 分別將其頂部或底部對齊文字字體的頂部或底部,`"middle"` 則將其置中於基線上方字體 x 高度一半的位置。只要元素超出字體範圍,行高就會增大以容納它,即使設定了固定的 `lineHeight` 也一樣。若段落開頭的圖示需要與文字底部對齊(如 Android 的 `ImageSpan` 的繪製方式),請使用 `"text-bottom"`。對應的 class 為 `align-baseline`、`align-text-top`、`align-text-bottom` 和 `align-middle`;在 Rust 中則是 `.align_text_bottom()` 及其他同名項目。
 
 ```tsx
 <Text style={{ fontSize: 16 }}>
@@ -171,23 +173,23 @@ text("Made with ")
 | 屬性 | 值 | Rust |
 |---|---|---|
 | `color` | [顏色](./styling.md#colors)。預設為黑色 | `.text_color(..)` |
-| `fontSize` | 點(pt)。預設為 14 | `.text_size(px(..))`、`.text_sm()`、`.text_lg()` 等 |
+| `fontSize` | 點數。預設為 14 | `.text_size(px(..))`、`.text_sm()`、`.text_lg()`、... |
 | `fontWeight` | `"normal"`(400)、`"bold"`(700),或 `100`–`900`(數字或字串) | `.font_weight(FontWeight::BOLD)` |
 | `fontStyle` | `"normal"`、`"italic"`:彩色 emoji 保持直立 | `.italic()` |
-| `fontFamily` | 系統字型家族、通用字型家族,或[匯入的字型](./fonts.md) | `.font_family(..)` |
-| `lineHeight` | 點(pt) | `.line_height(px(..))` |
-| `letterSpacing` | 點(pt) | `.letter_spacing(px(..))` |
-| `textAlign` | `"auto"`、`"left"`、`"center"`、`"right"`、`"justify"`、`"start"`、`"end"`:`left` 與 `right` 固定左右兩側,`start` 與 `end` 則跟隨文字方向 | `.text_left()`、`.text_center()`、`.text_right()`、`.text_justify()` |
-| `textAlignVertical` | `"auto"`、`"top"`、`"center"`、`"bottom"`:文字短於其容器時所在的位置 | |
+| `fontFamily` | 系統字體族、通用字體族,或[匯入的字體](./fonts.md) | `.font_family(..)` |
+| `lineHeight` | 點數 | `.line_height(px(..))` |
+| `letterSpacing` | 點數 | `.letter_spacing(px(..))` |
+| `textAlign` | `"auto"`、`"left"`、`"center"`、`"right"`、`"justify"`、`"start"`、`"end"`:`left` 和 `right` 固定為左右兩側,`start` 和 `end` 則跟隨文字方向 | `.text_left()`、`.text_center()`、`.text_right()`、`.text_justify()` |
+| `textAlignVertical` | `"auto"`、`"top"`、`"center"`、`"bottom"`:文字比其方框短時所處的位置 | |
 | `textTransform` | `"none"`、`"uppercase"`、`"lowercase"`、`"capitalize"` | `.normal_case()`、`.uppercase()`、`.lowercase()`、`.capitalize()` |
 | `textDecorationLine` | `"none"`、`"underline"`、`"line-through"`、`"underline line-through"` | `.no_underline()`、`.underline()`、`.line_through()` |
-| `textDecorationColor`、`textDecorationStyle` | 顏色;`"solid"`、`"double"`、`"dotted"`、`"dashed"`、`"wavy"` | `.text_decoration_color(..)`、`.text_decoration_wavy()` 等 |
-| `textDecorationThickness`、`textUnderlineOffset` | 點(pt),或 `"auto"`(粗細亦可使用 `"from-font"`) | `.text_decoration_thickness(px(..))`、`.underline_offset(px(..))` |
-| `textShadow` | CSS 的 `text-shadow`,字形後方的陰影:`"2px 2px 4px rgb(0 0 0 / 0.6)"`(偏移、模糊、顏色),或以數字表示其圖層 `[{ x: 2, y: 2, blur: 4, color: "#00000099" }]`;多個圖層會以最寬者繪製 | `.text_shadow([TextShadow { .. }])`、`.text_shadow_sm()` 等、`.text_shadow_color(..)` |
+| `textDecorationColor`、`textDecorationStyle` | 顏色;`"solid"`、`"double"`、`"dotted"`、`"dashed"`、`"wavy"` | `.text_decoration_color(..)`、`.text_decoration_wavy()`、... |
+| `textDecorationThickness`、`textUnderlineOffset` | 點數,或 `"auto"`(粗細也可用 `"from-font"`) | `.text_decoration_thickness(px(..))`、`.underline_offset(px(..))` |
+| `textShadow` | CSS 的 `text-shadow`,即字形後方的陰影:`"2px 2px 4px rgb(0 0 0 / 0.6)"`(偏移、模糊、顏色),或以數字表示其各層,`[{ x: 2, y: 2, blur: 4, color: "#00000099" }]`;多個層會按最寬的一層繪製 | `.text_shadow([TextShadow { .. }])`、`.text_shadow_sm()`、...、`.text_shadow_color(..)` |
 | `fontVariant` | OpenType 功能:`["tabular-nums"]`、`"small-caps"`、`"oldstyle-nums"`、`"lining-nums"`、`"proportional-nums"` | `.tabular_nums()`、`.small_caps()`、`.oldstyle_nums()`、`.lining_nums()`、`.proportional_nums()` |
 | `writingDirection` | `"auto"`、`"ltr"`、`"rtl"`:段落的基準方向 | `.writing_direction(WritingDirection::Rtl)` |
 
-text 元素同時也是 view:它可使用背景、邊框、圓角、內距,以及其他 [view 樣式](./styling.md)。
+text 元素同時也是 view:它支援背景、邊框、圓角、內距(padding)及其他 [view 樣式](./styling.md)。
 
 ```rust tabs
 text(move || format!("{:.2}", price.get())).text_size(px(18.0)).tabular_nums()
@@ -212,7 +214,7 @@ text("Shadow")
 </Text>
 ```
 
-`tabular-nums` 讓每個數字具有相同寬度,可避免計數器與價格在數值變動時產生跳動。
+`tabular-nums` 令每個數字寬度相同,避免計數器和價格在變化時抖動。
 
 <a id="truncation"></a>
 
@@ -228,11 +230,11 @@ text(file_path).number_of_lines(1).text_overflow(EllipsizeMode::Middle)
 <Text style={{ numberOfLines: 1, textOverflow: "ellipsis-middle" }}>{filePath}</Text>
 ```
 
-| 樣式鍵 / prop | Rust | 說明 |
+| 樣式鍵/屬性 | Rust | 說明 |
 |---|---|---|
-| `numberOfLines`(style) | `.number_of_lines(n)` | 最多顯示的行數;`0`(預設)會顯示全部 |
-| `textOverflow`(style) | `.text_overflow(EllipsizeMode::Middle)` | 放不下的文字如何截斷:在結尾加省略號(`"ellipsis"`,預設)、在開頭加省略號(`"ellipsis-start"`)、在中間加省略號(`"ellipsis-middle"`),或 `"clip"` |
-| `adjustsFontSizeToFit` | `.shrink_to_fit(min_scale)` | 縮小字型直到文字符合其行數與容器 |
+| `numberOfLines`(樣式) | `.number_of_lines(n)` | 最多顯示的行數;`0`(預設)顯示全部 |
+| `textOverflow`(樣式) | `.text_overflow(EllipsizeMode::Middle)` | 放不下的文字如何截斷:在末端加省略號(`"ellipsis"`,預設)、在開頭(`"ellipsis-start"`)或中間(`"ellipsis-middle"`)加省略號,或 `"clip"` |
+| `adjustsFontSizeToFit` | `.shrink_to_fit(min_scale)` | 縮小字體,直至文字符合其行數與方框 |
 | `minimumFontScale` | | `adjustsFontSizeToFit` 最多可縮小的幅度(0–1) |
 
 ```rust tabs
@@ -249,20 +251,20 @@ text(move || total.get())
 </Text>
 ```
 
-Tailwind 的 `line-clamp-*`、`text-ellipsis` 與 `text-clip` class 會設定相同的鍵,而 `truncate`(`.truncate()`)是以省略號截斷的單行文字;作為樣式鍵時,它們也支援狀態樣式與變體。
+Tailwind class `line-clamp-*`、`text-ellipsis` 和 `text-clip` 設定相同的鍵,`truncate`(`.truncate()`)是以省略號截斷的單行文字;作為樣式鍵時,它們也支援狀態樣式和變體。
 
 <a id="system-text-size"></a>
 
 ## 系統文字大小
 
-文字預設會跟隨使用者的文字大小設定(iOS 上為 Dynamic Type,Android 上為字型大小)。
+文字預設會跟隨用戶的文字大小設定(iOS 的 Dynamic Type、Android 的字體大小)。
 
-| Prop | Rust | 說明 |
+| 屬性 | Rust | 說明 |
 |---|---|---|
-| `allowFontScaling` | `.allow_font_scaling(false)` | `false` 會讓大小固定。預設為 `true` |
-| `maxFontSizeMultiplier` | `.max_font_size_multiplier(1.5)` | 套用的最大縮放倍率,例如 `1.5`。`0` 表示不設上限 |
+| `allowFontScaling` | `.allow_font_scaling(false)` | `false` 會令大小固定。預設為 `true` |
+| `maxFontSizeMultiplier` | `.max_font_size_multiplier(1.5)` | 套用的最大縮放比例,例如 `1.5`。`0` 表示無上限 |
 
-Rust 中的 `font_scale()` 與 TSX 中來自 [`nsh`](../modules/nsh.md#device) 的 `fontScale()` 代表目前的縮放倍率,並會在使用者變更設定時隨之改變。input 也支援 `allowFontScaling` 與 `maxFontSizeMultiplier`。
+Rust 中的 `font_scale()` 與 TSX 中來自 [`nsh`](../modules/nsh.md#device) 的 `fontScale()` 是目前的縮放比例,會在用戶更改設定時變化。input 也支援 `allowFontScaling` 和 `maxFontSizeMultiplier`。
 
 ```rust tabs
 text("Tab label").max_font_size_multiplier(1.3).text_size(px(13.0))
@@ -272,15 +274,15 @@ text("Tab label").max_font_size_multiplier(1.3).text_size(px(13.0))
 <Text maxFontSizeMultiplier={1.3} style={{ fontSize: 13 }}>Tab label</Text>
 ```
 
-建議限制縮放倍率,而不是完全關閉:大字體是許多人仰賴的無障礙設定。
+與其關閉縮放,不如限制縮放上限:大字體是許多人依賴的無障礙設定。
 
 <a id="selection"></a>
 
 ## 選取
 
-樣式鍵 `userSelect: "text"`(`.select_text()`,class 為 `select-text`)讓使用者可以選取並複製文字,與系統原生的文字檢視相同:長按會選取手指下的單字,拖曳控制把手可移動選取範圍的兩端,編輯選單則提供「拷貝」與「全選」(iOS 另有「查詢」、「翻譯」與「分享」;Android 有「分享」)。選取範圍不會跨出單一文字區塊。樣式鍵 `selectionColor`(`.selection_color(..)`、`selection:text-*`)用來設定反白區域與控制把手的顏色。設定在 view 上的 `userSelect` 會作用到其內部未自行設定的 text。
+樣式鍵 `userSelect: "text"`(`.select_text()`,class 為 `select-text`)讓用戶可以選取並複製文字,與系統自身的文字視圖一樣:長按會選取手指下的單詞,拖曳控點可移動選取範圍的兩端,編輯選單提供「拷貝」和「全選」(iOS 另加「查詢」、「翻譯」和「分享」;Android 另加「分享」)。選取範圍只限於同一個文字區塊內。樣式鍵 `selectionColor`(`.selection_color(..)`、`selection:text-*`)用來設定高亮和控點的顏色。在 view 上設定的 `userSelect` 會作用於其內未自行設定的 text。
 
-在桌面瀏覽器中,文字預設可選取,與網頁相同,但互動式元素內部除外(具有按壓或觸控處理函式的 view,例如按鈕與可按壓的列);`userSelect: "none"`(`.select_none()`,class 為 `select-none`)可讓文字在這些位置保持不可選取。手機與平板瀏覽器則遵循原生規則。
+在桌面瀏覽器中,文字預設可以選取,與網頁一樣,但互動元素內除外(設有按壓或觸控處理器的 view,例如按鈕和可按壓的列);`userSelect: "none"`(`.select_none()`,class 為 `select-none`)可令文字在那裡保持不可選取。手機和平板電腦的瀏覽器則遵循原生規則。
 
 ```rust tabs
 text(order_number).select_text().selection_color(rgb(0x7c3aed))
@@ -290,11 +292,11 @@ text(order_number).select_text().selection_color(rgb(0x7c3aed))
 <Text style={{ userSelect: "text", selectionColor: "#7c3aed" }}>{orderNumber}</Text>
 ```
 
-若要從程式碼中複製(例如「複製」按鈕),請在 Rust 中使用 `set_clipboard(..)`,在 TSX 中使用 [`Clipboard`](../modules/nsh.md#clipboard)。
+若要透過程式碼複製(例如「拷貝」按鈕),在 Rust 中使用 `set_clipboard(..)`,在 TSX 中使用 [`Clipboard`](../modules/nsh.md#clipboard)。
 
 ## onTextLayout
 
-`onTextLayout`(Rust 中為 `TextLayout` 事件)會在每次佈局後回報已排版的各行,座標位於 text 的內容框內:
+`onTextLayout`(Rust 中的 `TextLayout` 事件)會在每次佈局後回報已排版的各行,座標位於 text 的內容框內:
 
 ```rust tabs
 text(move || body.get()).on(EventKind::TextLayout, move |e: &EventPayload| {
@@ -315,18 +317,18 @@ text(move || body.get()).on(EventKind::TextLayout, move |e: &EventPayload| {
 </Text>
 ```
 
-每一行都包含 `text`、`x`、`y`、`width`、`height`、`ascender`、`descender`、`capHeight` 與 `xHeight`(Rust 中為 `cap_height` 與 `x_height`)。可用它來僅在文字被截斷時顯示「顯示更多」按鈕,或讓其他內容與基線對齊。
+每一行都有 `text`、`x`、`y`、`width`、`height`、`ascender`、`descender`、`capHeight` 和 `xHeight`(Rust 中為 `cap_height` 和 `x_height`)。可利用它僅在文字被截斷時顯示「閱讀更多」按鈕,或讓其他內容與基線對齊。
 
 <a id="accessibility"></a>
 
 ## 無障礙
 
-螢幕閱讀器會將 text 元素的內容朗讀出來。作為標題的文字(`.role(AccessibilityRole::Header)`、`role="header"`)與連結(`AccessibilityRole::Link`、`role="link"`)請指定 role。請參閱[無障礙](./accessibility.md)。
+螢幕閱讀器會將 text 元素的內容朗讀出來。請為作為標題的文字(`.role(AccessibilityRole::Header)`、`role="header"`)和連結(`AccessibilityRole::Link`、`role="link"`)指定角色。參見[無障礙](./accessibility.md)。
 
 <a id="related"></a>
 
 ## 相關內容
 
-- [字型](./fonts.md):自訂字型與字重。
-- [text 元素](../elements/text.md):所有 prop。
+- [字體](./fonts.md):自訂字體與字重。
+- [text 元素](../elements/text.md):所有屬性。
 - [表單與鍵盤](./forms-and-keyboard.md):文字輸入。

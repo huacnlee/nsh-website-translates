@@ -1,0 +1,182 @@
+{
+  "source_hash": "0f236d200996769b",
+  "strings": {
+    "title": "Native Shell — Écrivez une fois, natif partout | Framework UI Rust",
+    "description": "Native Shell est un framework d’UI natif pensé d’abord pour Rust : créez une seule app pour iOS, Android, macOS, Windows, Linux et le web, avec l’interface et les interactions propres à chaque plateforme.",
+    "slogan": "Écrivez une fois, natif partout",
+    "lead": "N’écrivez que du TSX et livrez des clients natifs qui suivent le rythme de Rust. Une seule base de code tourne sur 8 plateformes, chacune avec l’interface et les interactions propres au système.",
+    "idle": "Votre app est au centre. Chaque arc autour d’elle est une plateforme.",
+    "start": "Démarrer",
+    "gallery": "Galerie",
+    "try": "Playground",
+    "heroStats": [
+      "FPS",
+      "première image",
+      "plateformes"
+    ],
+    "numbersTitle": "Un client écrit en TSX, juste à côté de Rust",
+    "numbersLead": "Dans NSH, seul le code de votre app est en JS. Le graphe réactif, le moteur de rendu, la mise en page et chaque module sont en Rust. Les apps TSX et Rust partagent le même pipeline d’exécution natif.",
+    "stats": [
+      "22 sparklines en direct, un carnet d’ordres et un flux de transactions mis à jour ensemble, image p95 sous 4 ms",
+      "Démarrage du moteur (75–155 µs)",
+      "Première image d’une app compteur",
+      "Un tap, de l’événement au commit",
+      "Le code applicatif d’un hello world",
+      "Le téléchargement d’une app TSX sur le web (runtime Wasm)"
+    ],
+    "compareHead": "Petites apps mesurées : quelques MB au-dessus de la fenêtre système nue",
+    "compareCols": [
+      "",
+      "TSX",
+      "Rust",
+      "Fenêtre système nue"
+    ],
+    "compareRows": [
+      "Empreinte mémoire, macOS",
+      "Mémoire privée modifiée (private dirty), Linux (GTK, GL)",
+      "Au-dessus de la fenêtre système, macOS / Linux",
+      "Working set privé, Windows"
+    ],
+    "sizeHead": "Taille sur chaque plateforme : le hello world de nsh init",
+    "sizeCols": [
+      "",
+      "Exécutable TSX",
+      "Paquet TSX",
+      "Exécutable Rust",
+      "Paquet Rust"
+    ],
+    "sizeRows": [
+      "macOS (Apple silicon)",
+      "Linux (x86_64)",
+      "Windows (x86_64)",
+      "Web"
+    ],
+    "sizeWeb": "~1.1 MB à télécharger",
+    "numbersNote": "Builds de release. Mémoire au repos : empreinte macOS sur un Apple M3 (l’app compteur et le template Rust en 1200 × 800 ; la fenêtre système contient un seul label en 480 × 640) ; mémoire privée modifiée sous Linux sur une NVIDIA RTX 3060 Ti (les templates TSX et Rust de nsh init et une fenêtre GTK avec un seul label, le tout en 480 × 640) ; working set privé sous Windows. La mesure de chaque plateforme, avec RSS et USS, figure dans le rapport. Tailles : builds de release de nsh package, avec optimisation à l’édition de liens et symboles retirés ; l’exécutable TSX embarque le runtime QuickJS, le code de l’app fait moins de 1 KB ; le paquet est le .app compressé sur macOS, le .tar.gz sur Linux et le .zip sur Windows ; sur le web, ce que le navigateur télécharge, runtime et app compris.",
+    "numbersCta": "Le rapport de performances complet",
+    "zeroTitle": "TSX avec 0 dépendance",
+    "zeroLead": "Une app, ce sont les fichiers ci-dessous. La ligne de commande nsh embarque son propre bundler et sa propre chaîne d’outils, et les modules que vous importez sont natifs.",
+    "zeroPoints": [
+      "Un seul exécutable nsh crée, lance, teste et empaquette",
+      "~120 ms entre l’enregistrement d’un fichier et l’exécution de la nouvelle version",
+      "nsh check vérifie les types avec le tsc natif de TypeScript 7"
+    ],
+    "viewsTitle": "8 plateformes, chacune avec les contrôles propres au système",
+    "viewsLead": "NSH construit chaque UI à partir de ce que sa plateforme offre déjà. La saisie de texte, la sélection, les méthodes de saisie et l’accessibilité viennent du système, et ce qu’une nouvelle version de l’OS leur apporte parvient à l’app avec elle.",
+    "cols": [
+      "Plateforme",
+      "Vues",
+      "Texte",
+      "Saisie de texte",
+      "Prérequis"
+    ],
+    "embedNote": "Les cartes, les web views, la vidéo et toute vue native enregistrée par l’hôte sont une sous-vue de plus dans la même hiérarchie : elles se positionnent, se découpent, défilent et reçoivent les touchers comme le reste de l’app.",
+    "embedCta": "Le backend de chaque plateforme",
+    "formTitle": "Une app, dans la forme propre à chaque appareil",
+    "formLead": "Le même code compilé s’exécute ici deux fois, et seul l’appareil change. Avec un pointeur, c’est une fenêtre avec ses conversations sur le côté ; sur un téléphone, les boutons et le champ de saisie flottent en Liquid Glass, avec le fil qui défile en dessous ; dans un terminal, tout tient sur la grille de caractères. L’app n’est écrite qu’une seule fois.",
+    "desktop": "Bureau",
+    "phone": "Téléphone",
+    "terminal": "Terminal",
+    "formHint": "En direct : saisissez un message",
+    "formCaption": "Le bureau et le téléphone tournent en direct dans votre navigateur, sur le runtime web de Native Shell. Le terminal est la vraie sortie de nsh run --target tui.",
+    "pending": "L’aperçu en direct n’est pas encore construit : lancez bun run dev (ou cargo xtask web).",
+    "tuiCta": "Découvrir TUI",
+    "langTitle": "Le même moteur en Rust, quand vous le souhaitez",
+    "langLead": "Rust est un langage de premier rang pour des apps entières : l’UI, la logique et les composants compilent en code natif, prêt pour une logique métier exigeante. Les deux utilisent les mêmes éléments et signaux, et les écrans TSX importent vos composants Rust.",
+    "langCta": "Développer avec Rust",
+    "fastTitle": "Seules les vues modifiées sont touchées",
+    "fastLead": "Chaque élément est une vue que la plateforme conserve. Un changement n’exécute que les expressions qui lisent le signal modifié, en un seul lot par image. Le thread principal n’attend jamais le JS et les animations natives s’exécutent sans lui : le défilement et les animations tiennent 120 FPS, et l’app reste quasi inactive au repos.",
+    "fastPress": "Appuyez sur +1",
+    "fastLegend": "Les deux textes qui lisent les signaux changent et l’historique gagne une ligne ; aucune autre vue n’est touchée.",
+    "fastIdle": "24 nœuds, au repos",
+    "fastTouched": "Mis à jour par cet appui",
+    "fastKept": "Laissé intact",
+    "fastStat": "1 commit · 7 éléments de montage",
+    "fastCta": "Comment elle reste rapide",
+    "shipTitle": "Après la publication, votre app peut encore recevoir de nouvelles UI",
+    "shipLead": "Votre équipe peut l’écrire, ou un modèle peut la générer pour chaque requête. Elle arrive sur l’appareil sous forme de module signé, s’exécute dans un sandbox défini par l’hôte et s’affiche nativement.",
+    "trust": "Frontière de confiance",
+    "flow": [
+      {
+        "title": "Écrire",
+        "body": "Votre équipe ou un modèle écrit un module TSX."
+      },
+      {
+        "title": "Vérifier",
+        "body": "Vérifiez les types, puis exécutez ses tests en headless."
+      },
+      {
+        "title": "Signer",
+        "body": "Un .nshpkg signé Ed25519, dont la clé de release est certifiée par une racine hors ligne."
+      },
+      {
+        "title": "Exécuter",
+        "body": "L’appareil vérifie la signature, le certificat et les révocations. Chaque vue reçoit une VM avec des limites de mémoire, de temps d’appel et de nœuds, et uniquement les capacités que l’hôte accorde."
+      }
+    ],
+    "waysHead": "Trois façons de livrer, un seul moteur",
+    "foundTitle": "Le comportement vient de NSH, l’apparence de vous",
+    "foundLead": "nsh/base contient des composants de base sans style qui gèrent l’état, le focus, le clavier et l’accessibilité, et l’app stylise chaque partie. Une seule ligne de commande nsh fait le reste.",
+    "closeTitle": [
+      "Vues et interactions natives,",
+      "votre design visuel"
+    ],
+    "closeBody": "Installez nsh et lancez votre première app TSX en une minute.",
+    "closeCta": "Commencer à développer",
+    "platforms": "Plateformes",
+    "chat": "Chat",
+    "terminalLabel": "Le chat dans un terminal",
+    "surfaces": {
+      "Windows": {
+        "input": "L’éditeur de NSH, IMM32"
+      },
+      "Web": {
+        "text": "Celui du navigateur",
+        "needs": "Navigateurs modernes"
+      },
+      "Android": {
+        "views": "Vues Android"
+      },
+      "TUI": {
+        "text": "La police du terminal",
+        "input": "Touches Readline, méthodes de saisie"
+      },
+      "GPUI": {
+        "text": "Le système de texte de GPUI",
+        "input": "L’éditeur de NSH",
+        "needs": "Intégré aux apps GPUI Kit"
+      }
+    },
+    "ways": [
+      {
+        "label": "Apps autonomes",
+        "body": "Écrivez-la en Rust, en TSX ou les deux, et empaquetez une app installable pour iOS, Android, macOS, Windows ou Linux, ou un site web statique.",
+        "cta": "Premiers pas"
+      },
+      {
+        "label": "UI dynamique et plugins",
+        "body": "Intégrez une vue sur n’importe quel écran et chargez-y des modules TSX signés à l’exécution, aux côtés des composants natifs de l’hôte.",
+        "cta": "Intégration, plateforme par plateforme"
+      },
+      {
+        "label": "UI générée par IA",
+        "body": "Un modèle écrit un module par requête, et l’app répond avec une interface. Votre serveur le vérifie et le signe.",
+        "cta": "Signature et sandboxing"
+      }
+    ],
+    "found": [
+      {
+        "title": "Composants de base sans style",
+        "body": "Navigation, boîtes de dialogue, menus, popovers, onglets, selects, tableaux de données, un éditeur de code et un noyau de texte enrichi. Stylisez chaque partie avec des classes Tailwind ou des styles typés."
+      },
+      {
+        "title": "Une seule chaîne d’outils, pour les humains et les agents",
+        "body": "Un seul exécutable nsh crée, compile, vérifie les types, recharge à chaud, teste, empaquette et signe. Les déclarations sont générées à partir des sources Rust et la documentation est servie sous forme de llms.txt, de sorte qu’un agent exécute toute la boucle avec les mêmes commandes."
+      },
+      {
+        "title": "Vérifié sur chaque cible",
+        "body": "Les mêmes tests s’exécutent en headless, ainsi que dans de vraies fenêtres, un simulateur iOS, un appareil Android ou un navigateur, avec la saisie propre à la plateforme."
+      }
+    ]
+  }
+}

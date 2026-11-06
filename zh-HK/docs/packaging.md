@@ -1,16 +1,18 @@
 ---
 title: "打包"
-description: "使用 nsh package 為 iOS 裝置、iOS 模擬器、Android、macOS、Windows、Linux 與網頁建置可安裝的 Rust 和 TSX 應用程式,並支援應用程式中繼資料、圖示與簽署。"
+description: "使用 nsh package 為 iOS 裝置、iOS 模擬器、Android、macOS、Windows、Linux 及網頁建立可安裝的 Rust 和 TSX 應用程式，並設定應用程式中繼資料、圖示及簽署。"
 order: 19
 group: platforms
+source_hash: 74c2991490481926
 ---
+
 
 # 打包
 
-`nsh package` 可以把 app 變成可安裝的成品:iOS 模擬器用的 `.app`、iOS 裝置用的已簽署 `.ipa`、Android 用的已簽署 `.apk`、macOS 用的 ad hoc 簽署 `.app`、Linux 用的目錄與 `.tar.gz`、Windows 用的目錄與 `.zip`,或是 Web 用的靜態網站。它不需要 Xcode 專案,也不需要 Gradle。
+`nsh package` 可將應用程式變成可安裝的成品:供 iOS 模擬器使用的 `.app`、供 iOS 裝置使用的已簽署 `.ipa`、供 Android 使用的已簽署 `.apk`、供 macOS 使用的 ad hoc 簽署 `.app`、供 Linux 使用的目錄和 `.tar.gz`、供 Windows 使用的目錄和 `.zip`,或供網頁使用的靜態網站。無需 Xcode 專案,也無需 Gradle。
 
-- **Rust app**(由 `nsh.json` 指定其 `"root"`)會從它所在的目錄進行打包。`nsh` 會以 release 模式建置目標平台的 runner,並編入你的 crate、掛載根元件,不含 QuickJS。所需工具:Cargo、該平台的 Rust target(`rustup target add …`),Android 還需要 NDK。
-- **TSX app** 需指定其入口。它的 release 建置(經過壓縮、編譯成 QuickJS 位元組碼,與 `nsh build --release` 的建置方式完全相同)會與 NSH 隨附的**預先建置執行階段**放在一起,因此不需要 Rust 工具鏈。擁有自己 crate 的 app(有 `"rust"` 但沒有 `"root"`)會使用其 crate 建置 runner。
+- **Rust 應用程式**(`nsh.json` 指定其 `"root"`)會從其目錄打包。`nsh` 以 release 模式建置目標平台的 runner,並編入你的 crate、掛載根元件,不含 QuickJS:需要 Cargo、該平台的 Rust target(`rustup target add …`),Android 還需要 NDK。
+- **TSX 應用程式**需指定其入口。其 release 建置(經壓縮、編譯為 QuickJS bytecode,與 `nsh build --release` 的建置方式完全相同)會與 NSH 隨附的**預建 runtime** 放在一起,因此無需 Rust 工具鏈。擁有自己 crate 的應用程式(有 `"rust"` 而無 `"root"`)則會連同其 crate 建置 runner。
 
 ```sh
 # A Rust app, from its directory
@@ -26,16 +28,16 @@ nsh package --target ios --sign "Apple Development: Jane Doe (ABCDE12345)" --pro
 nsh package App.tsx --target ios-simulator --run
 ```
 
-除非傳入 `--out`,否則輸出會放到 `.nsh/out/`。以下各節列出 Rust app 在各目標平台的指令;TSX app 則需加上其入口(`nsh package App.tsx --target …`)。
+輸出會寫入 `.nsh/out/`,除非你傳入 `--out`。以下各節列出 Rust 應用程式在各目標平台的指令;TSX 應用程式則需加上其入口(`nsh package App.tsx --target …`)。
 
 > [!NOTE]
-> 若想把 NSH 放進*既有的*原生 app 內,請見[平台](./platforms.md#embed-in-a-native-app);若是 GPUI 或 GPUI Kit app,請見 [GPUI](./gpui.md#embedding-in-a-gpui-app)。若要發佈讓 app 下載並驗證的更新,請見[已簽署的套件](./signed-packages.md)。
+> 如要改為把 NSH 放進*現有的*原生應用程式,請參閱[平台](./platforms.md#embed-in-a-native-app);GPUI 或 GPUI Kit 應用程式請參閱 [GPUI](./gpui.md#embedding-in-a-gpui-app)。如要發佈讓應用程式下載並驗證的更新,請參閱[已簽署套件](./signed-packages.md)。
 
 <a id="app-metadata-30"></a>
 
-## App 中繼資料:`nsh.json`
+## 應用程式元數據:`nsh.json`
 
-`nsh package` 會讀取 app 所在目錄中的 `nsh.json`(TSX app 則位於入口檔案旁)。`nsh init` 會寫出一個:
+`nsh package` 會讀取應用程式目錄中的 `nsh.json`(TSX 應用程式則在入口檔案旁)。`nsh init` 會寫入一個:
 
 ```json
 {
@@ -47,15 +49,15 @@ nsh package App.tsx --target ios-simulator --run
 }
 ```
 
-| 鍵 | 型別 | 預設值 | 用途 |
+| 鍵 | 類型 | 預設值 | 用途 |
 |---|---|---|---|
-| `name` | string | 入口所在的目錄名稱 | 圖示下方顯示的名稱(`CFBundleDisplayName`、Android 的 `android:label`)以及輸出檔名。 |
-| `id` | string | 必填 | Bundle identifier / Android 套件名稱,採用反向 DNS 格式,並使用你擁有的網域。它也決定 app 的[儲存空間](../modules/nsh.md#storage)位置,讓每個 app 各有自己的儲存空間。`nsh package` 與 `nsh publish` 會針對 `com.example.` 這個預留位置發出警告。 |
-| `version` | string | `"1.0.0"` | 使用者看得到的版本(`CFBundleShortVersionString`、`versionName`)。 |
-| `build` | number | `1` | 建置編號(`CFBundleVersion`、`versionCode`)。每次上傳的發行版本都要調高。 |
-| `icon` | string | 無 | 正方形 PNG,建議為 1024×1024,路徑相對於 `nsh.json`。 |
+| `name` | string | 入口所在目錄的名稱 | 圖示下方顯示的名稱(`CFBundleDisplayName`、Android 的 `android:label`)及輸出檔案名稱。 |
+| `id` | string | 必填 | 套件識別碼 / Android 套件名稱,採用你擁有的網域的反向 DNS 格式。它同時決定應用程式[儲存空間](../modules/nsh.md#storage)的位置,令每個應用程式各有自己的儲存空間。`nsh package` 和 `nsh publish` 會對 `com.example.` 佔位值發出警告。 |
+| `version` | string | `"1.0.0"` | 使用者可見的版本(`CFBundleShortVersionString`、`versionName`)。 |
+| `build` | number | `1` | 建置編號(`CFBundleVersion`、`versionCode`)。每次上傳新版本都要調高。 |
+| `icon` | string | 無 | 正方形 PNG,建議 1024×1024,路徑相對於 `nsh.json`。 |
 
-`nsh.json` 還包含 `rust` 與 `root`(app 的 crate 及其根元件,見[使用 Rust 建置](./rust.md))、`theme` 與 `appearance`、`tailwind`(見 [Tailwind](./tailwind.md))以及 `capabilities`(見[沙箱與權限](./sandbox-and-capabilities.md));所有的鍵都列在[專案結構](./project-structure.md#nshjson)中。未知的鍵會視為錯誤。
+`nsh.json` 亦包含 `rust` 和 `root`(應用程式的 crate 及其根元件,參閱[使用 Rust 建置](./rust.md))、`theme` 和 `appearance`、`tailwind`(參閱 [Tailwind](./tailwind.md))以及 `capabilities`(參閱[沙盒與權限](./sandbox-and-capabilities.md));所有鍵的完整列表請見[專案結構](./project-structure.md#nshjson)。未知的鍵會導致錯誤。
 
 上述每個鍵都可以在命令列覆寫,這在 CI 中很方便:
 
@@ -69,20 +71,20 @@ nsh package --target android --app-version 1.4.0 --build 42
 
 | 旗標 | 說明 |
 |---|---|
-| `--target <ios \| ios-simulator \| android \| macos \| linux \| windows \| web>` | 要為哪個目標建置(必填)。 |
+| `--target <ios \| ios-simulator \| android \| macos \| linux \| windows \| web>` | 要為哪個平台建置(必填)。 |
 | `-o, --out <dir>` | 輸出目錄。預設為 `.nsh/out`。 |
 | `--name <name>` | 顯示名稱。 |
-| `--id <id>` | Bundle identifier,例如 `com.example.app`。 |
+| `--id <id>` | 套件識別碼,例如 `com.example.app`。 |
 | `--app-version <version>` | 版本,例如 `1.2.0`。 |
 | `--build <n>` | 建置編號。 |
-| `--icon <png>` | App 圖示:正方形 PNG,建議為 1024×1024。 |
+| `--icon <png>` | 應用程式圖示:正方形 PNG,建議 1024×1024。 |
 | `--sign <identity>` | iOS:裝置用的程式碼簽署身分。 |
 | `--profile <file>` | iOS:裝置用的佈建描述檔(`.mobileprovision`)。 |
 | `--keystore <file>` | Android:release keystore(預設:debug 金鑰)。 |
 | `--key-alias <alias>` | Android:keystore 中的金鑰別名。 |
-| `--keystore-password <password>` | Android:keystore 密碼;也可從 `NSH_KEYSTORE_PASSWORD` 讀取。 |
-| `--abi <abi>` | Android:APK 的 ABI,可重複指定或以逗號分隔(預設:`arm64-v8a` 與 `armeabi-v7a`)。 |
-| `--run` | 打包完成後安裝並啟動:在 iOS 模擬器中,或在 `adb` 偵測到的 Android 裝置或模擬器上;macOS、Linux 與 Windows app 會在本機啟動;Web 網站會在本機提供服務並在瀏覽器中開啟。不適用於 `--target ios`。 |
+| `--keystore-password <password>` | Android:keystore 密碼;亦可從 `NSH_KEYSTORE_PASSWORD` 讀取。 |
+| `--abi <abi>` | Android:APK 的 ABI,可重複指定或以逗號分隔(預設:`arm64-v8a` 和 `armeabi-v7a`)。 |
+| `--run` | 建置後安裝並啟動:在 iOS 模擬器中,或在 `adb` 偵測到的 Android 裝置或模擬器上;macOS、Linux 和 Windows 應用程式會在本機啟動;網站則會在本機提供服務並在瀏覽器中開啟。不適用於 `--target ios`。 |
 
 <a id="ios-simulator"></a>
 
@@ -92,7 +94,7 @@ nsh package --target android --app-version 1.4.0 --build 42
 nsh package --target ios-simulator --run
 ```
 
-會寫出 `.nsh/out/<Name>.app`,並以 ad hoc 方式簽署(模擬器需要簽章,但不需要身分)。搭配 `--run` 時,若沒有正在執行的模擬器,它會啟動一個,然後安裝並啟動 app。需要 Xcode。
+會寫入 `.nsh/out/<Name>.app`,以 ad hoc 方式簽署(模擬器需要簽署,但不需要身分)。使用 `--run` 時,若沒有正在運行的模擬器,它會啟動一個,安裝應用程式並啟動。需要 Xcode。
 
 <a id="ios-devices"></a>
 
@@ -104,21 +106,21 @@ nsh package --target ios \
   --profile AppStore.mobileprovision
 ```
 
-會寫出 `.nsh/out/<Name>.ipa`,可用於 TestFlight、App Store 上傳工具或直接安裝(視描述檔而定)。過程如下:
+會寫入 `.nsh/out/<Name>.ipa`,可用於 TestFlight、App Store 上傳工具或直接安裝(視乎描述檔而定)。過程如下:
 
-- 佈建描述檔會以 `embedded.mobileprovision` 的名稱複製到 app 中。
-- Entitlements 來自描述檔。NSH 會檢查描述檔的 application identifier 是否涵蓋 app 的 `id`(萬用字元描述檔,例如 `TEAMID.*` 或 `TEAMID.com.example.*`,皆可使用),否則會以錯誤停止。
-- App 會使用該身分以 `codesign` 簽署,然後壓縮成 `.ipa`(`Payload/<Name>.app`)。
+- 佈建描述檔會以 `embedded.mobileprovision` 的名稱複製到應用程式中。
+- 權利(entitlements)來自描述檔。NSH 會檢查描述檔的應用程式識別碼是否涵蓋應用程式的 `id`(`TEAMID.*` 或 `TEAMID.com.example.*` 等萬用字元描述檔亦可),否則會報錯並停止。
+- 應用程式會以 `codesign` 使用該身分簽署,然後壓縮成 `.ipa`(`Payload/<Name>.app`)。
 
-你可以用以下指令找出自己的身分:
+可用以下指令找出你的身分:
 
 ```sh
 security find-identity -v -p codesigning
 ```
 
-若沒有 `--sign` 與 `--profile`,NSH 會寫出未簽署的 `.nsh/out/<Name>.app` 並告知你;這樣的 app 無法直接安裝到裝置上。
+若沒有 `--sign` 和 `--profile`,NSH 會寫入未簽署的 `.nsh/out/<Name>.app` 並告知你;它無法直接安裝到裝置上。
 
-此 app 支援 iPhone 與 iPad、直向與橫向(僅 iPad 支援直向倒置),並需要 iOS 15.0 或更新版本。
+應用程式支援 iPhone 和 iPad、直向和橫向(上下顛倒的直向僅限 iPad),並需要 iOS 15.0 或更新版本。
 
 ## Android
 
@@ -126,13 +128,13 @@ security find-identity -v -p codesigning
 nsh package --target android --run
 ```
 
-會寫出 `.nsh/out/<Name>.apk`。APK 是直接使用 SDK 的建置工具(`aapt2`、`zipalign`、`apksigner`)組裝而成,不需要 Gradle。需求如下:
+會寫入 `.nsh/out/<Name>.apk`。APK 直接以 SDK 的建置工具(`aapt2`、`zipalign`、`apksigner`)組裝,無需 Gradle。需求如下:
 
-- Android SDK,透過 `ANDROID_HOME`(或 `ANDROID_SDK_ROOT`、`~/Library/Android/sdk`)尋找,並需包含建置工具與 `platforms;android-35` 套件。缺少任一項時,NSH 會告訴你要執行的 `sdkmanager` 指令。
-- JDK,用於第一次建立 debug keystore。
-- Rust app 還需要 Android NDK(`sdkmanager "ndk;<version>"` 或 `ANDROID_NDK_HOME`),用來建置其 `libnsh.so`。
+- Android SDK,透過 `ANDROID_HOME`(或 `ANDROID_SDK_ROOT`,或 `~/Library/Android/sdk`)尋找,並包含建置工具和 `platforms;android-35` 套件。如有缺少,NSH 會告訴你應執行的 `sdkmanager` 指令。
+- JDK,用於首次建立 debug keystore。
+- 對於 Rust 應用程式,還需要 Android NDK(`sdkmanager "ndk;<version>"`,或 `ANDROID_NDK_HOME`),用來建置其 `libnsh.so`。
 
-此 app 的目標為 API 35,並需要 API 28(Android 9)或更新版本。它包含手機 ABI 的原生程式碼,即 `arm64-v8a` 與 `armeabi-v7a`;搭配 `--run` 時,還會包含該裝置的 ABI,例如模擬器的 `x86_64`。你也可以用 `--abi` 自行挑選,例如 `--abi arm64-v8a` 只支援 64 位元手機,可得到最小的 APK:
+應用程式的目標為 API 35,並需要 API 28(Android 9)或更新版本。它包含手機 ABI 的原生程式碼,即 `arm64-v8a` 和 `armeabi-v7a`;使用 `--run` 時,還會包含裝置本身的 ABI,例如模擬器的 `x86_64`。`--abi` 可自行選擇,例如 `--abi arm64-v8a` 只包含 64 位元手機,APK 最小:
 
 ```sh
 nsh package --target android --abi arm64-v8a
@@ -140,9 +142,9 @@ nsh package --target android --abi arm64-v8a
 
 <a id="signing-for-release"></a>
 
-### Release 簽署
+### 為 release 簽署
 
-若沒有 `--keystore`,APK 會以標準的 debug 金鑰(`~/.android/debug.keystore`,若不存在則建立)簽署,NSH 也會警告這不適用於商店發行。要建立 release 版本時,先建立一次 keystore,再傳入:
+沒有 `--keystore` 時,APK 會以標準 debug 金鑰(`~/.android/debug.keystore`,如不存在則會建立)簽署,NSH 會警告它不適用於商店發佈。發佈 release 時,請先建立一次 keystore,然後傳入:
 
 ```sh
 keytool -genkeypair -v -keystore release.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000
@@ -151,7 +153,7 @@ NSH_KEYSTORE_PASSWORD=… nsh package --target android \
   --keystore release.jks --key-alias upload
 ```
 
-建議使用環境變數,而不要用 `--keystore-password`,這樣密碼就不會留在 shell 歷史記錄中。
+建議使用環境變數而非 `--keystore-password`,以免密碼留在你的 shell 歷史記錄中。
 
 ## macOS
 
@@ -159,7 +161,7 @@ NSH_KEYSTORE_PASSWORD=… nsh package --target android \
 nsh package --target macos --run
 ```
 
-會寫出 `.nsh/out/<Name>.app`:可執行檔位於 `Contents/MacOS/`,而 `nsh/assets/…`、`nsh/app.json`(視窗標題與 app 的外觀)以及 TSX app 的 `nsh/bundle.nshc` 位於 `Contents/Resources/`。App 以 ad hoc 方式簽署,並需要 macOS 14 或更新版本;若要散布,請以 Developer ID 簽署並進行公證(notarize)。請見 [macOS](./macos.md#packaging)。
+會寫入 `.nsh/out/<Name>.app`:可執行檔位於 `Contents/MacOS/`,而 `nsh/assets/…`、`nsh/app.json`(視窗標題及應用程式外觀)以及 TSX 應用程式的 `nsh/bundle.nshc` 則位於 `Contents/Resources/`。應用程式以 ad hoc 方式簽署,需要 macOS 14 或更新版本;如要發佈,請以 Developer ID 簽署並進行公證(notarize)。參閱 [macOS](./macos.md#packaging)。
 
 ## Linux
 
@@ -167,7 +169,7 @@ nsh package --target macos --run
 nsh package --target linux --run
 ```
 
-會寫出 `.nsh/out/<Name>/`(包含可執行檔 `<Name>`、`nsh/assets/…`、含有視窗標題與 application id 的 `nsh/app.json`、TSX app 的 `nsh/bundle.nshc`、`<id>.desktop`,以及圖示 `<id>.png`),以及與 `.nsh/out/<Name>.tar.gz` 相同的內容。請在 Linux 上打包:runner 是為建置它的機器而建置的。執行 app 的機器上必須安裝 GTK 4(4.14 或更新版本)、Pango 與 WebKitGTK 6.0(供 web view 使用)。安裝方式與桌面項目請見 [Linux](./linux.md#packaging)。
+會寫入 `.nsh/out/<Name>/`(可執行檔 `<Name>`、`nsh/assets/…`、載有視窗標題和應用程式 id 的 `nsh/app.json`、TSX 應用程式的 `nsh/bundle.nshc`、`<id>.desktop` 和圖示 `<id>.png`),以及與 `.nsh/out/<Name>.tar.gz` 相同的內容。須在 Linux 上打包:runner 是為建置它的機器而建置的。應用程式運行的地方必須安裝 GTK 4(4.14 或更新版本)、Pango 和 WebKitGTK 6.0(用於網頁檢視)。安裝及桌面項目的說明:[Linux](./linux.md#packaging)。
 
 ## Windows
 
@@ -175,58 +177,60 @@ nsh package --target linux --run
 nsh package --target windows --run
 ```
 
-會寫出 `.nsh\out\<Name>\`(包含帶有 app 圖示的可執行檔 `<Name>.exe`、`nsh\assets\…`、含有視窗標題、app id、版本與外觀的 `nsh\app.json`,以及 TSX app 的 `nsh\bundle.nshc`),以及與 `.nsh\out\<Name>.zip` 相同的內容。TSX app 不需要任何工具;Rust app 的 runner 則使用 Visual Studio Build Tools 建置。請在 Windows 上打包:runner 是為建置它的機器而建置的,而且只有 Windows 能嵌入圖示。App 可從其目錄被複製到的任何位置執行,不需要安裝。請見 [Windows](./windows.md#packaging)。
+會寫入 `.nsh\out\<Name>\`(帶有應用程式圖示的可執行檔 `<Name>.exe`、`nsh\assets\…`、載有視窗標題、應用程式 id、版本和外觀的 `nsh\app.json`,以及 TSX 應用程式的 `nsh\bundle.nshc`),以及與 `.nsh\out\<Name>.zip` 相同的內容。TSX 應用程式不需要任何工具;Rust 應用程式的 runner 則以 Visual Studio Build Tools 建置。須在 Windows 上打包:runner 是為建置它的機器而建置的,而且只有 Windows 能嵌入圖示。應用程式可從其目錄被複製到的任何位置運行,無需安裝。參閱 [Windows](./windows.md#packaging)。
 
-## Web
+<a id="web"></a>
+
+## 網頁
 
 ```sh
 nsh package --target web --run
 ```
 
-會寫出 `.nsh/out/<Name>/`,這是一個靜態網站:`index.html`、`manifest.webmanifest`、頁面指令碼(`nsh.<digest>.js`)以及 `nsh.<digest>.wasm`(Rust app 的引擎與 crate;TSX app 則是執行階段,與 app 的 ES module `app.<digest>.js` 放在一起)、其資產與圖示,每個檔案都以其內容命名,讓主機可以永久快取。將此目錄部署到任何網頁伺服器或 CDN 即可;`--run` 會在 `http://127.0.0.1:4173/` 提供服務,供你開啟。快取標頭與嵌入方式請見 [Web](./web.md#publish-an-app)。
+會寫入 `.nsh/out/<Name>/`,這是一個靜態網站:`index.html`、`manifest.webmanifest`、頁面腳本(`nsh.<digest>.js`)和 `nsh.<digest>.wasm`(Rust 應用程式的引擎和 crate;TSX 應用程式則是 runtime,與應用程式的 ES module `app.<digest>.js` 放在一起),以及其資產和圖示,每個檔案都以其內容命名,方便主機長期快取。將該目錄部署到任何網頁伺服器或 CDN 即可;`--run` 會在 `http://127.0.0.1:4173/` 上提供服務供你開啟。快取標頭和嵌入方式:[Web](./web.md#publish-an-app)。
 
 <a id="icons"></a>
 
 ## 圖示
 
-請提供一張正方形 PNG,建議為 1024×1024,可寫在 `nsh.json`(`"icon": "icon.png"`)中,或搭配 `--icon` 使用:
+在 `nsh.json`(`"icon": "icon.png"`)中或以 `--icon` 提供一個正方形 PNG,建議 1024×1024:
 
-- **iOS:** 由 Xcode 的 `actool` 編譯進 app 的資產目錄(`Assets.car`),並由它衍生出 iOS 所需的所有尺寸。
-- **Android:** 縮放為 192×192,作為啟動器圖示(`mipmap-xxxhdpi`)。
-- **macOS:** 由 `sips` 轉換為 `AppIcon.icns`。
-- **Linux:** 複製為 `<id>.png`,並由 `.desktop` 檔案將其指定為 `Icon`。
-- **Windows:** 縮放為 16 至 64 像素以及 256 像素,並以圖示形式嵌入可執行檔,視窗、檔案總管與工作列都會顯示它。
-- **Web:** 縮放為 32 像素(favicon)、180(`apple-touch-icon`)、192 與 512(web app manifest)。
+- **iOS:**由 Xcode 的 `actool` 編譯進應用程式的資產目錄(`Assets.car`),由它衍生 iOS 所需的所有尺寸。
+- **Android:**縮放為 192×192 並用作啟動器圖示(`mipmap-xxxhdpi`)。
+- **macOS:**由 `sips` 轉換為 `AppIcon.icns`。
+- **Linux:**複製為 `<id>.png`,由 `.desktop` 檔案將其指定為 `Icon`。
+- **Windows:**縮放為 16 至 64 像素及 256 像素,並嵌入可執行檔作為其圖示,視窗、檔案總管和工作列都會顯示它。
+- **網頁:**縮放為 32 像素(favicon)、180(`apple-touch-icon`)、192 和 512(web app manifest)。
 
-若沒有圖示,系統會顯示其預設圖示。
+沒有圖示時,系統會顯示其預設圖示。
 
 <a id="what-is-inside"></a>
 
-## 內容物
+## 內含內容
 
-Rust app 的套件包含其 runner(以你的 crate 建置並掛載其根元件),以及其 crate 所註冊的資產(`assets!()`)。TSX app 的套件則包含其位元組碼、其 `capabilities.json`(在宣告了權限時),以及它所匯入的資產,並與預先建置的執行階段放在一起:
+Rust 應用程式的套件包含其 runner(連同你的 crate 建置並掛載其根元件),以及其 crate 登記的資產(`assets!()`)。TSX 應用程式的套件包含其 bytecode、其 `capabilities.json`(當它宣告權限時)以及它匯入的資產,並與預建 runtime 放在一起:
 
-| 目標 | 執行階段 | TSX app |
+| 目標平台 | Runtime | TSX 應用程式 |
 |---|---|---|
 | iOS | `nsh-ios-app` 可執行檔 | `<Name>.app/nsh/bundle.nshc`、`nsh/assets/…` |
-| Android | `classes.dex`、`lib/<abi>/libnsh.so`(無符號、未壓縮儲存、16 KB 對齊) | `assets/nsh/bundle.nshc`、`assets/nsh/assets/…` |
-| macOS | `nsh-macos-app` 可執行檔,更名為 `<Name>` | `<Name>.app/Contents/Resources/nsh/bundle.nshc`、`nsh/assets/…` |
-| Linux | `nsh-linux-app` 可執行檔,更名為 `<Name>` | `<Name>/nsh/bundle.nshc`、`nsh/assets/…` |
-| Windows | `nsh-windows-app.exe` 可執行檔,更名為 `<Name>.exe` | `<Name>\nsh\bundle.nshc`、`nsh\assets\…` |
+| Android | `classes.dex`、`lib/<abi>/libnsh.so`(不含符號、以未壓縮方式儲存、16 KB 對齊) | `assets/nsh/bundle.nshc`、`assets/nsh/assets/…` |
+| macOS | `nsh-macos-app` 可執行檔,重新命名為 `<Name>` | `<Name>.app/Contents/Resources/nsh/bundle.nshc`、`nsh/assets/…` |
+| Linux | `nsh-linux-app` 可執行檔,重新命名為 `<Name>` | `<Name>/nsh/bundle.nshc`、`nsh/assets/…` |
+| Windows | `nsh-windows-app.exe` 可執行檔,重新命名為 `<Name>.exe` | `<Name>\nsh\bundle.nshc`、`nsh\assets\…` |
 | Web | `nsh.<digest>.wasm`、`nsh.<digest>.js` | `<Name>/app.<digest>.js`、`assets/…`、`index.html` |
 
-打包後的 app 不會註冊[原生元件](./native-components.md);若需要原生元件,請將 NSH 嵌入你自己的 app。
+已打包的應用程式不會登記[原生元件](./native-components.md);如需使用,請將 NSH 嵌入你自己的應用程式。
 
 <a id="finding-the-runtime"></a>
 
-## 尋找執行階段
+## 尋找 runtime
 
-Rust app 會建置自己的 runner。對於 TSX app,`nsh package` 會在 CLI 旁尋找預先建置的執行階段(發行版中的 `bin/../runtime`)。在 NSH 的 checkout 中,則使用 `target/<triple>/<profile>` 與 `target/android/<profile>`,並採用 CLI 本身的 profile(debug CLI 使用 debug 執行階段):請用 `cargo build -p nsh-ios-app --target aarch64-apple-ios-sim`(裝置則用 `aarch64-apple-ios`)與 `cargo xtask android`(release CLI 需加上 `--release`)建置;`nsh-macos-app`(macOS 上)、`nsh-linux-app`(Linux 上)與 `nsh-windows-app`(Windows 上)是為這台機器建置在 `target/<profile>`(`cargo build -p nsh-macos-app`、`cargo build -p nsh-linux-app`、`cargo build -p nsh-windows-app`)中;Web 執行階段則無論 CLI 的 profile 為何,一律以 `web` profile 建置到 `target/wasm32-unknown-unknown/web/`。環境變數 `NSH_RUNTIME` 可讓 CLI 指向另一個目錄,其結構需與發行版的 `runtime/` 相同(`ios/iphoneos`、`ios/iphonesimulator`、`android/release`、`macos`、`linux`、`windows`、`gpui`、`web` 等)。
+Rust 應用程式會自行建置 runner。對於 TSX 應用程式,`nsh package` 會在 CLI 旁尋找預建 runtime(發行版中的 `bin/../runtime`)。在 NSH 的 checkout 中,它會使用 `target/<triple>/<profile>` 和 `target/android/<profile>`,並採用 CLI 本身的 profile(debug CLI 使用 debug runtime):請以 `cargo build -p nsh-ios-app --target aarch64-apple-ios-sim`(裝置則用 `aarch64-apple-ios`)和 `cargo xtask android`(release CLI 需加上 `--release`)建置它們;`nsh-macos-app`(在 macOS 上)、`nsh-linux-app`(在 Linux 上)和 `nsh-windows-app`(在 Windows 上)是為本機而建置,位於 `target/<profile>`(`cargo build -p nsh-macos-app`、`cargo build -p nsh-linux-app`、`cargo build -p nsh-windows-app`);網頁 runtime 不論 CLI 使用哪個 profile,都以 `web` profile 建置,輸出到 `target/wasm32-unknown-unknown/web/`。環境變數 `NSH_RUNTIME` 可讓 CLI 指向另一個目錄,其結構須與發行版的 `runtime/` 相同(`ios/iphoneos`、`ios/iphonesimulator`、`android/release`、`macos`、`linux`、`windows`、`gpui`、`web` 等)。
 
 <a id="see-also"></a>
 
 ## 另請參閱
 
 - [CLI](./cli.md):所有指令
-- [已簽署的套件](./signed-packages.md):app 下載的更新
-- [專案結構](./project-structure.md):`nsh.json` 與 app 的檔案
+- [已簽署套件](./signed-packages.md):應用程式下載的更新
+- [專案結構](./project-structure.md):`nsh.json` 及應用程式的檔案

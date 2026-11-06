@@ -1,15 +1,17 @@
 ---
 title: "DiffView"
-description: "DiffView 元件:顯示兩段文字之間或某個 patch 的變更,支援並排與統一兩種檢視方式,可醒目標示行內變更的字詞,將未變更的行收合為可展開的分隔線,並提供語法醒目提示、自動換行、逐項變更操作、行選取與審閱註解。"
+description: "DiffView 元件:顯示兩段文字之間或補丁(patch)的變更,支援並排或統一檢視,會突顯行內被修改的字詞,將未變更的行收合為可展開的分隔線,並提供語法突顯、自動換行、逐項變更操作、行選取及審閱註解。"
 group: base
 demo: el-diff-view
+source_hash: 2004ab3c0d854626
 ---
+
 
 # DiffView
 
-`DiffView` 以程式碼審查工具的方式顯示兩段文字之間的差異:並排模式下舊文字在左、新文字在右,各行對齊;統一模式下則是刪除的行在上、新增的行在下。在變更的行內,有變動的詞會被標示出來,變更之間未變動的行會摺疊成可展開的分隔線,文字則以 [`Editor`](./editor.md) 的語法色彩高亮。它可以顯示兩段文字(`oldValue` 與 `newValue`),或統一 diff 中的各個檔案(`patch`:`git diff` 的輸出、pull request 的 diff),每個檔案各有標頭。它專為審查變更而設計,包括 AI 提出的編輯:應用程式針對每項變更提供的操作可以保留或還原該變更。只會建立可見範圍內的列,因此長檔案的捲動就和短檔案一樣順暢。
+`DiffView` 以程式碼審查工具的方式顯示兩段文字之間的差異：並排顯示時，舊文字在左、新文字在右，各行對齊；統一顯示時，刪除的行在上、新增的行在下。已更改的行內，更改了的字詞會被突顯；位於更改之間的未更改行會摺疊成可展開的分隔列；文字會以 [`Editor`](./editor.md) 的語法顏色突顯。它可顯示兩段文字（`oldValue` 和 `newValue`），或統一 diff 的各個檔案（`patch`：`git diff` 的、pull request 的），每個檔案各有標題。它專為審查更改而設，AI 建議的編輯亦包括在內：應用程式針對每項更改的操作可保留或還原該更改。只會建立檢視範圍內的列，因此長檔案的捲動與短檔案一樣流暢。
 
-`DiffView` 負責行為,並附帶一套以主題 token 建構的預設外觀:主題的 `font-mono` 以 13pt 字級、20pt 列高顯示,行號使用 `muted-foreground`,新增的行以綠色底色標示、刪除的行以紅色標示,變動的詞使用更深的底色,每個變更行在邊欄邊緣有一條色條,分隔線使用 `muted`。各個部分都會在這些預設值之上套用應用程式的樣式(`classes` 與 `styles`)。Rust 以 `nsh_base::diff_view()` 建立,TSX 則使用來自 `nsh/base` 的 `<DiffView>`。
+`DiffView` 負責行為，並附帶以主題 token 建構的預設外觀：主題的 `font-mono`（13pt，列高 20pt）、以 `muted-foreground` 顯示的行號、新增行淡綠底色、刪除行淡紅底色、更改字詞以較深色調標示、每條更改行在行號欄邊緣有一條色條，分隔列則使用 `muted`。各部分均以應用程式的樣式覆蓋這些預設值（`classes` 和 `styles`）。Rust 以 `nsh_base::diff_view()` 建立，TSX 則使用來自 `nsh/base` 的 `<DiffView>`。
 
 ```rust tabs
 use nsh_base::diff_view;
@@ -43,14 +45,14 @@ function App() {
 mount(App);
 ```
 
-檢視會填滿應用程式提供的方塊(`flex-1`、高度),並在其中捲動:垂直捲動各列,水平捲動至最長的行,並排檢視的兩側會一起捲動。使用 `softWrap` 時,長行會改為在該側的寬度處換行,並排的一列與較高的一側等高,因此兩側保持對齊。
+檢視會填滿應用程式給予它的框（`flex-1`、高度），並在其內捲動：垂直捲動各列，橫向捲動至最長的行，並排檢視的兩側一同捲動。使用 `softWrap` 時，長行會按該側的寬度換行，並排的一列高度與較高的一側相同，因此兩側保持對齊。
 
 <a id="two-texts-or-a-patch"></a>
 
-## 兩段文字或一份 patch
+## 兩段文字或修補檔
 
-- **兩段文字**:`oldValue` 與 `newValue`。各行依原樣比對,因此新增或移除結尾的換行符號也算一項變更,與 git 的顯示一致。
-- **patch**:`patch`,為一個或多個檔案的統一 diff(`git diff`、`git format-patch`、`diff -u`;重新命名、模式、新增、刪除與二進位檔案,以及前面的 commit 訊息,皆依 git 的寫法讀取)。檢視會顯示其 hunk 的行,行號與檔案中的一致,每個 hunk 位於以其標頭(所在的函式)構成的分隔線下方,多個檔案時每個檔案各有自己的標頭([patch 的檔案](#files-of-a-patch))。未設定 `language` 時,各檔案的路徑決定其語言。
+- **兩段文字**：`oldValue` 和 `newValue`。各行按原樣比較，因此新增或移除最後的換行符號即屬更改，與 git 的顯示一致。
+- **修補檔**：`patch`，一個或多個檔案的 unified diff（`git diff`、`git format-patch`、`diff -u`；重新命名、模式、新增、刪除及二進位檔案，以及其前的提交訊息，均按 git 的寫法讀取）。檢視會顯示其 hunk 的行，行號與檔案中相同，每個 hunk 之上有以其標頭（所在函式）組成的分隔列，多個檔案時每個檔案各有自己的標題（[修補檔的檔案](#files-of-a-patch)）。未設定 `language` 時，各檔案的路徑決定其語言。
 
 ```tsx
 const PATCH = `diff --git a/src/total.rs b/src/total.rs
@@ -66,15 +68,15 @@ const PATCH = `diff --git a/src/total.rs b/src/total.rs
 <DiffView patch={PATCH} layout="unified" class="flex-1" />
 ```
 
-`language` 的語言名稱與 `Editor` 相同:名稱、別名、副檔名或檔案名稱(`"rust"`、`"tsx"`、`"main.go"`、`"Dockerfile"`)。
+`language` 以 `Editor` 的方式指定語言：名稱、別名、副檔名或檔案名稱（`"rust"`、`"tsx"`、`"main.go"`、`"Dockerfile"`）。
 
 <a id="files-of-a-patch"></a>
 
-## patch 的檔案
+## 修補檔的檔案
 
-包含多個檔案的 patch 會在每個檔案上方顯示一列標頭:預設為其路徑(重新命名時為 `old → new`)、新增與刪除的行數,以及 `▾`,按一下即可將該檔案摺疊為只剩標頭(`▸`)或展開。`renderFileHeader` 以應用程式自己的方式繪製標頭(單一檔案的 patch 上方也會顯示一個),並會得到該檔案的資訊(`DiffFile`):`index`、`path`、`oldPath`(重新命名或複製自)、`status`(`"modified"`、`"added"`、`"deleted"`、`"renamed"`、`"copied"`)、`binary`(patch 未顯示其任何行)、`added`、`deleted`、`hunks`、`firstHunk` 與 `collapsed`。應用程式的標頭會呼叫 ref 的 `toggleFile(path)`;`collapseFile` 與 `expandFile` 設定狀態,每次變更都會以 `onFileToggle({ file })` 回報。只要新的 `patch` 仍包含該檔案,已摺疊的檔案就會維持摺疊。
+多檔案修補檔會在每個檔案上方顯示標題列：預設顯示其路徑（重新命名時為 `old → new`）、新增及刪除的行數，以及 `▾`，按一下即可將該檔案摺疊為只剩標題（`▸`）或展開。`renderFileHeader` 以應用程式的方式繪製標題（單一檔案的修補檔上方亦會顯示一個），並會獲告知該檔案（`DiffFile`）：`index`、`path`、`oldPath`（重新命名或複製自）、`status`（`"modified"`、`"added"`、`"deleted"`、`"renamed"`、`"copied"`）、`binary`（修補檔未顯示其任何行）、`added`、`deleted`、`hunks`、`firstHunk` 和 `collapsed`。應用程式的標題會呼叫 ref 的 `toggleFile(path)`；`collapseFile` 和 `expandFile` 設定狀態，每項更改均會以 `onFileToggle({ file })` 回報。只要新的 `patch` 仍包含該檔案，已摺疊的檔案便保持摺疊。
 
-變更會跨檔案依序計數:一個檔案的變更為 `firstHunk` 到 `firstHunk + hunks - 1`,供 `goToHunk`、`renderHunkActions` 與 `hunks()` 使用(`DiffHunk` 的 `file` 是其所屬檔案的索引,其行數以該檔案內為準),而 `stats()` 會加總所有檔案的數量。`goToHunk` 會先展開已摺疊的檔案。
+更改會跨檔案按順序計算：檔案的更改為 `firstHunk` 至 `firstHunk + hunks - 1`，供 `goToHunk`、`renderHunkActions` 和 `hunks()` 使用（`DiffHunk` 的 `file` 是其檔案的索引，其行號在該檔案內計算），`stats()` 則加總每個檔案的更改。`goToHunk` 會先展開已摺疊的檔案。
 
 ```tsx
 let diff!: DiffViewRef;
@@ -110,20 +112,20 @@ const files = signal<DiffFile[]>([]);
 
 <a id="layout-and-inline-changes"></a>
 
-## 版面配置與行內變更
+## 版面配置與行內更改
 
-`layout` 可為 `"split"`(預設:並排,每一條刪除的行置於與它最相似的新增行旁)或 `"unified"`(單欄,一項變更的刪除行在其新增行上方,並顯示兩個行號)。`inline` 決定變更行內要標示的內容:
+`layout` 為 `"split"`（預設：並排，每條刪除行旁邊是與它最相似的新增行）或 `"unified"`（單欄，更改的刪除行在其新增行之上，並顯示兩個行號）。`inline` 決定已更改行內突顯的內容：
 
-| `inline` | 標示的內容 |
+| `inline` | 突顯內容 |
 |---|---|
-| `"wordAlt"`(預設) | 有變動的詞,相距一個字元時會合併,因此一段變動的片語會視為一個整體 |
-| `"word"` | 每個有變動的詞 |
-| `"char"` | 每個有變動的字元 |
-| `"none"` | 不標示:僅使用行的底色 |
+| `"wordAlt"`（預設） | 已更改的字詞；相隔一個字元時會合併，使更改的短語視為一個 |
+| `"word"` | 每個已更改的字詞 |
+| `"char"` | 每個已更改的字元 |
+| `"none"` | 無：僅顯示行的底色 |
 
-詞是由字母、數字與 `_` 組成的連續片段;每個 CJK 字元、假名與韓文音節各自為一個詞,因此句子中變動的一個字元只會標示它自己。幾乎整行都變動的行只顯示其底色。
+字詞是由字母、數字和 `_` 組成的連續字元；每個 CJK 字元、假名和諺文音節各自成為一個字詞，因此句子中更改了一個字元，只會標示該字元本身。幾乎整行都已更改的行只顯示其底色。
 
-`indicators` 在行號旁標記變更的行:`"bars"`(預設,邊欄邊緣的一條色條)、`"classic"`(文字前顯示 `+` 與 `−`)或 `"none"`。`background={false}` 讓變更的行不加底色,`lineNumbers={false}` 則隱藏行號。
+`indicators` 在行號旁標記已更改的行：`"bars"`（預設，行號欄邊緣的色條）、`"classic"`（文字前的 `+` 和 `−`）或 `"none"`。`background={false}` 令已更改的行不上底色，`lineNumbers={false}` 則隱藏行號。
 
 ```tsx
 <DiffView oldValue={before()} newValue={after()} language="md" layout="unified" inline="word" indicators="classic" class="flex-1" />
@@ -133,9 +135,9 @@ const files = signal<DiffFile[]>([]);
 
 ## 摺疊的行
 
-每項變更周圍會顯示 `contextLines` 行未變動的行(預設為 3);變更之間的未變動行,以及第一項變更之前與最後一項變更之後的行,會摺疊成一條分隔線,並註明它隱藏了多少行。按下它會顯示全部。`expandAll` 會顯示每一行;ref 的 `expand`、`expandAll()` 與 `collapseAll()` 讓應用程式展開與摺疊這些行。
+每項更改周圍會顯示 `contextLines` 行未更改的行（預設 3 行）；更改之間以及第一項更改之前、最後一項之後的未更改行，會摺疊成一個分隔列，並註明所隱藏的行數。按一下即可全部顯示。`expandAll` 顯示所有行；ref 的 `expand`、`expandAll()` 和 `collapseAll()` 可由應用程式展開和摺疊它們。
 
-`renderSeparator` 以應用程式自己的方式繪製分隔線。它會得到分隔線的資訊(`DiffSeparator`):`gap`、摺疊區段的索引(第一項變更之前為 0,介於變更 `i - 1` 與 `i` 之間時為 `i`)、`lines`(它隱藏的行數)、`first` 與 `last`,對 patch 而言還有該 hunk 的 `header`。`expand(gap, direction, lines)` 會顯示 `"all"` 其所有行(預設),或顯示 `lines`(預設 20)`"up"`,位於分隔線下方變更的正上方,或 `"down"`,位於分隔線上方變更的正下方。第一條分隔線向上展開,最後一條向下展開。
+`renderSeparator` 以應用程式的方式繪製分隔列。它會獲得分隔列（`DiffSeparator`）：`gap`、摺疊區段的索引（第一項更改之前為 0，更改 `i - 1` 與 `i` 之間為 `i`）、`lines`（所隱藏的行數）、`first` 和 `last`，修補檔還有 hunk 的 `header`。`expand(gap, direction, lines)` 可顯示 `"all"` 其全部的行（預設），或顯示 `lines`（預設 20）`"up"`，位置緊接在分隔列下方更改的上方，或 `"down"`，緊接在上方更改的下方。第一個分隔列向上展開，最後一個向下展開。
 
 ```tsx
 let diff!: DiffViewRef;
@@ -164,9 +166,9 @@ let diff!: DiffViewRef;
 
 <a id="keeping-and-reverting-changes"></a>
 
-## 保留與還原變更
+## 保留與還原更改
 
-`renderHunkActions` 會把應用程式的操作放在可見範圍內每項變更的右上角,並得到該變更的資訊(`DiffHunk`:`index`、`oldStart`、`oldLines`、`newStart`、`newLines`,行從 0 起算,以及 `file`,patch 中其所屬檔案的索引)。它們呼叫 ref:`revertHunk(index)` 把該變更的舊行放回新文字,`acceptHunk(index)` 則讓它的新行成為舊文字的內容。檢視會立即顯示結果,並以 `onChange({ change })`(`{ oldValue, newValue }`)回報兩段文字,應用程式再將其設為 props。逐項保留或還原 AI 的編輯就是這樣做的:
+`renderHunkActions` 會在檢視範圍內每項更改的右上方放置應用程式的操作，並獲告知該更改（`DiffHunk`：`index`、`oldStart`、`oldLines`、`newStart`、`newLines`（行從 0 起算），以及 `file`（修補檔中其檔案的索引））。它們會呼叫 ref：`revertHunk(index)` 將更改的舊行放回新文字，`acceptHunk(index)` 令其新行成為舊文字的內容。檢視會即時顯示結果，並以 `onChange({ change })`（`{ oldValue, newValue }`）回報兩段文字，應用程式再將它們設為 props。逐項保留或還原 AI 的編輯如下：
 
 ```tsx
 import { signal, Text, View } from "nsh";
@@ -205,40 +207,40 @@ function Proposal(props: { file: string; current: string; proposed: string; onAp
 }
 ```
 
-此處舊文字是檔案目前的內容:保留一項變更就是把它套用到檔案(`onApply`),還原則是把它從提案中移除。顯示 `patch` 的檢視顯示的是檔案的節錄,其變更維持原樣。
+這裡舊文字就是檔案現時的內容：保留更改即將其套用到檔案（`onApply`），還原則將其從建議中移除。顯示 `patch` 的檢視只顯示檔案的節錄，其更改保持不變。
 
 <a id="methods"></a>
 
 ## 方法
 
-`ref={diff}` 提供檢視的方法(`DiffViewRef`)。會回傳值的方法(`hunks()`、`stats()`)在 JS 中回傳該值的 `Promise`,因此要 `await` 它們:`const changes = await diff.hunks()`。若要顯示畫面上的計數,`onStatsChange` 會在計數變動時回報。若傳給方法的變更、分隔線或檔案不存在於 diff 中,則不會有任何變更,並記錄一則指出方法名稱與該值的警告。
+`ref={diff}` 提供檢視的方法（`DiffViewRef`）。回傳值的方法（`hunks()`、`stats()`）在 JS 中回傳其 `Promise`，因此須 `await`：`const changes = await diff.hunks()`。如需顯示於畫面的計數，`onStatsChange` 會在其變化時回報。若方法所收到的更改、分隔列或檔案在 diff 中不存在，則不會作出任何更改，並記錄一則警告，指出方法名稱和該值。
 
 | 方法 | 說明 |
 |---|---|
-| `hunks()` | `Promise<DiffHunk[]>`:依序列出各項變更。 |
-| `stats()` | `Promise<DiffStats>`:`{ added, deleted, hunks }`、新增與刪除的行數以及變更的數量。 |
-| `goToHunk(index)` | 將變更 `index` 捲動到可見範圍,其第一列位於頂端。 |
-| `revertHunk(index)` | 將變更 `index` 的舊行放回新文字,並回報兩段文字(`onChange`)。 |
-| `acceptHunk(index)` | 讓變更 `index` 的新行成為舊文字的內容,並回報兩段文字(`onChange`)。 |
-| `expand(gap, direction?, lines?)` | 顯示分隔線 `gap` 所隱藏的行:`"all"`(預設),或 `lines`(預設 20)`"up"` 或 `"down"`。 |
-| `expandAll()` | 顯示所有未變動的行。 |
-| `collapseAll()` | 再次摺疊未變動的行。 |
-| `nextHunk()` | `Promise<number \| null>`:將下一項變更捲動到頂端並回傳其索引(最後一項之後為第一項)。 |
-| `previousHunk()` | `Promise<number \| null>`:將上一項變更捲動到頂端並回傳其索引(第一項之前為最後一項)。 |
-| `currentHunk()` | `Promise<number \| null>`:最後跳轉到的變更(檢視停留在該處時),否則為檢視頂端的變更或可見範圍內的第一項變更。 |
-| `selectedLines()` | `Promise<DiffLineRange \| null>`:在行號上選取的行。 |
-| `setSelectedLines(range)` | 選取某一側的行(`null`:不選取),不觸發 `onLineSelectionChange`。 |
-| `selectedText()` | `Promise<string>`:所選行的文字。 |
-| `files()` | `Promise<DiffFile[]>`:patch 的各檔案,依序附上其計數(兩段文字時為空)。 |
-| `scrollToFile(path)` | 將位於 `path` 的檔案標頭捲動到頂端。 |
-| `collapseFile(path)` | 只顯示位於 `path` 的檔案標頭。 |
+| `hunks()` | `Promise<DiffHunk[]>`：按順序列出各項更改。 |
+| `stats()` | `Promise<DiffStats>`：`{ added, deleted, hunks }`、新增及刪除的行數，以及更改的數目。 |
+| `goToHunk(index)` | 將更改 `index` 捲動至檢視範圍內，其第一列置於頂部。 |
+| `revertHunk(index)` | 將更改 `index` 的舊行放回新文字，並回報兩段文字（`onChange`）。 |
+| `acceptHunk(index)` | 令更改 `index` 的新行成為舊文字的內容，並回報兩段文字（`onChange`）。 |
+| `expand(gap, direction?, lines?)` | 顯示分隔列 `gap` 所隱藏的行：`"all"`（預設），或 `lines`（預設 20）`"up"` 或 `"down"`。 |
+| `expandAll()` | 顯示所有未更改的行。 |
+| `collapseAll()` | 再次摺疊未更改的行。 |
+| `nextHunk()` | `Promise<number \| null>`：將下一項更改捲動至頂部並給出其索引（最後一項之後為第一項）。 |
+| `previousHunk()` | `Promise<number \| null>`：將上一項更改捲動至頂部並給出其索引（第一項之前為最後一項）。 |
+| `currentHunk()` | `Promise<number \| null>`：最後前往的更改（只要檢視停留在該處），否則為位於檢視頂部的更改，或檢視範圍內的第一項。 |
+| `selectedLines()` | `Promise<DiffLineRange \| null>`：在行號上選取的行。 |
+| `setSelectedLines(range)` | 選取某一側的行（`null`：無），不觸發 `onLineSelectionChange`。 |
+| `selectedText()` | `Promise<string>`：所選行的文字。 |
+| `files()` | `Promise<DiffFile[]>`：修補檔的檔案，按順序附帶其計數（兩段文字則無）。 |
+| `scrollToFile(path)` | 將位於 `path` 的檔案標題捲動至頂部。 |
+| `collapseFile(path)` | 只顯示位於 `path` 的檔案標題。 |
 | `expandFile(path)` | 再次顯示位於 `path` 的檔案的行。 |
-| `toggleFile(path)` | 摺疊位於 `path` 的檔案,若已摺疊則展開。 |
-| `hunkBounds()` | `Promise<DiffHunkBounds[]>`:每項變更在各列中的位置,依序([總覽尺規](#an-overview-ruler))。 |
-| `scrollOffset()` | `Promise<Point>`:各列已捲動的距離(`x` 為 0)。 |
-| `setScrollOffset(offset)` | 立即將各列捲動到 `offset.y`,最遠到其極限,如同滑塊跟隨拖曳它的指標。 |
+| `toggleFile(path)` | 摺疊位於 `path` 的檔案，已摺疊則展開。 |
+| `hunkBounds()` | `Promise<DiffHunkBounds[]>`：各項更改在各列中的位置，按順序（[總覽尺標](#an-overview-ruler)）。 |
+| `scrollOffset()` | `Promise<Point>`：各列已捲動的距離（`x` 為 0）。 |
+| `setScrollOffset(offset)` | 即時將各列捲動至 `offset.y`，直至其極限，如同滑塊跟隨拖曳它的指標。 |
 
-`nextHunk()` 與 `previousHunk()` 在檢視停留於其跳轉到的變更時,會從該變更繼續,否則從檢視頂端開始,因此靠近末尾、無法捲動到頂端的變更仍會被計入。下一項與上一項變更的按鈕,以及來自 `onStatsChange` 的計數:
+`nextHunk()` 和 `previousHunk()` 會從其前往的更改繼續（只要檢視停留在該處），否則從檢視頂部起計，因此接近末尾而無法捲動至頂部的更改仍會被計入。上一項和下一項更改按鈕，附有來自 `onStatsChange` 的計數：
 
 ```tsx
 let diff!: DiffViewRef;
@@ -256,11 +258,11 @@ const stats = signal<DiffStats>({ added: 0, deleted: 0, hunks: 0 });
 
 <a id="an-overview-ruler"></a>
 
-## 總覽尺規
+## 總覽尺標
 
-`onScroll({ offset, contentSize, size })` 回報各列的位置,所用的鍵與 [`Scroll`](./scroll.md) 相同:`offset.y`(已捲動的距離;各列垂直捲動,寬度與檢視相同,兩側則各自水平捲動:`offset.x` 為 0)、`contentSize`(所有列合計的大小),以及 `size`(可視區域的大小)。它在檢視完成版面配置後觸發一次,之後只要其中任何一項變動就再次觸發:各列捲動時、檢視調整大小時,以及各列高度改變時(其他文字、`layout`、`softWrap`、展開或摺疊檔案或分隔線、完成版面配置的註解)。`hunkBounds()` 給出每項變更在各列中的位置(`DiffHunkBounds`:`{ index, bounds }`、`bounds`,從其第一列的頂端到最後一列的底端,其下方附上註解,橫跨整個檢視),僅包含有顯示的變更:已摺疊檔案的變更沒有列。`onHunkBoundsChange({ hunkBounds })` 在檢視完成版面配置後給出相同的清單,之後每當變更移動或大小改變時再次給出,即使各列高度不變(一個變更行變成另一行):尺規應據此繪製標記,而不是在 `onScroll` 上讀取。`scrollOffset()` 讀取各列已捲動的距離,`setScrollOffset({ x, y })` 立即將各列捲動到 `y`,讓拖曳的滑塊在同一個影格內跟隨指標。
+`onScroll({ offset, contentSize, size })` 回報各列的位置，其鍵與 [`Scroll`](./scroll.md) 的相同：`offset.y`，各列已捲動多遠（各列垂直捲動，寬度與檢視相同，兩側各自橫向捲動：`offset.x` 為 0）、`contentSize`，所有列合計的大小，以及 `size`，即視口的大小。檢視完成版面配置後會觸發一次，其後只要其中之一改變便再觸發：各列捲動時、檢視調整大小時，以及各列高度改變時（其他文字、`layout`、`softWrap`、檔案或分隔列展開或摺疊、註解完成版面配置）。`hunkBounds()` 給出各項更改在各列中的位置（`DiffHunkBounds`：`{ index, bounds }`、`bounds`，由其第一列頂部至最後一列底部，其下為註解，橫跨整個檢視），只包括會顯示的更改：已摺疊檔案的更改沒有列。`onHunkBoundsChange({ hunkBounds })` 在檢視完成版面配置後給出同一列表，其後只要有更改移動或改變大小便再給出，即使各列高度不變（一行已更改的行變成另一行）：尺標據此繪製標記，而不是在 `onScroll` 上讀取。`scrollOffset()` 讀取各列已捲動的距離，`setScrollOffset({ x, y })` 即時將各列捲動至 `y`，使被拖曳的滑塊在同一幀內跟隨指標。
 
-它們合在一起,就能在檢視旁做出像程式碼編輯器那樣的總覽尺規:每項變更一個標記、覆蓋可見各列的滑塊,以及按下或拖曳即可捲動到該處。這裡的尺規與檢視等高:
+它們合起來便構成檢視旁的總覽尺標，如程式碼編輯器一樣：每項更改一個標記、檢視範圍內各列上的滑塊，以及按一下或拖曳即捲動至該處。這裡尺標與檢視等高：
 
 ```rust tabs
 use nsh_base::{DiffHunkBounds, DiffView, DiffViewApi, DiffViewEvent, diff_view, theme};
@@ -389,15 +391,15 @@ const follow = (pageY: number) => diff.setScrollOffset({ x: 0, y: (pageY - ruler
 </View>
 ```
 
-標記的 `index` 是該變更在 `hunks()` 中的索引,其 `oldLines` 與 `newLines` 可區分新增的變更(沒有舊行)與刪除的變更(沒有新行),用來為標記上色。
+標記的 `index` 是 `hunks()` 中該更改的，其 `oldLines` 和 `newLines` 可分辨新增更改（無舊行）與刪除更改（無新行），藉以為標記著色。
 
 <a id="review-comments"></a>
 
-## 審查留言
+## 審查評論
 
-行號可選取某一側的行:按一下選取一行,Shift 加按則將選取範圍延伸到該行,在行號上拖曳滑鼠則選取經過的行。`onLineSelectionChange` 將所選的行回報為 `range`(`DiffLineRange`:`{ side, start, end }`,行從 0 起算,未選取時為 `null`),按下行號時也會回報 `onLineNumberPress({ line })`(`{ side, line }`)。ref 可讀取選取範圍(`selectedLines()`、`selectedText()`)並加以設定。
+行號可選取某一側的行：按一下選取一行，Shift 加按一下將選取範圍延伸至該行，在行號上拖曳滑鼠則選取經過的行。`onLineSelectionChange` 將所選行回報為 `range`（`DiffLineRange`：`{ side, start, end }`，行從 0 起算，`null` 表示無），按一下行號時亦會回報 `onLineNumberPress({ line })`（`{ side, line }`）。ref 可讀取選取範圍（`selectedLines()`、`selectedText()`）並設定它。
 
-`annotations` 把應用程式的內容放在行的下方:每個 `{ id, side, line }` 由 `renderAnnotation` 繪製,橫跨其行所在的一側(統一模式時為整個檢視),高度依版面配置而定,並在其行顯示時才顯示。`renderAddAnnotation` 是應用程式用來新增留言的控制項,位於指標所在行以及最後一個選取行的邊欄右側;當其行屬於所選的行時,它會得到所選的行,否則得到該行。
+`annotations` 將應用程式的內容放在行之下：每個 `{ id, side, line }` 由 `renderAnnotation` 橫跨其行所在的一側繪製（統一檢視時為整個檢視），高度按其版面配置而定，並於其所屬行顯示時顯示。`renderAddAnnotation` 是應用程式用來新增評論的控制項，位於指標所在行及最後選取行的行號欄右側；當其行屬於所選行之一時，它會獲得所選的行，否則獲得該行。
 
 ```tsx
 type Comment = { id: string; side: "old" | "new"; line: number; text: string };
@@ -423,9 +425,9 @@ const drafting = signal<DiffLineRange | null>(null);
 ```
 <a id="styling-the-parts"></a>
 
-## 為各部位設定樣式
+## 為各部分設定樣式
 
-`class` 和 `style` 用來設定 view 外框的樣式。`classes` 依部位接受 Tailwind classes，`styles` 則依部位接受行內樣式；部位的 classes 會排在其自身預設樣式之後，因此優先於預設樣式，而該部位的 `styles` 又優先於其 classes。字型透過 `fontFamily`、`fontSize` 和 `lineHeight` 設定。
+`class` 和 `style` 設定視圖外框的樣式。`classes` 按部分接受 Tailwind classes，`styles` 則按部分接受內聯樣式；某個部分的 classes 排在其自身預設樣式之後，因此會優先生效，而其 `styles` 又會優先於其 classes。字型由 `fontFamily`、`fontSize` 和 `lineHeight` 設定。
 
 ```tsx
 <DiffView
@@ -445,59 +447,57 @@ const drafting = signal<DiffLineRange | null>(null);
 />
 ```
 
-| 部位 | 說明 | 預設值 |
+| 部分 | 說明 | 預設值 |
 |---|---|---|
 | `side` | 每一側（split）或單一欄（unified） | 兩側之間有一條 `border` 線 |
-| `gutter` | 一側的行號與指示符號 | |
+| `gutter` | 一側的行號和標記 | |
 | `lineNumber` | 每個行號 | 靠右對齊，`muted-foreground` |
 | `lineNumberAdded` | 新增行的行號，套用於 `lineNumber` 之後 | |
 | `lineNumberDeleted` | 刪除行的行號，套用於 `lineNumber` 之後 | |
-| `content` | 一側的文字，位於其 gutter 旁 | 文字前後各 8pt |
+| `content` | 一側的文字，位於其行號欄旁 | 文字前後各 8pt |
 | `line` | 一側的每一列 | |
-| `lineAdded` | 新增行的列，套用於 `line` 之後 | 綠色底色 |
-| `lineDeleted` | 刪除行的列，套用於 `line` 之後 | 紅色底色 |
-| `filler` | 分割列中，另一側沒有對應行時，旁邊的空白半邊 | 淡淡的 `muted` 填色 |
-| `wordAdded` | 新增行內被變更的字詞 | 較深的綠色 |
-| `wordDeleted` | 刪除行內被變更的字詞 | 較深的紅色 |
+| `lineAdded` | 新增行所在的列，套用於 `line` 之後 | 淡綠色底色 |
+| `lineDeleted` | 刪除行所在的列，套用於 `line` 之後 | 淡紅色底色 |
+| `filler` | split 列中的空白半邊，位於另一側所沒有的行旁 | 淡淡的 `muted` 填色 |
+| `wordAdded` | 新增行內被更改的字詞 | 較深的綠色 |
+| `wordDeleted` | 刪除行內被更改的字詞 | 較深的紅色 |
 | `indicatorAdded` | 新增行的色條（`"bars"`）或 `+`（`"classic"`） | 綠色，3pt 寬 |
 | `indicatorDeleted` | 刪除行的色條或 `−` | 紅色，3pt 寬 |
-| `separator` | 已收合行的分隔列，或 patch 的 hunk 標頭 | `⋯`，以及位於 `muted` 的行數 |
-| `hunkActions` | 針對某個變更的 app 動作所在的框 | 位於該變更的右上角 |
-| `lineSelected` | 覆蓋在該側已選取行的列上 | 主題的選取色（與 `Editor` 的選取範圍相同） |
-| `annotation` | 註解的框，位於其所屬行的下方 | 橫跨其所屬行的那一側 |
-| `addAnnotation` | 新增控制項的框，寬度為 gutter 的寬度、高度為一行 | 控制項位於其右側 |
-| `fileHeader` | patch 中某個檔案的標頭 | 路徑與數量位於 `secondary`，其下有一條 `border` 線 |
+| `separator` | 已收合行的分隔線，或 patch 的 hunk 標題 | `⋯`，以及位於 `muted` 上的數量 |
+| `hunkActions` | 應用程式對某項變更所提供操作的方框 | 位於變更的右上角 |
+| `lineSelected` | 覆蓋於所選行在其所屬一側的列上 | 主題的選取顏色（與 `Editor` 的選取範圍相同） |
+| `annotation` | 註解的方框，位於其所屬行之下 | 橫跨其所屬行所在的一側 |
+| `addAnnotation` | 新增控制項的方框，寬度與行號欄相同，高度為一行 | 控制項位於其右側 |
+| `fileHeader` | patch 中某個檔案的標題列 | 路徑和數量顯示於 `secondary`，下方有一條 `border` 線 |
 
-<a id="props"></a>
+## Props
 
-## 屬性
-
-| 屬性 | Rust | 型別 | 預設值 | 說明 |
+| Prop | Rust | 類型 | 預設值 | 說明 |
 |---|---|---|---|---|
 | `oldValue` | `.old_value(..)` | `string` | | 舊文字。 |
 | `newValue` | `.new_value(..)` | `string` | | 新文字。 |
-| `patch` | `.patch(..)` | `string` | | 一個或多個檔案的 unified diff，在未設定 `oldValue` 和 `newValue` 時顯示。 |
+| `patch` | `.patch(..)` | `string` | | 一個或多個檔案的 unified diff；在 `oldValue` 和 `newValue` 未設定時顯示。 |
 | `language` | `.language(..)` | `string` | 純文字（patch：各檔案自身的語言） | 語言的名稱、別名、副檔名或檔案名稱。 |
 | `layout` | `.layout(..)` | `"split" \| "unified"` | `"split"` | 並排顯示或單欄顯示。 |
-| `inline` | `.inline(..)` | `"wordAlt" \| "word" \| "char" \| "none"` | `"wordAlt"` | 變更行內要醒目標示的內容。 |
-| `indicators` | `.indicators(..)` | `"bars" \| "classic" \| "none"` | `"bars"` | 變更行在行號旁的標記方式。 |
-| `contextLines` | `.context_lines(..)` | `number` | `3` | 每個變更周圍顯示的未變更行。 |
-| `expandAll` | `.expand_all(..)` | `boolean` | `false` | 顯示所有未變更的行。 |
+| `inline` | `.inline(..)` | `"wordAlt" \| "word" \| "char" \| "none"` | `"wordAlt"` | 在已更改的行內要突出顯示的內容。 |
+| `indicators` | `.indicators(..)` | `"bars" \| "classic" \| "none"` | `"bars"` | 已更改的行在行號旁如何標記。 |
+| `contextLines` | `.context_lines(..)` | `number` | `3` | 每項變更周圍顯示的未更改行。 |
+| `expandAll` | `.expand_all(..)` | `boolean` | `false` | 顯示所有未更改的行。 |
 | `lineNumbers` | `.line_numbers(..)` | `boolean` | `true` | 行號。 |
-| `background` | `.background(..)` | `boolean` | `true` | 變更行是否套用底色。 |
+| `background` | `.background(..)` | `boolean` | `true` | 為已更改的行加上底色。 |
 | `fontFamily` | `.font_family(..)` | `string` | 主題的 `font-mono` | 文字的字型。 |
 | `fontSize` | `.font_size(..)` | `number` | `13` | 字型大小，單位為 point。 |
-| `lineHeight` | `.line_height(..)` | `number` | `20` | 每列的高度，單位為 point。 |
-| `renderSeparator` | `.render_separator(..)` | `(separator: DiffSeparator) => JSX.Element` | | 繪製已收合行的分隔列。 |
-| `renderHunkActions` | `.render_hunk_actions(..)` | `(hunk: DiffHunk) => JSX.Element` | | app 針對每個變更提供的動作。 |
-| `softWrap` | `.soft_wrap(..)` | `boolean` | `false` | 過長的行會依該側的寬度換行。 |
-| `annotations` | `.annotations(..)` | `DiffAnnotation[]` | `[]` | app 放在各行下方的內容：`{ id, side, line }`。 |
-| `renderAnnotation` | `.render_annotation(..)` | `(annotation: DiffAnnotation) => JSX.Element` | | 在所屬行的下方繪製註解。 |
-| `renderAddAnnotation` | `.render_add_annotation(..)` | `(range: DiffLineRange) => JSX.Element` | | app 提供的新增註解控制項，顯示在游標懸停的行以及最後一個被選取的行旁。 |
-| `renderFileHeader` | `.render_file_header(..)` | `(file: DiffFile) => JSX.Element` | | 繪製 patch 中每個檔案的標頭，高度為一列。 |
-| `classes` | `.classes(..)` | `DiffViewClasses` | `{}` | 依部位指定的 Tailwind classes。 |
-| `styles` | `.styles(..)` | `DiffViewStyles` | `{}` | 依部位指定的行內樣式，優先於 classes。 |
-| `class`、`style` | style methods | `string`、`StyleProp<ViewStyle>` | | view 的外框。 |
+| `lineHeight` | `.line_height(..)` | `number` | `20` | 每一列的高度，單位為 point。 |
+| `renderSeparator` | `.render_separator(..)` | `(separator: DiffSeparator) => JSX.Element` | | 繪製已收合行的分隔線。 |
+| `renderHunkActions` | `.render_hunk_actions(..)` | `(hunk: DiffHunk) => JSX.Element` | | 應用程式對每項變更所提供的操作。 |
+| `softWrap` | `.soft_wrap(..)` | `boolean` | `false` | 長行會按該側的寬度換行。 |
+| `annotations` | `.annotations(..)` | `DiffAnnotation[]` | `[]` | 應用程式在行下方的內容：`{ id, side, line }`。 |
+| `renderAnnotation` | `.render_annotation(..)` | `(annotation: DiffAnnotation) => JSX.Element` | | 在行下方繪製註解。 |
+| `renderAddAnnotation` | `.render_add_annotation(..)` | `(range: DiffLineRange) => JSX.Element` | | 應用程式用來新增註解的控制項，顯示在滑鼠懸停的行和最後選取的行旁。 |
+| `renderFileHeader` | `.render_file_header(..)` | `(file: DiffFile) => JSX.Element` | | 繪製 patch 中每個檔案的標題列，高度為一列。 |
+| `classes` | `.classes(..)` | `DiffViewClasses` | `{}` | 按部分設定的 Tailwind classes。 |
+| `styles` | `.styles(..)` | `DiffViewStyles` | `{}` | 按部分設定的內聯樣式，優先於 classes。 |
+| `class`、`style` | 樣式方法 | `string`、`StyleProp<ViewStyle>` | | 視圖的外框。 |
 
 <a id="events"></a>
 
@@ -505,18 +505,18 @@ const drafting = signal<DiffLineRange | null>(null);
 
 | 事件 | Rust | 說明 |
 |---|---|---|
-| `onChange` | `.on_change(\|change: &DiffChange\| ..)` | 某個變更已被保留或還原：`{ change }`，目前的文字（`{ oldValue, newValue }`）。 |
-| `onLineNumberPress` | `.on_line_number_press(\|line: &DiffLine\| ..)` | 按下了某個行號：`{ line }`，為 `{ side, line }`。 |
-| `onLineSelectionChange` | `.on_line_selection_change(\|range: &Option<DiffLineRange>\| ..)` | 選取的行已變更：`{ range }`，為 `{ side, start, end }` 或 `null`。 |
-| `onStatsChange` | `.on_stats_change(\|stats: &DiffStats\| ..)` | 計數已變更：`{ stats }`，為 `{ added, deleted, hunks }`。view 建立時會觸發一次，之後每當文字經 diff 得到不同的計數時會再次觸發，可用來顯示「+8 −8 · 5 changes」這類的一行文字。 |
-| `onFileToggle` | `.on_file_toggle(\|file: &DiffFile\| ..)` | patch 中的某個檔案已被收合或展開（透過其標頭或 ref）：`{ file }`，目前的 `DiffFile`。 |
-| `onScroll` | `.on_scroll(\|e: &DiffViewEvent\| ..)` | 列已捲動，或列或 viewport 的大小已變更：`{ offset, contentSize, size }`，與 `Scroll` 的相同（Rust 中為 `DiffViewEvent::Scroll(offset, content_size, size)`）。view 完成版面配置後會觸發一次，之後其中任一項變更時會再次觸發。 |
-| `onHunkBoundsChange` | `.on_hunk_bounds_change(\|bounds: &Vec<DiffHunkBounds>\| ..)` | 變更在各列中的位置已改變：`{ hunkBounds }`，即 `hunkBounds()` 所給的清單。view 完成版面配置後會觸發一次，之後每當某個變更移動或改變大小時會再次觸發（無論列高是否維持不變），可用於繪製概覽標尺的標記。 |
+| `onChange` | `.on_change(\|change: &DiffChange\| ..)` | 某項變更已被保留或還原：`{ change }`，目前的文字（`{ oldValue, newValue }`）。 |
+| `onLineNumberPress` | `.on_line_number_press(\|line: &DiffLine\| ..)` | 按下了某個行號：`{ line }`，一個 `{ side, line }`。 |
+| `onLineSelectionChange` | `.on_line_selection_change(\|range: &Option<DiffLineRange>\| ..)` | 所選的行已改變：`{ range }`，一個 `{ side, start, end }` 或 `null`。 |
+| `onStatsChange` | `.on_stats_change(\|stats: &DiffStats\| ..)` | 數量已改變：`{ stats }`，一個 `{ added, deleted, hunks }`。視圖建立時會觸發一次，之後每當文字被重新比對而得出不同數量時再次觸發，可用於顯示「+8 −8 · 5 changes」這類文字行。 |
+| `onFileToggle` | `.on_file_toggle(\|file: &DiffFile\| ..)` | patch 中的某個檔案已被收合或展開（透過其標題列或 ref）：`{ file }`，目前的 `DiffFile`。 |
+| `onScroll` | `.on_scroll(\|e: &DiffViewEvent\| ..)` | 列已捲動，或列或視口的大小已改變：`{ offset, contentSize, size }`，格式與 `Scroll` 相同（Rust 中為 `DiffViewEvent::Scroll(offset, content_size, size)`）。視圖完成佈局後會觸發一次，之後每當其中之一改變時再次觸發。 |
+| `onHunkBoundsChange` | `.on_hunk_bounds_change(\|bounds: &Vec<DiffHunkBounds>\| ..)` | 各項變更在列中的位置已改變：`{ hunkBounds }`，即清單 `hunkBounds()` 所提供的內容。視圖完成佈局後會觸發一次，之後每當某項變更移動或改變大小時再次觸發（無論列的高度是否維持不變），可用於繪製概覽標尺的標記。 |
 
 <a id="related"></a>
 
 ## 相關內容
 
-- [Editor](./editor.md)：程式碼編輯器，`DiffView` 使用它的語法色彩與語言。
-- [TextView](./text-view.md)：Markdown 與 HTML 文件，適用於審查內容周圍的文字。
+- [Editor](./editor.md)：`DiffView` 所使用語法顏色和語言的來源程式碼編輯器。
+- [TextView](./text-view.md)：Markdown 和 HTML 文件，適用於審閱內容周圍的文字。
 - [`nsh/base`](../modules/nsh-base.md)：其他基礎元件。

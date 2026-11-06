@@ -1,14 +1,16 @@
 ---
 title: "Canvas"
-description: "Canvas 元素:使用 2D context 進行自訂繪圖,並以原生方式重播。"
+description: "Canvas 元素:透過 2D context 進行自訂繪圖,並以原生方式重播。"
 order: 60
 group: primitives
 demo: el-canvas
+source_hash: db2829bf8681ec52
 ---
+
 
 # Canvas
 
-Canvas 是一種由你自行使用 2D 繪圖 API(即 HTML Canvas 2D API)繪製的 view:圖表、儀表、圓環、簽名、自訂形狀。繪圖程式碼只負責記錄操作,平台再以螢幕解析度原生重播這些操作(在 iOS 與 Mac Catalyst 上使用 Core Graphics,在 Android 上使用 `android.graphics.Canvas`)。Rust 以 `canvas(painter)`(一個記錄繪圖內容的 `Painter`)建立;TSX 則使用來自 `nsh` 的 `<Canvas>` 及其 `draw` 函式。
+一個 canvas 是由你以 2D 繪圖 API(即 HTML Canvas 2D API)親自繪製內容的視圖,適用於圖表、儀表、環形圖、簽名和自訂形狀。繪圖程式碼會記錄各項操作,再由平台以原生方式按螢幕解析度重播(iOS 和 Mac Catalyst 使用 Core Graphics,Android 使用 `android.graphics.Canvas`)。Rust 以 `canvas(painter)` 建立 canvas,它是記錄繪圖內容的 `Painter`;TSX 則使用 `nsh` 的 `<Canvas>` 及其 `draw` 函式。
 
 ```rust tabs
 use std::f32::consts::{FRAC_PI_2, TAU};
@@ -62,23 +64,23 @@ function Ring(props: { progress: number }) {
 mount(() => <Ring progress={0.7} />);
 ```
 
-在 TSX 中,`Canvas` 會建立原生 canvas view、量測其大小,並以 context 與 canvas 的尺寸執行你的 `draw` 函式(請參閱 [Canvas API](../modules/nsh-canvas.md))。在 Rust 中,`canvas(..)` 接受一個 `Painter`,或是回傳該物件的閉包:當閉包所讀取的內容改變時,它會重新繪製;若繪圖內容取決於尺寸,則尺寸來自 `on_layout`。
+在 TSX 中,`Canvas` 會建立原生 canvas 視圖、量度其大小,並以 context 和 canvas 的尺寸執行你的 `draw` 函式(參閱 [Canvas API](../modules/nsh-canvas.md))。在 Rust 中,`canvas(..)` 接受一個 `Painter`,或一個回傳它的閉包:當閉包讀取的內容改變時,它會重新繪製;若繪圖內容取決於尺寸,則尺寸來自 `on_layout`。
 
 ## Props
 
-Canvas 接受 [view](./view.md) 的 props(樣式、按壓與手勢 props、`onLayout`、無障礙、`ref` 等),另外還有:
+Canvas 接受[視圖](./view.md)的 props(樣式、按壓和手勢 props、`onLayout`、無障礙、`ref` 等),另外還有:
 
-| Prop | Rust | Type | Description |
+| Prop | Rust | 類型 | 說明 |
 |---|---|---|---|
-| `draw` | `canvas(painter)` | `(cx: CanvasRenderingContext2D, size: { width: number; height: number }) => void` | 繪製 canvas。在尺寸確定後執行,canvas 調整大小時再次執行,其所讀取的 signal 改變時也會再次執行。 |
+| `draw` | `canvas(painter)` | `(cx: CanvasRenderingContext2D, size: { width: number; height: number }) => void` | 繪製 canvas。在尺寸確定後執行一次,canvas 改變大小時再執行,而它所讀取的 signal 改變時亦會再執行。 |
 
-請透過樣式(width / height、`flex`、長寬比)指定 canvas 的大小:其尺寸即為樣式所給定的尺寸。
+請透過樣式為 canvas 指定尺寸(寬度/高度、`flex`、長寬比):其尺寸以樣式所指定的為準。
 
 <a id="when-it-redraws"></a>
 
-## 重新繪製的時機
+## 重繪時機
 
-繪圖過程的追蹤方式與 effect 相同:在其中讀取 signal,就會讓繪圖訂閱該 signal。
+繪圖過程會像 effect 一樣被追蹤:在其中讀取 signal,便會讓繪圖訂閱該 signal。
 
 ```rust tabs
 let values = signal(vec![12.0_f32, 40.0, 28.0, 64.0]);
@@ -110,7 +112,7 @@ const values = signal([12, 40, 28, 64]);
 />;
 ```
 
-數字與顏色也可以是[原生動畫值](../modules/nsh.md#animation)(`CanvasNumber`、`CanvasPaint`;在 Rust 中,凡是可放入數字之處都可使用 `&AnimatedValue`):此時平台會在這些值產生動畫的期間自行重新繪製,應用程式的程式碼不需要為每一幀做任何處理。
+數字和顏色亦可以是[原生動畫值](../modules/nsh.md#animation)(`CanvasNumber`、`CanvasPaint`;在 Rust 中,凡是可放數字的地方都可放 `&AnimatedValue`):此時平台會在它們播放動畫期間自行重繪,應用程式的程式碼無需逐格處理。
 
 ```rust tabs
 use std::f32::consts::TAU;
@@ -150,20 +152,20 @@ Animated.timing(angle, { toValue: Math.PI * 2, duration: 1000 }).start();
 
 ## Context
 
-`CanvasRenderingContext2D` 是瀏覽器版本的子集,而 `Painter` 以 snake case 的方法提供相同的操作(`move_to`、`line_to`、`fill_rect`、`fill_text`、`stroke_color` 等):狀態堆疊(`save`、`restore`)、變換、路徑(`moveTo`、`lineTo`、`arc`、`arcTo`、`ellipse`、`rect`、`roundRect`、Bézier 曲線)、`fill` / `stroke` / `clip`(也可用於 `Path2D`,它接受 SVG 路徑資料;在 Rust 中為 `fill_svg` / `stroke_svg`)、矩形、文字(`fillText`、`strokeText`、`measureText`)、線性 / 放射狀 / 圓錐漸層、虛線、陰影、`globalAlpha`、`globalCompositeOperation` 與 `drawImage`(以 URL 或資源載入圖片)。所有成員皆列於 [Canvas API 參考文件](../modules/nsh-canvas.md);[canvas 指南](../docs/canvas.md)則會逐步說明如何繪製圖表與動畫圖形。
+`CanvasRenderingContext2D` 是瀏覽器版本的子集,而 `Painter` 則以 snake case 的方法提供相同的操作(`move_to`、`line_to`、`fill_rect`、`fill_text`、`stroke_color` 等):狀態堆疊(`save`、`restore`)、變換、路徑(`moveTo`、`lineTo`、`arc`、`arcTo`、`ellipse`、`rect`、`roundRect`、Bézier 曲線)、`fill` / `stroke` / `clip`(亦適用於 `Path2D`,它接受 SVG 路徑資料;在 Rust 中為 `fill_svg` / `stroke_svg`)、矩形、文字(`fillText`、`strokeText`、`measureText`)、線性 / 放射 / 錐形漸層、虛線、陰影、`globalAlpha`、`globalCompositeOperation` 及 `drawImage`(以 URL 或資源載入圖片)。所有成員均列於 [Canvas API 參考](../modules/nsh-canvas.md);[canvas 指南](../docs/canvas.md)會逐步介紹如何繪製圖表和動畫圖形。
 
-座標以 point 為單位,原點位於左上角。`measureText` 為同步執行,並回傳 `width`。Rust 的 `Painter` 也能回應命中測試(`is_point_in_path`、`is_point_in_stroke`)。
+座標以點(point)為單位,原點位於左上角。`measureText` 是同步的,並會回傳 `width`。Rust 的 `Painter` 亦可回應點擊測試(`is_point_in_path`、`is_point_in_stroke`)。
 
-Context 繪製的是向量操作與圖片:像素存取(`getImageData` / `putImageData`)、`filter` 與 SVG 圖片不在其支援範圍內。
+Context 繪製向量操作和圖片:像素存取(`getImageData` / `putImageData`)、`filter` 及 SVG 圖片不在其支援範圍內。
 
 <a id="events"></a>
 
 ## 事件
 
-[view 事件](./view.md#events):`onPress`、`onLayout`、手勢與觸控。若要處理相對於繪圖區域的點按,請在 `onTouchEnd` 中讀取 `locationX` / `locationY`,或使用 `onResponderMove` 追蹤拖曳(Rust 中為 `.on_responder_move(..)`,搭配 `e.location`)。
+[視圖事件](./view.md#events):`onPress`、`onLayout`、手勢和觸控。若要處理相對於繪圖區域的點按,請在 `onTouchEnd` 中讀取 `locationX` / `locationY`,或以 `onResponderMove` 追蹤拖曳(在 Rust 中為 `.on_responder_move(..)`,搭配 `e.location`)。
 
 <a id="ref-methods"></a>
 
 ## Ref 方法
 
-無自有的方法。
+沒有專屬的方法。

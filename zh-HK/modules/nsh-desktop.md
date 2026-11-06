@@ -1,12 +1,14 @@
 ---
 title: "nsh/desktop"
-description: "僅限桌面平台的 API：視窗（標題、標題列、最大化、全螢幕）、應用程式自訂的標題列與可拖曳區域、應用程式選單、右鍵選單，以及鍵盤快速鍵。"
+description: "僅限桌面平台的 API:視窗(標題、標題列、最大化、全螢幕)、應用程式自訂標題列與可拖曳區域、應用程式選單、右鍵選單及鍵盤快速鍵。"
 order: 12.5
+source_hash: 460c34aa14353d38
 ---
+
 
 # nsh/desktop
 
-`nsh/desktop` 收錄只有桌面平台才有的功能：視窗與其標題列、應用程式選單和右鍵選單，可在 macOS、Windows 和 Linux 上運作。Rust 程式碼可在 `nsh_core::element::desktop` 找到相同的內容：視窗的函式（`set_title`、`set_title_bar`、`title_bar`、`minimize`、… `close_window`）、應用程式選單與右鍵選單（`set_application_menu`、`popup_menu`，由多個 `MenuItem` 組成），並以 `.window_drag(true)` 標記可拖曳的 view；TSX 則匯入 `nsh/desktop`。此模組可在所有平台上匯入，因此同一個 bundle 可以到處執行：在 iOS 和 Android 上，它的函式不會執行任何動作，而 `isAvailable` 會告訴你視窗與選單是否可用。
+`nsh/desktop` 收納只有桌面才有的功能：視窗及其標題列、應用程式選單和右鍵選單。它適用於 macOS、Windows 和 Linux。Rust 程式碼可在 `nsh_core::element::desktop` 找到同樣的功能：視窗的函式（`set_title`、`set_title_bar`、`title_bar`、`minimize`、… `close_window`）、應用程式選單和右鍵選單（`set_application_menu`、`popup_menu`，由 `MenuItem` 組成），並以 `.window_drag(true)` 標記可拖曳的檢視；TSX 則匯入 `nsh/desktop`。此模組可在所有平台匯入，因此同一個 bundle 可到處執行：在 iOS 和 Android 上，其函式不會有任何作用，而 `isAvailable` 會告訴你視窗和選單是否存在。
 
 ```rust tabs
 use nsh_core::{
@@ -28,9 +30,9 @@ import { isAvailable, Menu, titleBar, Window } from "nsh/desktop";
 const isAvailable: boolean;
 ```
 
-`true` 表示此模組的視窗與選單 API 可運作的環境：macOS、Windows 和 Linux；其他環境則為 `false`。Rust：`os().is_desktop()`。
+`true` 表示此模組的視窗和選單 API 可用的平台：macOS、Windows 和 Linux；其他平台則為 `false`。Rust：`os().is_desktop()`。
 
-[`platform.desktop`](./nsh.md#platform) 是針對桌面行為（`desktop={{…}}` props、`platform.select({ desktop })`）更廣泛的檢查：在以桌面慣例執行、位於瀏覽器自身視窗中的瀏覽器裡，它同樣成立。請以 `platform.desktop` 判斷桌面版面配置、密度與輸入方式，並以 `isAvailable` 判斷是否呼叫 `Window` 和 `Menu`。
+[`platform.desktop`](./nsh.md#platform) 是針對桌面行為更廣泛的檢查（`desktop={{…}}` 屬性、`platform.select({ desktop })`）：在以桌面慣用方式執行的瀏覽器中（它們在瀏覽器自己的視窗內運行）同樣成立。桌面版面配置、密度和輸入應以 `platform.desktop` 作判斷，而 `Window` 和 `Menu` 的呼叫則以 `isAvailable` 作判斷。
 
 <a id="window"></a>
 
@@ -55,30 +57,30 @@ const Window: {
 };
 ```
 
-Rust 欄位列出 `nsh_core::element::desktop` 的函式。
+Rust 欄列出 `nsh_core::element::desktop` 的函式。
 
 | 成員 | Rust | 說明 |
 |---|---|---|
-| `setTitle(title)` | `set_title(title)` | 視窗的標題：顯示於標題列、工作列或 Dock、視窗切換器。 |
-| `setTitleBar({ style, height? })` | `set_title_bar(TitleBarStyle::Hidden, Some(px(height)))` | `style: "hidden"` 會移除系統的標題列：app 會填滿視窗直到頂端邊緣，並自行繪製標題列。系統的視窗控制項仍會保留（macOS 的紅綠燈按鈕、Windows 的最小化／最大化／關閉按鈕、GTK 的視窗按鈕）。`height` 是你的標題列高度，單位為 point：控制項會在其中置中（Windows 的標題按鈕會填滿該高度；在 macOS 上，`height` 會在 44 point 以下選用精簡樣式，超過則選用標準樣式；請使用 `titleBar().height` 提供的實際高度來設計你的標題列，而紅綠燈按鈕會由 AppKit 在即時調整大小時定位。嵌入式 app 既有的工具列會保留自己的樣式與高度）；未設定時則採用平台的高度。`style: "default"` 會恢復系統的標題列（Rust：`set_title_bar(TitleBarStyle::Default, None)`）。 |
-| `setMenuBar(mode)` | `set_menu_bar_visibility(mode)` | 在 Windows 和 Linux 的 GPUI app 中，視窗會將應用程式選單繪製成 app 上方的選單列：`"shown"`（預設）會一律顯示；`"autoHide"` 則在單獨按下並放開 Alt 後顯示，直到再次單獨按下 Alt 才隱藏，與 Windows 和 GNOME 的 app 相同。無論哪種設定，F10 以及 Alt 加上選單的首字母都會開啟選單，且選單開啟期間選單列會顯示。macOS 的選單列由系統管理。 |
-| `minimize()` | `minimize()` | 將視窗最小化。 |
-| `toggleMaximize()` | `toggle_maximize()` | 將視窗最大化；若已最大化則還原。 |
+| `setTitle(title)` | `set_title(title)` | 視窗的標題：標題列、工作列或 Dock，以及視窗切換器。 |
+| `setTitleBar({ style, height? })` | `set_title_bar(TitleBarStyle::Hidden, Some(px(height)))` | `style: "hidden"` 會移除系統的標題列：應用程式會填滿視窗直至頂端，並自行繪製標題列。系統的視窗控制項會保留（macOS 的紅綠燈按鈕、Windows 的最小化／最大化／關閉按鈕、GTK 的視窗按鈕）。`height` 是你的標題列高度（以點為單位）：控制項會在其中置中（Windows 的標題按鈕會填滿該高度；在 macOS 上，`height` 選用最高 44 點的精簡外觀，超過則為標準外觀；請使用 `titleBar().height` 提供的實際高度來設定標題列大小，而 AppKit 會在即時調整大小期間放置紅綠燈按鈕。嵌入式應用程式既有的工具列會保留自己的樣式和高度）；若不設定，則採用平台的高度。`style: "default"` 會恢復系統的標題列（Rust：`set_title_bar(TitleBarStyle::Default, None)`）。 |
+| `setMenuBar(mode)` | `set_menu_bar_visibility(mode)` | 在 Windows 和 Linux 的 GPUI 應用程式中，視窗會把應用程式選單繪製為應用程式上方的選單列：`"shown"`（預設）一律顯示；`"autoHide"` 在單獨按下並放開 Alt 後顯示，直到再次單獨按 Alt 才隱藏，與 Windows 和 GNOME 應用程式相同。無論哪種方式，F10 以及 Alt 加選單的首字母都會開啟選單，選單開啟期間選單列會顯示。macOS 的選單列由系統提供。 |
+| `minimize()` | `minimize()` | 最小化視窗。 |
+| `toggleMaximize()` | `toggle_maximize()` | 最大化視窗；若已最大化則還原。 |
 | `toggleFullScreen()` | `toggle_full_screen()` | 進入或離開全螢幕。 |
-| `setFrame(frame)` | `set_frame(WindowFrame { .. })` | 以 point 為單位移動視窗並調整大小；省略的欄位會保留原值。在 macOS 和 Windows 上，`size`（`width`、`height`）包含視窗裝飾；在 Linux 上則設定 GTK 的預設視窗大小。`origin`（`x`、`y`）是視窗的左上角，從主螢幕（在 macOS 上為有選單列的螢幕）的左上角起算，`y` 向下增加，各平台皆相同；只有 `height` 而沒有 `y` 時，上邊緣會維持原位，因此視窗會從底部邊緣放大或縮小。`animated: true` 會啟用 macOS 的調整大小動畫（預設：false）。 |
-| `setLevel(level)` | `set_level(level)` | 在 macOS 和 Windows 上，`"floating"` 會讓視窗保持在一般視窗之上，`"normal"` 則恢復一般層級。`"desktopIcon"` 會選用 macOS 的桌面圖示層級（視窗也會出現在每個空間，但不會出現在 Mission Control 和 Cmd+` 中）；在 Windows 上，它會將視窗移到目前 z 順序的最底部，之後的啟用動作可能會將它拉高。 |
-| `orderFront()` | `order_front()` | 將視窗帶到其層級的最前方並取得焦點（app 會啟用；macOS 會取消最小化，Windows 會還原最小化的視窗並設為前景，GTK 會呈現視窗）。視窗會保持原本的層級。在 macOS 上，桌面層級的表面仍會位於其他視窗之後。GPUI 會啟用它的視窗；在 Linux 上，前景請求由視窗管理員控制。 |
-| `close()` | `close_window()` | 關閉視窗；app 會隨之結束。 |
+| `setFrame(frame)` | `set_frame(WindowFrame { .. })` | 以點為單位移動視窗並調整大小；省略的欄位保持原值。在 macOS 和 Windows 上，`size`（`width`、`height`）包含視窗裝飾；在 Linux 上則設定 GTK 的預設視窗大小。`origin`（`x`、`y`）是視窗的左上角，從主螢幕（在 macOS 上是有選單列的那個）的左上角量度，`y` 向下遞增，各平台相同；只有 `height` 而沒有 `y` 時，頂邊維持不變，因此視窗會在底邊放大和縮小。`animated: true` 啟用 macOS 的調整大小動畫（預設：false）。 |
+| `setLevel(level)` | `set_level(level)` | 在 macOS 和 Windows 上，`"floating"` 讓視窗保持在一般視窗之上，`"normal"` 則恢復一般層級。`"desktopIcon"` 選用 macOS 的桌面圖示層級（視窗也會出現在每個空間，且不在 Mission Control 和 Cmd+` 之中）；在 Windows 上，它會把視窗移到目前 z-order 的底部，之後的啟用操作可能會將其提升。 |
+| `orderFront()` | `order_front()` | 將視窗帶到其層級的最前並取得焦點（應用程式會啟用；macOS 會還原最小化的視窗，Windows 會還原最小化的視窗並設為前景，GTK 會呈現視窗）。視窗保持其層級。在 macOS 上，桌面層級的介面會留在其他視窗之後。GPUI 會啟用其視窗；在 Linux 上，前景請求由視窗管理員控制。 |
+| `close()` | `close_window()` | 關閉視窗；應用程式隨之結束。 |
 
-視窗大小調整支援 macOS、Windows 和 Linux；定位與層級則支援 macOS 和 Windows。Linux 的視窗管理員控制位置與堆疊順序。在 GPUI app 中，`setFrame` 會設定視窗大小並由平台決定位置；GPUI 的 host 會在開啟視窗時選擇其位置與層級。
+視窗大小調整支援 macOS、Windows 和 Linux；定位和層級則支援 macOS 和 Windows。Linux 的視窗管理員控制位置和堆疊。在 GPUI 應用程式中，`setFrame` 設定視窗大小，由平台決定位置；GPUI 的宿主會在開啟視窗時選擇其位置和層級。
 
-依據以 `onLayout` 量測的內容來調整視窗大小時，請在 macOS 和 Windows 上為視窗裝飾預留空間。`width` 和 `height` 接受有限的正數；`x` 和 `y` 接受有限的數字。無效的欄位會保留先前的值。
+當根據以 `onLayout` 量度的內容來決定視窗大小時，請在 macOS 和 Windows 上為視窗裝飾預留空間。`width` 和 `height` 接受正的有限數字；`x` 和 `y` 接受有限數字。無效的欄位會保留先前的值。
 
 <a id="a-title-bar-of-your-own"></a>
 
 ## 自訂標題列
 
-隱藏標題列後，app 會自行繪製標題列，並透過 Rust 中的 `.window_drag(true)` 與 TSX 中的 `desktop={{ windowDrag: true }}` 指定其中哪些部分可以移動視窗：
+隱藏標題列後，應用程式會自行繪製標題列，並以 Rust 的 `.window_drag(true)` 和 TSX 的 `desktop={{ windowDrag: true }}` 指明其中哪些部分可移動視窗：
 
 ```rust tabs
 use nsh_core::{
@@ -132,11 +134,11 @@ function TitleBar() {
 }
 ```
 
-按下設有 `windowDrag` 的 view 會像系統的標題列一樣拖曳視窗：按兩下會將視窗最大化（或依使用者的設定執行，在 macOS 上為「按兩下視窗的標題列以」），而在 Windows 和 Linux 上，按右鍵會開啟視窗選單。
+按下設有 `windowDrag` 的檢視會像系統標題列一樣拖曳視窗：按兩下會最大化視窗（或依使用者的設定：在 macOS 上為「按兩下視窗的標題列以」），而在 Windows 和 Linux 上按右鍵會開啟視窗選單。
 
-- 由最近的、設定了 `windowDrag` 的 view 決定：`.window_drag(false)`（`desktop={{ windowDrag: false }}`）可讓可拖曳 view 中的某個部分保持可點擊。
-- 可拖曳 view 內的文字欄位以及帶有按下或觸控處理常式（`onPress`、`onTouch*`、responder）的 view，即使沒有它也能保持可點擊：上例中的搜尋欄位和所有按鈕都能照常運作。
-- `windowDrag` 也適用於系統的標題列：側邊欄或工具列同樣可以用來移動視窗。
+- 設定 `windowDrag` 的最近一層檢視具決定性：`.window_drag(false)`（`desktop={{ windowDrag: false }}`）可讓可拖曳檢視的一部分保持可點按。
+- 可拖曳檢視內的文字欄位，以及設有按壓或觸控處理器（`onPress`、`onTouch*`、responders）的檢視，無需額外設定也保持可點按：上例中的搜尋欄位和任何按鈕都照常運作。
+- `windowDrag` 也適用於系統的標題列：側邊欄或工具列同樣可以移動視窗。
 
 ### titleBar
 
@@ -144,15 +146,15 @@ function TitleBar() {
 const titleBar: Accessor<{ height: number; left: number; right: number }>;
 ```
 
-隱藏標題列的區域，單位為 point（reactive）：包含它的 `height`，以及系統視窗控制項在其 `left` 與 `right` 兩端所佔的寬度。請依此配置你的標題列，避免內容位於控制項之下。當系統顯示其標題列時（以及在全螢幕和非桌面環境中），這三個值皆為 0。Rust：`title_bar() -> Edges<Points>`，其中 `top` 為高度，`left` 和 `right` 為控制項的寬度；讀取它會訂閱其變更。
+隱藏標題列的區域（以點為單位，具反應性）：其 `height`，以及系統視窗控制項在其 `left` 和 `right` 兩端所佔的寬度。請用它來排版你的標題列，避免任何內容位於控制項之下。系統顯示標題列時（以及全螢幕時和非桌面平台上），三者皆為 0。Rust：`title_bar() -> Edges<Points>`，其 `top` 為高度，`left` 和 `right` 為控制項的寬度；讀取它會訂閱變更。
 
 | | `height` | `left` | `right` |
 |---|---|---|---|
 | macOS | `height`，否則為標題列的高度（28 或 32，視 macOS 版本而定） | 紅綠燈按鈕的寬度 | 0 |
 | Windows | `height`，否則為 32 | 0 | 三個標題按鈕（138） |
-| Linux | `height`，否則為標頭列的高度 | 起始端的視窗按鈕（依桌面環境的按鈕配置） | 結尾端的視窗按鈕 |
+| Linux | `height`，否則為標頭列（header bar）的高度 | 開頭處的視窗按鈕（依桌面的按鈕配置） | 末端的視窗按鈕 |
 
-在 Windows 上，標題按鈕由 NSH 以 Windows 11 的樣式繪製並跟隨 app 的外觀；將滑鼠移到最大化按鈕上會顯示 Windows 11 的貼齊版面配置。在每個平台上，視窗都會保留其調整大小的邊框、陰影和圓角。
+在 Windows 上，標題按鈕由 NSH 以 Windows 11 的風格繪製，並跟隨應用程式的外觀；游標停留在最大化按鈕上會顯示 Windows 11 的貼齊版面配置（snap layouts）。視窗在所有平台上都保留縮放邊框、陰影和圓角。
 
 <a id="menu"></a>
 
@@ -167,12 +169,12 @@ const Menu: {
 
 | 成員 | 說明 |
 |---|---|
-| `setApplicationMenu(items)` | 設定應用程式選單：每個頂層項目對應一個子選單（`File`、`Edit`、...）。在 macOS 上它是選單列，第一個選單為 app 選單（AppKit 會以 app 的名稱作為其標題）。在 Windows 和 Linux 上它是視窗的選單列，隱藏標題列時不會顯示；其快速鍵仍可運作，而 app 自訂的標題列可以用 `Menu.popup` 開啟它的選單。`null` 會恢復平台的預設選單。 |
-| `popup(items, at?)` | 顯示右鍵選單，其左上角位於 `at`（視窗座標，單位為 point：例如 `onContextMenu` 的 `e.pagePosition`），或位於指標處。此 promise 會在選單關閉後 resolve，無論是否選擇了項目：開啟選單的按鈕可以在此之前保持按下狀態。 |
+| `setApplicationMenu(items)` | 設定應用程式選單：每個頂層項目對應一個子選單（`File`、`Edit`……）。在 macOS 上它是選單列，第一個選單是應用程式選單（AppKit 以應用程式名稱作標題）。在 Windows 和 Linux 上它是視窗的選單列，標題列隱藏時不會顯示；其快速鍵仍然有效，而應用程式自己的標題列可用 `Menu.popup` 開啟其選單。`null` 會恢復平台的預設選單。 |
+| `popup(items, at?)` | 顯示右鍵選單，其左上角位於 `at`（視窗座標，以點為單位：即 `onContextMenu` 的 `e.pagePosition`）或指標位置。選單關閉後 promise 才會完成，不論是否選了項目：開啟選單的按鈕在此之前可保持按下狀態。 |
 
-在 Rust 中，`set_application_menu(items)` 接受 `Vec<MenuItem>`（`None` 會恢復平台的預設選單），而 `popup_menu(items)`（位於指標處）和 `popup_menu_at(items, at)` 會回傳一個 `Answer<()>`，在選單關閉後完成（是否 await 它為選擇性）。項目的處理常式會在設定該選單的 owner 底下執行，直到該 owner 結束。
+在 Rust 中，`set_application_menu(items)` 接受 `Vec<MenuItem>`（`None` 恢復平台的預設選單），而 `popup_menu(items)`（在指標位置）和 `popup_menu_at(items, at)` 會返回一個 `Answer<()>`，在選單關閉後完成（是否 await 它皆可）。項目的處理器在設定該選單的 owner 之下執行，只要該 owner 仍存活。
 
-再次呼叫 `setApplicationMenu` 即可變更選單。在 `effect` 內呼叫時，它會追蹤所讀取的 signal：依 app 狀態而定的勾選記號或停用狀態會保持最新。
+再次呼叫 `setApplicationMenu` 即可更改選單。在 `effect` 內呼叫時，它會跟隨所讀取的 signal：取決於應用程式狀態的勾選標記或停用狀態會保持最新。
 
 <a id="menu-items"></a>
 
@@ -195,45 +197,45 @@ type MenuItem =
 
 | 欄位 | 說明 |
 |---|---|
-| `label` | 項目顯示的內容。具有 role 的項目在未設定時會使用自己的標籤。 |
-| `onSelect` | 在項目被選取時呼叫，無論是透過點擊或其快速鍵。 |
-| `shortcut` | 其鍵盤快速鍵：修飾鍵與一個按鍵以 `+` 連接，例如 `"mod+n"`、`"mod+shift+z"`、`"alt+f4"` 或 `"f11"`。修飾鍵列於下表。按鍵可以是字母、數字和標點符號，寫成該鍵在美式鍵盤上不按 Shift 時所輸入的字元（`,`、`/`；`?` 寫作 `"shift+/"`），或是名稱：`plus`（`=` ／ `+` 鍵，也可寫作 `=`）、`minus`（也可寫作 `-`）、`space`、`enter`（`return`）、`escape`（`esc`）、`tab`、`backspace`、`delete`（`del`）、`insert`、方向鍵 `up`、`down`、`left`、`right`（`arrowup`、…）、`home`、`end`、`pageup`、`pagedown`、`f1`–`f24`。不分大小寫（`"Mod+Shift+N"` 即 `"mod+shift+n"`；大寫字母是同一個鍵，而不是 Shift），建議使用小寫。無效的快速鍵（`"mod-n"`、`"mod++"`、`"mod+?"`）會擲出錯誤並提示正確的寫法。`keymap` 接受相同的按鍵組合。選單會以平台自身的樣式顯示它（macOS 上為 `⇧⌘N`，Windows 上為 `Ctrl+Shift+N`）。 |
-| `when` | 在 GPUI 後端上，當文字欄位擁有鍵盤焦點時，快速鍵何時會選取該項目：`"always"`（預設）、`"auto"`（除非欄位本身會使用該按鍵：包括會輸入文字、移動插入點或刪除的按鍵，以及編輯快速鍵，如同 [`keymap`](./nsh.md#keymap) 的綁定）或 `"notEditing"`。項目放過的按鍵會交給欄位處理。 |
-| `disabled` | `true` 會將項目設為灰色（預設為 `false`）。 |
-| `checked` | 設為（`true` 或 `false`）時，項目會帶有勾選記號。 |
-| `submenu` | 使項目成為子選單（需要搭配 `label`）。 |
-| `role` | 由平台執行的標準項目（見下文）。 |
+| `label` | 項目顯示的內容。角色項目若不設定它，則使用自己的標籤。 |
+| `onSelect` | 項目被選取時呼叫，不論是點按還是快速鍵。 |
+| `shortcut` | 其鍵盤快速鍵：修飾鍵和一個按鍵，以 `+` 連接，例如 `"mod+n"`、`"mod+shift+z"`、`"alt+f4"` 或 `"f11"`。修飾鍵見下表。按鍵為字母、數字和標點符號，寫成該鍵在美式鍵盤上不按 Shift 時輸入的字元（`,`、`/`；`"shift+/"` 代表 `?`），或使用名稱：`plus`（`=` / `+` 鍵，亦可寫 `=`）、`minus`（亦可寫 `-`）、`space`、`enter`（`return`）、`escape`（`esc`）、`tab`、`backspace`、`delete`（`del`）、`insert`、方向鍵 `up`、`down`、`left`、`right`（`arrowup`、…）、`home`、`end`、`pageup`、`pagedown`、`f1`–`f24`。不分大小寫（`"Mod+Shift+N"` 即 `"mod+shift+n"`；大寫字母是同一個鍵，並非 Shift），建議使用小寫。無效的快速鍵（`"mod-n"`、`"mod++"`、`"mod+?"`）會拋出錯誤並給出正確寫法。`keymap` 接受相同的按鍵組合。選單以平台自己的風格顯示（macOS 上為 `⇧⌘N`，Windows 上為 `Ctrl+Shift+N`）。 |
+| `when` | 在 GPUI 後端，當文字欄位持有鍵盤焦點時，由快速鍵選取該項目的情況：`"always"`（預設）、`"auto"`（除非欄位本身使用該按鍵：包括輸入字元、移動插入點或刪除的按鍵，以及編輯快速鍵，與 [`keymap`](./nsh.md#keymap) 的綁定相同）或 `"notEditing"`。項目放過的按鍵會交給欄位。 |
+| `disabled` | `true` 會使項目變灰（預設 `false`）。 |
+| `checked` | 設為（`true` 或 `false`）即成為帶勾選標記的項目。 |
+| `submenu` | 使項目成為子選單（需要 `label`）。 |
+| `role` | 由平台執行的標準項目（見下）。 |
 
-`null`、`undefined` 和 `false` 的項目會被略過，因此 `cond && { … }` 可以在清單中使用。
+`null`、`undefined` 和 `false` 項目會被略去，因此 `cond && { … }` 可用於列表中。
 
-在 Rust 中，項目為 `MenuItem::new(label)`、`MenuItem::role(role)`、`MenuItem::separator()` 或 `MenuItem::submenu(label, items)`，各欄位對應為方法：`.shortcut("mod+n")`（快速鍵無效時會 panic，並提示正確的寫法）、`.shortcut_when(When::Auto)`、`.disabled(true)`、`.checked(on)`、`.on_select(f)`，以及用於具有 role 項目的 `.label(..)`。
+在 Rust 中，項目是 `MenuItem::new(label)`、`MenuItem::role(role)`、`MenuItem::separator()` 或 `MenuItem::submenu(label, items)`，欄位則為方法：`.shortcut("mod+n")`（快速鍵無效時會 panic，並給出正確寫法）、`.shortcut_when(When::Auto)`、`.disabled(true)`、`.checked(on)`、`.on_select(f)`，以及用於角色項目的 `.label(..)`。
 
 修飾鍵：
 
 | 修飾鍵 | macOS | Windows | Linux |
 |---|---|---|---|
-| `mod`（也可寫作 `cmdorctrl`） | Command (⌘) | Ctrl | Ctrl |
-| `cmd`（也可寫作 `command`、`meta`、`super`、`win`） | Command (⌘) | Windows 鍵 | Super |
-| `ctrl`（也可寫作 `control`） | Control (⌃) | Ctrl | Ctrl |
-| `alt`（也可寫作 `option`、`opt`） | Option (⌥) | Alt | Alt |
+| `mod`（亦可寫 `cmdorctrl`） | Command (⌘) | Ctrl | Ctrl |
+| `cmd`（亦可寫 `command`、`meta`、`super`、`win`） | Command (⌘) | Windows 鍵 | Super |
+| `ctrl`（亦可寫 `control`） | Control (⌃) | Ctrl | Ctrl |
+| `alt`（亦可寫 `option`、`opt`） | Option (⌥) | Alt | Alt |
 | `shift` | Shift (⇧) | Shift | Shift |
 
-app 自己的快速鍵請使用 `mod`：它是各平台 app 用於此目的的按鍵（macOS 上為 ⌘N，Windows 和 Linux 上為 Ctrl+N），因此一種寫法即可適用於所有平台。Windows 鍵和 Super 大多由系統使用（Win+E、GNOME 概覽），所以 `cmd` 在 macOS 以外很少是合適的選擇。
+應用程式自己的快速鍵請用 `mod`：它是各平台應用程式用於此用途的按鍵（macOS 上為 ⌘N，Windows 和 Linux 上為 Ctrl+N），因此一種寫法適用於所有平台。Windows 鍵和 Super 大多屬於系統（Win+E、GNOME 的概覽），因此在 macOS 以外，`cmd` 很少是正確選擇。
 
-Role：
+角色：
 
-| Role | 作用 | 平台 |
+| 角色 | 作用 | 平台 |
 |---|---|---|
-| `about`、`hide`、`hideOthers`、`showAll` | app 選單的標準項目 | macOS（其他平台會略過） |
-| `quit` | 結束 app | 所有平台 |
-| `undo`、`redo`、`cut`、`copy`、`paste`、`selectAll` | 編輯取得焦點的文字欄位（其自身的快速鍵仍由它自己處理） | 所有平台 |
+| `about`、`hide`、`hideOthers`、`showAll` | 應用程式選單的標準項目 | macOS（其他平台會略去） |
+| `quit` | 結束應用程式 | 所有平台 |
+| `undo`、`redo`、`cut`、`copy`、`paste`、`selectAll` | 編輯焦點所在的文字欄位（其自身的快速鍵仍歸其所有） | 所有平台 |
 | `minimize`、`zoom`、`toggleFullScreen`、`close` | 視窗 | 所有平台 |
 
-除非自行設定，具有 role 的項目會使用平台的標籤與快速鍵（macOS 會在 `about`、`hide` 和 `quit` 加上 app 的名稱）。
+角色項目除非自行設定，否則使用平台的標籤和快速鍵（macOS 會在 `about`、`hide` 和 `quit` 加上應用程式名稱）。
 
-選單快速鍵優先，與原生 app 相同：項目佔用的按鍵絕不會傳到取得焦點的文字欄位或 NSH 本身的按鍵。只有具有相同按鍵組合的 [`keymap`](./nsh.md#keymap) 綁定會排在它們之前。因此，編輯快速鍵（`mod+c`、`mod+v`、`mod+x`、`mod+a`、`mod+z`）只應指派給編輯 role，由它們傳遞給文字欄位；並請避免使用沒有修飾鍵的按鍵（`escape`、方向鍵、字母），否則會從文字欄位和返回導覽中奪走這些按鍵。在 GPUI 後端上，`when: "auto"` 可讓項目與文字欄位共用同一個按鍵：`delete` 或 `mod+z` 會在沒有欄位取得焦點時選取該項目，而在有欄位取得焦點時編輯文字。
+選單快速鍵優先，與原生應用程式相同：項目佔用的按鍵不會傳到持有焦點的文字欄位，也不會傳到 NSH 自己的按鍵。只有同一按鍵組合的 [`keymap`](./nsh.md#keymap) 綁定會排在它們之前。因此，編輯快速鍵（`mod+c`、`mod+v`、`mod+x`、`mod+a`、`mod+z`）只應交給編輯角色，由它們傳給文字欄位；並避免使用沒有修飾鍵的按鍵（`escape`、方向鍵、字母），否則會從文字欄位和返回導覽中奪走這些按鍵。在 GPUI 後端，`when: "auto"` 可讓項目與文字欄位共用按鍵：`delete` 或 `mod+z` 會在沒有欄位持有焦點時選取項目，而在有欄位持有焦點時編輯文字。
 
-在 GPUI 後端上，取得鍵盤焦點的原生元件會最先接收每個按鍵。它自己處理的按鍵絕不會傳到 keymap 或選單。它放過的按鍵會像有文字欄位取得焦點一樣傳到 keymap，然後才傳到選單。
+在 GPUI 後端，持有鍵盤焦點的原生元件會先接收每個按鍵。它自行處理的按鍵不會傳到 keymap 或選單。它放過的按鍵會像有文字欄位獲得焦點一樣傳到 keymap，然後才到選單。
 
 ```rust tabs
 use nsh_core::{
@@ -326,7 +328,7 @@ effect(() => {
 });
 ```
 
-由按鈕按下所開啟的右鍵選單：
+由按鈕按下觸發的右鍵選單：
 
 ```rust tabs
 text("More").on_press(|| {
@@ -355,4 +357,4 @@ text("More").on_press(|| {
 ```
 
 > [!NOTE]
-> 選單由系統提供（NSMenu、Win32 選單、GTK 彈出式選單）：它們的外觀和行為與其他 app 一致，會跟隨系統（或 app）的外觀，並支援鍵盤操作。`examples/desktop` 是一個具有自訂標題列、應用程式選單和右鍵選單的 app。
+> 選單由系統提供（NSMenu、Win32 選單、GTK 彈出式選單）：外觀和行為與其他應用程式相同，跟隨系統（或應用程式）的外觀，並支援鍵盤操作。`examples/desktop` 是一個設有自己的標題列、應用程式選單和右鍵選單的應用程式。

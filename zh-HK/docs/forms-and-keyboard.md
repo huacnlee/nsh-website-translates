@@ -1,16 +1,18 @@
 ---
 title: "表單與鍵盤"
-description: "使用 input 元素處理文字輸入：受控與非受控的值、鍵盤類型、換行鍵、焦點、選取範圍、可自動增高的多行輸入框，以及如何讓內容不被軟體鍵盤遮住。"
+description: "使用 input 元素處理文字輸入:受控與非受控的值、鍵盤類型、換行鍵(Return 鍵)、焦點、選取範圍、自動增高的多行輸入框,以及讓內容避開軟體鍵盤。"
 order: 42
 group: ui
 demo: guide-forms
+source_hash: a7bed0645c77c155
 ---
+
 
 # 表單與鍵盤
 
-文字輸入使用 input 元素，Rust 中為 `input()`，TSX 中為 `<Input>`：在 iOS 上是 UITextField 或 UITextView，在 Android 上是 EditText。輸入文字、插入點、選取、自動校正與自動填入皆由平台原生處理；你的 app 透過事件取得文字，並可加以控制。NSH 也會自動讓取得焦點的輸入保持在軟體鍵盤上方，對於它無法自行處理的情況，則提供鍵盤高度作為響應式的值。
+如果輸入框內文字有變，輸入元件就是文字輸入元件，Rust 中為 `input()`，TSX 中為 `<Input>`：在 iOS 上是 UITextField 或 UITextView，在 Android 上是 EditText。輸入、游標、選取、自動修正和自動填入都由平台負責；你的應用程式透過事件取得文字，並可控制文字內容。NSH 亦會自動讓獲得焦點的輸入框保持在軟鍵盤上方，並把鍵盤高度以響應式數值提供給你，用於它本身無法處理的情況。
 
-input 和任何 view 一樣可以套用樣式（Rust 使用型別化的樣式方法，TSX 使用 styles 與 Tailwind class），因此表單欄位可以呈現 app 自己的外觀。帶標籤的欄位只需自行撰寫一個簡短的元件：
+輸入框與任何 view 一樣可以套用樣式（Rust 使用具型別的樣式方法，TSX 使用樣式和 Tailwind class），因此表單中的欄位可以具備你應用程式自己的外觀。帶標籤的欄位只是你自己寫的一個簡短元件：
 
 ```rust tabs
 use nsh_core::prelude::*;
@@ -62,9 +64,9 @@ function Field(props: { label: string; value: string; onChange: (e: { value: str
 
 <a id="controlled-and-uncontrolled-inputs"></a>
 
-## 受控與非受控輸入
+## 受控與非受控輸入框
 
-當你傳入 input 的值（`.value(..)`，TSX 為 `value`）時，它就是**受控**的：它顯示 signal 所持有的內容，而你要從變更事件（`.on_change(..)`，TSX 為 `onChange`）更新該 signal。
+傳入 value（`.value(..)`，TSX 為 `value`）的輸入框是**受控**的：它顯示你的 signal 所持有的內容，而你從 change 事件（`.on_change(..)`，TSX 為 `onChange`）更新該 signal。
 
 ```rust tabs
 use nsh_core::prelude::*;
@@ -117,15 +119,15 @@ function App() {
 mount(App);
 ```
 
-由於值由你控制，你可以轉換使用者輸入的內容：`.on_change(move |t: &str| tag.set(t.to_uppercase()))` 會轉為大寫，`onChange={({ value }) => code.set(value.replace(/[^0-9]/g, ""))}` 只保留數字。
+由於 value 由你控制，你可以轉換使用者輸入的內容：`.on_change(move |t: &str| tag.set(t.to_uppercase()))` 轉為大寫，`onChange={({ value }) => code.set(value.replace(/[^0-9]/g, ""))}` 只保留數字。
 
 <a id="input-methods"></a>
 
 ### 輸入法
 
-中文、日文與韓文輸入法會先組字再提交文字：拼音在選定字之後才會變成 腾。`onCompositionChange`（Rust 為 `.on_composition_change(..)`）會持續回報組字過程，使用者輸入時回報 `{ composing: true, text: "teng" }`，組字結束時回報 `{ composing: false, text: "" }`；提交的文字會在結束之前送達 `onChange`。在 iOS、Android、macOS 與 web 上，`onChange` 也會回報正在組字的文字，因為這些系統把組字內容保留在輸入框中；在 Windows、Linux 與 GPUI 上，它則回報已提交的文字。無論 app 如何處理該值，受控輸入都會讓組字持續進行：使用者組字期間設定的 `value` 會在組字結束後才顯示，因此會轉為大寫或過濾文字的輸入，仍能正常接受按原樣輸入的拼音。
+中文、日文和韓文輸入法會先組字再提交文字：拼音在選定字詞後才變成「腾」。`onCompositionChange`（Rust 為 `.on_composition_change(..)`）會即時回報組字過程，使用者輸入時為 `{ composing: true, text: "teng" }`，組字結束時為 `{ composing: false, text: "" }`；提交的文字會在結束前先送到 `onChange`。在 iOS、Android、macOS 和 web 上，`onChange` 亦會回報正在組字的文字，因為這些系統把組字中的文字保留在輸入框內；在 Windows、Linux 和 GPUI 上，它回報的是已提交的文字。無論應用程式如何處理 value，受控輸入框都會讓組字持續進行：使用者組字期間設定的 `value` 會在組字結束後才顯示，因此轉大寫或過濾文字的輸入框，對拼音輸入也會照常處理。
 
-一個只搜尋已提交文字的搜尋框：
+只搜尋已提交文字的搜尋框：
 
 ```rust tabs
 let query = signal(String::new());
@@ -162,57 +164,59 @@ let composing = false;
 />
 ```
 
-沒有 value 的輸入則是**非受控**的：它自行保存文字，從預設值開始（`.default_value(..)`，TSX 為 `defaultValue`），需要時再從變更或送出事件讀取。適用於只在送出時才讀取的欄位，例如密碼。
+沒有 value 的輸入框是**非受控**的：它自行保管文字，起始內容為預設值（`.default_value(..)`，TSX 為 `defaultValue`），需要時再從 change 或 submit 事件讀取。這適用於只在提交時才讀取的欄位，例如密碼。
 
 > [!NOTE]
-> 受控輸入絕不會遺失按鍵。每次原生編輯都帶有一個編輯計數，從 JS 傳回的 `value` 只有在對應最新一次編輯時才會被套用。如果 JS 處理較慢，而使用者在這段期間又輸入了更多內容，過期的值會被丟棄，而不會覆蓋較新的文字。
+> 受控輸入框不會遺失任何按鍵。每次原生編輯都帶有一個編輯計數，而從 JS 傳回的 `value` 只有在回應最新一次編輯時才會被套用。如果 JS 反應較慢，而使用者在此期間又輸入了更多內容，過時的 value 會被丟棄，而不會覆蓋較新的文字。
 
 <a id="props"></a>
 
 ## 屬性
 
-在 Rust 中，每個屬性都是 `input()` 的方法，以 snake case 命名（`.placeholder(..)`、`.masked(true)`、`.max_length(6)`、`.return_key_type(ReturnKeyType::Next)`、`.selected_range((0, 4))`），但以下幾個有自己的名稱：`.keyboard_type(KeyboardType::Email)` 與其他 `KeyboardType` 變體、對應 `autoComplete` 的 `.auto_fill(AutoFill::Email)`、以及對應 `ios={{ … }}` 屬性的 `.keyboard_appearance(..)` 和 `.input_accessory(..)`。每個事件都是 `on_` 的方法：`.on_change(|text: &str| ..)`、`.on_submit(|text: &str| ..)`、`.on_focus(..)`、`.on_blur(..)`、`.on_selection_change(|s: &Selection| ..)`、`.on_key_press(|key: &str| ..)`、`.on_content_size_change(|size: &Size<Points>| ..)`。
+在 Rust 中，每個屬性都是 `input()` 的方法，以 snake case 命名（`.placeholder(..)`、`.masked(true)`、`.max_length(6)`、`.return_key_type(ReturnKeyType::Next)`、`.selected_range((0, 4))`），以下為各自獨有的名稱：`.keyboard_type(KeyboardType::Email)` 及其他 `KeyboardType` 變體、用於 `autoComplete` 的 `.auto_fill(AutoFill::Email)`、用於 `ios={{ … }}` 屬性的 `.keyboard_appearance(..)` 和 `.input_accessory(..)`。每個事件都是 `on_` 方法：`.on_change(|text: &str| ..)`、`.on_submit(|text: &str| ..)`、`.on_focus(..)`、`.on_blur(..)`、`.on_selection_change(|s: &Selection| ..)`、`.on_key_press(|key: &str| ..)`、`.on_content_size_change(|size: &Size<Points>| ..)`。
 
-| 屬性 | 型別 | 預設值 | 說明 |
+| 屬性 | 類型 | 預設值 | 說明 |
 |---|---|---|---|
-| `value` | `string` | | 文字，由 JS 控制。 |
-| `defaultValue` | `string` | | 非受控輸入的初始文字。 |
-| `placeholder` | `string` | | 輸入為空時顯示。 |
+| `value` | `string` | | 由 JS 控制的文字。 |
+| `defaultValue` | `string` | | 非受控輸入框的初始文字。 |
+| `placeholder` | `string` | | 輸入框為空時顯示。 |
 | `masked` | `boolean` | `false` | 隱藏文字（密碼）。 |
 | `keyboardType` | `KeyboardType` | `"default"` | 鍵盤配置。 |
-| `returnKeyType` | `ReturnKeyType` | `"default"` | Return 鍵的標籤。 |
+| `returnKeyType` | `ReturnKeyType` | `"default"` | 換行鍵的標籤。 |
 | `autoCapitalize` | `"none" \| "sentences" \| "words" \| "characters"` | `"sentences"` | 自動大寫。 |
-| `autoCorrect` | `boolean` | `true` | 系統的校正功能。 |
-| `autoComplete` | `AutoComplete` | | 輸入所裝載的內容類型，供自動填入使用。 |
-| `multiline` | `boolean` | `false` | 多行；除非 `submitBehavior` 另有指定，否則 Return 會插入換行。 |
+| `autoCorrect` | `boolean` | `true` | 系統的修正功能。 |
+| `autoComplete` | `AutoComplete` | | 輸入框所容納的內容類別，供自動填入使用。 |
+| `multiline` | `boolean` | `false` | 多行；除非 `submitBehavior` 另有指定，否則按換行鍵會插入換行。 |
 | `maxLength` | `number` | | 使用者最多可輸入的字元數。 |
-| `readonly` | `boolean` | `false` | 使用者可以選取並複製文字，但不能修改。 |
-| `autoFocus` | `boolean` | `false` | 出現時即取得焦點。 |
-| `submitBehavior` | `"submit" \| "blurAndSubmit" \| "newline"` | 單行為 `"blurAndSubmit"`，多行為 `"newline"` | Return 的行為：送出並保持焦點、送出並取消焦點，或插入換行（僅限多行）。 |
-| `pasteBehavior` | `"insert" \| "report"` | `"insert"` | 貼上的行為：插入其文字，或不做任何事（[貼上](#pasting-images-and-files)）。 |
-| `caret` | `boolean` | `true` | 繪製插入點；`false` 會隱藏它。 |
+| `readonly` | `boolean` | `false` | 使用者可以選取和複製文字，但不能修改。 |
+| `autoFocus` | `boolean` | `false` | 出現時即獲得焦點。 |
+| `submitBehavior` | `"submit" \| "blurAndSubmit" \| "newline"` | 單行為 `"blurAndSubmit"`，多行為 `"newline"` | 按換行鍵的行為：提交並保持焦點、提交並取消焦點，或插入換行（僅限多行）。 |
+| `pasteBehavior` | `"insert" \| "report"` | `"insert"` | 貼上的行為：插入其文字，或不作任何處理（[貼上](#pasting-images-and-files)）。 |
+| `caret` | `boolean` | `true` | 繪製游標；`false` 會隱藏游標。 |
 | `ios={{ keyboardAppearance }}` | `"default" \| "light" \| "dark"` | `"default"` | 鍵盤的外觀（iOS）。 |
-| `selectedRange` | `{ start: number; end?: number }` | | 受控的選取範圍，以 UTF-16 單位表示。 |
-| `allowFontScaling` | `boolean` | `true` | 跟隨系統文字大小。 |
-| `maxFontSizeMultiplier` | `number` | | 系統縮放比例的上限（0：無上限）。 |
+| `selectedRange` | `{ start: number; end?: number }` | | 受控的選取範圍，以 UTF-16 單位計算。 |
+| `allowFontScaling` | `boolean` | `true` | 跟隨系統的文字大小。 |
+| `maxFontSizeMultiplier` | `number` | | 系統縮放比例的上限（0：不設上限）。 |
 | `ios={{ inputAccessoryViewID }}` | `string` | | iOS：顯示在鍵盤上方的工具列（見下文）。 |
-| `ios={{ textContentType }}` | `TextContentType` | | iOS 對 `autoComplete` 值的命名。 |
+| `ios={{ textContentType }}` | `TextContentType` | | iOS 對 `autoComplete` 值所用的名稱。 |
 
 事件：
 
-| 事件 | 承載資料 | 時機 |
+| 事件 | 負載 | 時機 |
 |---|---|---|
-| `onChange` | `{ value }` | 文字已變更：`value` 為目前的文字。 |
-| `onSubmit` | `{ text }` | 在會送出的輸入中按下 Return 鍵（單行，或 `submitBehavior` `"submit"` / `"blurAndSubmit"`）。 |
-| `onFocus` / `onBlur` | | 輸入取得 / 失去焦點。 |
-| `onSelectionChange` | `{ start, end }` | 插入點或選取範圍移動（UTF-16 單位）。 |
-| `onPaste` | `{ text, html, files, uris }` | 使用者貼上：文字、其 HTML（Linux、web）、以 `File` 表示的圖片、本機檔案的 URL（[貼上](#pasting-images-and-files)）。 |
-| `onCaretMove` | `{ bounds, pageBounds }` | 插入點移動：它在輸入中與在視窗中的位置（[插入點](#the-caret)）。 |
-| `onKeyPress` | `{ key }` | 文字變更之前：`key` 為輸入的文字，`"Backspace"` 或 `"Enter"`。 |
-| `onContentSizeChange` | `{ size }` | 文字的大小（`size`）在輸入時發生變更（多行時以輸入的寬度計算）；空的輸入會回報一行空白，不論其 placeholder 為何。 |
-| `onCompositionChange` | `{ composing, text }` | 輸入法的組字開始、變更或結束（見[輸入法](#input-methods)）。 |
+| `onChange` | `{ value }` | 文字已改變：`value` 為目前的文字。 |
+| `onSubmit` | `{ text }` | 在會提交的輸入框中按下換行鍵（單行，或 `submitBehavior` `"submit"` / `"blurAndSubmit"`）。 |
+| `onFocus` / `onBlur` | | 輸入框獲得 / 失去焦點。 |
+| `onSelectionChange` | `{ start, end }` | 游標或選取範圍移動（UTF-16 單位）。 |
+| `onPaste` | `{ text, html, files, uris }` | 使用者貼上內容：文字、其 HTML（Linux、web）、以 `File` 表示的圖片，以及本機檔案的 URL（[貼上](#pasting-images-and-files)）。 |
+| `onCaretMove` | `{ bounds, pageBounds }` | 游標移動：其在輸入框內和在視窗內的位置（[游標](#the-caret)）。 |
+| `onKeyPress` | `{ key }` | 文字改變之前：`key` 為輸入的文字，`"Backspace"` 或 `"Enter"`。 |
+| `onContentSizeChange` | `{ size }` | 文字的尺寸（`size`）在輸入時改變（多行時以輸入框的寬度計算）；空的輸入框無論其 placeholder 為何，都回報一行空白。 |
+| `onCompositionChange` | `{ composing, text }` | 輸入法的組字開始、改變或結束（見[輸入法](#input-methods)）。 |
 
-input 的樣式與文字相同：`fontSize`、`color`、`fontFamily`、`textAlign`、`letterSpacing` 以及[文字樣式](./text.md)中的其他項目，再加上邊框、內距與背景。焦點樣式（Rust 中為 `.focus(|s| ..)`，TSX 中為 `focus:` Tailwind 變體或 `focusStyle`）會在輸入取得焦點時套用。placeholder 的顏色是 `.placeholder_color(..)`（`placeholderColor` 樣式鍵，`placeholder:text-*`），插入點的顏色是 `.caret_color(..)`（`caretColor`、`caret-*`），選取反白的顏色是 `.selection_color(..)`（`selectionColor`、`selection:text-*`）；UIKit 以同一種顏色為插入點與選取範圍著色，若有設定則採用插入點的顏色：
+輸入框的樣式與文字相同：`fontSize`、`color`、`fontFamily`、`textAlign`、`letterSpacing` 以及[文字樣式](./text.md)的其餘部分，另加邊框、padding 和背景。焦點樣式（Rust 中為 `.focus(|s| ..)`，TSX 中為 `focus:` Tailwind 變體或 `focusStyle`）會在輸入框擁有焦點時套用。placeholder 的顏色為 `.placeholder_color(..)`（
+`placeholderColor` 樣式鍵，`placeholder:text-*`），游標的顏色為 `.caret_color(..)`（`caretColor`、`caret-*`），選取範圍標示的顏色為 `.selection_color(..)`
+（`selectionColor`、`selection:text-*`）；UIKit 以同一種顏色為游標和選取範圍著色，若有設定則採用游標的顏色：
 
 ```rust tabs
 input()
@@ -244,17 +248,17 @@ input()
 | Rust | TSX | 鍵盤 |
 |---|---|---|
 | `KeyboardType::Default` | `"default"` | 文字。 |
-| `KeyboardType::Email` | `"email-address"` | 文字，並方便輸入 `@` 與 `.`。 |
-| `KeyboardType::Url` | `"url"` | 文字，附有 `/` 與 `.com`。 |
-| `KeyboardType::Number` | `"number-pad"` | 僅有數字：沒有正負號與小數點（驗證碼、PIN）。 |
-| `KeyboardType::Decimal` | `"decimal-pad"` | 數字與小數點。 |
-| `KeyboardType::Numeric` | `"numeric"` | 與 React Native 相同：iOS 上為小數數字鍵盤；Android 上為含正負號與小數點的數字。 |
-| `KeyboardType::NumbersAndPunctuation` | `"numbers-and-punctuation"` | 數字、負號與標點符號（iOS 的數字與標點鍵盤；Android 上為含正負號與小數點的數字）。在 iOS 上輸入負數時請使用它。 |
+| `KeyboardType::Email` | `"email-address"` | 文字，並方便輸入 `@` 和 `.`。 |
+| `KeyboardType::Url` | `"url"` | 文字，附有 `/` 和 `.com`。 |
+| `KeyboardType::Number` | `"number-pad"` | 只有數字：沒有正負號，沒有小數分隔符號（驗證碼、PIN）。 |
+| `KeyboardType::Decimal` | `"decimal-pad"` | 數字和小數分隔符號。 |
+| `KeyboardType::Numeric` | `"numeric"` | 與 React Native 相同：iOS 的小數鍵盤；在 Android 上為帶有正負號和小數分隔符號的數字鍵盤。 |
+| `KeyboardType::NumbersAndPunctuation` | `"numbers-and-punctuation"` | 數字、負號和標點符號（iOS 的數字與標點鍵盤；在 Android 上為帶有正負號和小數分隔符號的數字鍵盤）。在 iOS 上輸入負數時使用。 |
 | `KeyboardType::Phone` | `"phone-pad"` | 電話撥號鍵盤。 |
 
-在 iOS 上，`.keyboard_appearance(KeyboardAppearance::Dark)`（TSX 為 `ios={{ keyboardAppearance: "dark" }}`；或 light，為預設值）會讓鍵盤呈現淺色或深色外觀，而不論系統的外觀為何，適用於在淺色模式下的深色 app。Android 的鍵盤一律跟隨系統主題。
+在 iOS 上，`.keyboard_appearance(KeyboardAppearance::Dark)`（TSX 為 `ios={{ keyboardAppearance: "dark" }}`；或 light，預設）會讓鍵盤呈現淺色或深色外觀，不受系統外觀影響，適用於在淺色模式下的深色應用程式。Android 的鍵盤一律跟隨系統主題。
 
-自動填入（`.auto_fill(AutoFill::Email)`，TSX 為 `autoComplete`）告訴系統欄位所裝載的內容，讓系統能提供已儲存的姓名、地址、密碼，以及來自訊息的一次性驗證碼。Rust 的 `AutoFill` 為每種類型提供一個變體（`Name`、`GivenName`、`FamilyName`、`Email`、`Tel`、`Username`、`Password`、`NewPassword`、`OneTimeCode`、`StreetAddress`、`PostalCode`、`Country`、`CreditCardNumber`、`Url`、`Birthdate`、...，以及 `Off`）。TSX 接受以下的值：`"name"`、`"given-name"`、`"family-name"`、`"email"`、`"tel"`、`"username"`、`"current-password"`、`"new-password"`、`"one-time-code"`、`"street-address"`、`"postal-code"`、`"country"`、`"cc-number"`、`"cc-exp"`、`"cc-csc"`、`"url"`、`"birthdate-full"` 等，或 `"off"`；iOS 自己的名稱（`"emailAddress"`、`"oneTimeCode"`、...）也可在 `autoComplete` 或 `ios={{ textContentType }}` 中使用。
+自動填入（`.auto_fill(AutoFill::Email)`，TSX 為 `autoComplete`）告訴系統該欄位所容納的內容，讓系統可以提供已儲存的姓名、地址、密碼，以及來自訊息的一次性驗證碼。Rust 的 `AutoFill` 為每種類別提供一個變體（`Name`、`GivenName`、`FamilyName`、`Email`、`Tel`、`Username`、`Password`、`NewPassword`、`OneTimeCode`、`StreetAddress`、`PostalCode`、`Country`、`CreditCardNumber`、`Url`、`Birthdate`……，以及 `Off`）。TSX 接受以下值：`"name"`、`"given-name"`、`"family-name"`、`"email"`、`"tel"`、`"username"`、`"current-password"`、`"new-password"`、`"one-time-code"`、`"street-address"`、`"postal-code"`、`"country"`、`"cc-number"`、`"cc-exp"`、`"cc-csc"`、`"url"`、`"birthdate-full"` 及其他，或 `"off"`；iOS 自己的名稱（`"emailAddress"`、`"oneTimeCode"`……）也可使用，放在 `autoComplete` 或 `ios={{ textContentType }}` 中。
 
 ```rust tabs
 use nsh_core::element::AutoFill;
@@ -281,19 +285,19 @@ input()
 
 <a id="the-return-key-and-moving-between-fields"></a>
 
-## Return 鍵與欄位間切換
+## 換行鍵與在欄位之間移動
 
-Return 鍵類型（`.return_key_type(ReturnKeyType::Next)`，TSX 為 `returnKeyType`）決定 Return 鍵的標籤：default、done、go、next、search 或 send。送出行為（`.submit_behavior(..)`，TSX 為 `submitBehavior`）則決定按下它後會發生什麼事：
+換行鍵類型（`.return_key_type(ReturnKeyType::Next)`，TSX 為 `returnKeyType`）決定換行鍵的標籤：default、done、go、next、search 或 send。提交行為（`.submit_behavior(..)`，TSX 為 `submitBehavior`）則決定按下它時會發生甚麼：
 
-| Rust | TSX | Return | 預設用於 |
+| Rust | TSX | 換行鍵 | 預設適用於 |
 |---|---|---|---|
-| `SubmitBehavior::BlurAndSubmit` | `"blurAndSubmit"` | 觸發送出事件，然後輸入失去焦點 | 單行輸入 |
-| `SubmitBehavior::Submit` | `"submit"` | 觸發送出事件；輸入保持焦點 | |
-| `SubmitBehavior::Newline` | `"newline"` | 插入換行（僅限多行輸入） | 多行輸入 |
+| `SubmitBehavior::BlurAndSubmit` | `"blurAndSubmit"` | 觸發 submit 事件，然後輸入框失去焦點 | 單行輸入框 |
+| `SubmitBehavior::Submit` | `"submit"` | 觸發 submit 事件；輸入框保持焦點 | |
+| `SubmitBehavior::Newline` | `"newline"` | 插入換行（僅限多行輸入框） | 多行輸入框 |
 
-設為 `"submit"` 或 `"blurAndSubmit"` 的多行輸入會在按下 Return 時送出，如同聊天訊息編輯器，且仍會自動換行；在實體鍵盤（桌面電腦、Mac、平板的鍵盤）上，Shift+Return 或 Option / Alt+Return 會插入換行。若 Return 是用來提交輸入法的組字（例如中文或日文輸入），則只會提交組字內容，絕不會送出。
+設定了 `"submit"` 或 `"blurAndSubmit"` 的多行輸入框會在按下換行鍵時送出，就像聊天輸入框一樣，並且仍會自動換行；在實體鍵盤上（桌上電腦、Mac、平板電腦的鍵盤），按 Shift+Return 或 Option / Alt+Return 會插入換行。用來確認輸入法組字（例如中文或日文輸入）的換行鍵，只會確認組字，不會提交。
 
-若要移到下一個欄位，請保存各輸入的 ref（Rust 中的 `element_ref()` 與 `.element_ref(&r)`，TSX 中的 `ref`），並呼叫 `focus()`：
+若要移到下一個欄位，請保留各輸入框的 ref（Rust 中為 `element_ref()` 和 `.element_ref(&r)`，TSX 中為 `ref`），然後呼叫 `focus()`：
 
 ```rust tabs
 use nsh_core::prelude::*;
@@ -357,25 +361,25 @@ function SignIn() {
 mount(SignIn);
 ```
 
-在第一個欄位使用不失焦的送出（`SubmitBehavior::Submit`、`submitBehavior="submit"`），能在焦點移動時讓鍵盤保持顯示，避免鍵盤收起後又再升起。按下 Return 即送出並保持焦點的聊天輸入，也以同樣方式送出（見[下方](#content-outside-scroll-views)的訊息編輯器）。
+在第一個欄位使用不失去焦點的提交（`SubmitBehavior::Submit`、`submitBehavior="submit"`），可在焦點移動期間保持鍵盤顯示，這樣鍵盤就不會收起後再升起。在送出後保持焦點的聊天輸入框，提交方式也是一樣（見[下方](#content-outside-scroll-views)的輸入框範例）。
 
-最大長度與送出行為都在原生層強制執行：使用者輸入時，平台會詢問「是否可以加入這個字元？」與「Return 是否應結束編輯？」，而 NSH 直接根據屬性回答，無須等待 JS。
+最大長度和提交行為都在原生層強制執行：使用者輸入時，平台會詢問「可以加入這個字元嗎？」和「換行鍵應該結束編輯嗎？」，而 NSH 會根據屬性直接回答，無需等待 JS。
 
 <a id="focus-from-code"></a>
 
-## 以程式碼控制焦點
+## 從程式碼控制焦點
 
-input 的 ref 提供以下方法：
+輸入框的 ref 具有以下方法：
 
 | Rust | TSX | 說明 |
 |---|---|---|
-| `focus()` | `focus()` | 讓輸入取得焦點並顯示鍵盤。 |
+| `focus()` | `focus()` | 讓輸入框獲得焦點並顯示鍵盤。 |
 | `blur()` | `blur()` | 取消其焦點。 |
-| `set_selection(start, end)` | `setSelection(start, end?)` | 選取 `start..end`（UTF-16 單位）；兩者相等時為插入點（TSX：不帶 `end`）。 |
+| `set_selection(start, end)` | `setSelection(start, end?)` | 選取 `start..end`（UTF-16 單位）；兩者相等時為游標（TSX：不帶 `end`）。 |
 
-在 macOS 與 web 上，對可接受按壓的 view 的 ref 呼叫 `focus()` 與 `blur()`，會像 Tab 鍵一樣移動鍵盤焦點（[鍵盤焦點](../elements/index.md#keyboard-focus)）。
+在 macOS 和 web 上，在接受按下操作的 view 的 ref 上呼叫 `focus()` 和 `blur()`，會像按 Tab 鍵一樣移動鍵盤焦點（[鍵盤焦點](../elements/index.md#keyboard-focus)）。
 
-Rust 中的 `dismiss_keyboard()` 以及 TSX 中來自 `nsh` 的 `Keyboard.dismiss()`，會取消目前取得焦點的任何輸入的焦點：
+Rust 中的 `dismiss_keyboard()` 和 TSX 中來自 `nsh` 的 `Keyboard.dismiss()` 會取消目前擁有焦點的任何輸入框的焦點：
 
 ```rust tabs
 view().on_press(|| dismiss_keyboard())
@@ -391,7 +395,7 @@ import { View, Keyboard } from "nsh";
 
 ## 選取範圍
 
-選取事件（`.on_selection_change(..)`，TSX 為 `onSelectionChange`）會回報插入點與選取範圍；ref 的 `set_selection` 或選取範圍（`.selected_range(..)`，TSX 為 `selectedRange`）可用來設定它們。位置採用 UTF-16 code unit，與 JavaScript 字串索引相同，因此在 TSX 中 `text.slice(start, end)` 即為被選取的文字；在 Rust 中，請對文字的 UTF-16 單位進行切片。
+selection 事件（`.on_selection_change(..)`，TSX 為 `onSelectionChange`）回報游標和選取範圍；ref 的 `set_selection` 或所選範圍（`.selected_range(..)`，TSX 為 `selectedRange`）可以設定它們。位置以 UTF-16 code unit 計算，與 JavaScript 字串索引相同，因此在 TSX 中 `text.slice(start, end)` 就是所選的文字；在 Rust 中，則需要切割文字的 UTF-16 單位。
 
 ```rust tabs
 /// `start..end` of `text` in UTF-16 units, as inputs count.
@@ -444,9 +448,11 @@ const selection = signal<{ start: number; end?: number } | undefined>(undefined)
 
 <a id="the-caret"></a>
 
-## 插入點
+## 游標
 
-插入點事件（`.on_caret_move(..)`，TSX 為 `onCaretMove`）會告知插入點的位置，讓屬於插入點的內容可以在該處開啟：`@` 提及的建議清單、斜線命令的選單、表情符號選擇器。`bounds` 是輸入中的一個 `Bounds`（`origin` 與 `size`，已套用輸入的內距與捲動），寬度與平台繪製的插入點相同，高度與其所在行相同；`pageBounds` 是同一個方框在視窗（或輸入所在的對話框）中的位置，覆蓋層可將其作為 `anchor`。只要輸入取得焦點，每當插入點移動時就會觸發此事件：隨選取範圍移動，以及輸入的文字捲動或換行到其他行時。在 Rust 中，覆蓋層以 `.anchor_bounds(..)` 相對於方框定位。
+caret 事件（`.on_caret_move(..)`，TSX 為 `onCaretMove`）說明游標所在的位置，讓屬於游標處的內容可以在該處開啟：例如 `@` 提及的建議、斜線指令的選單、表情符號選擇器。`bounds` 是輸入框內的一個 `Bounds`
+（`origin` 和 `size`，已套用輸入框的 padding 和捲動），寬度與平台繪製的游標相同，高度與其所在行相同；`pageBounds` 是同一個方框在視窗（或輸入框所在的對話框）中的位置，浮層會把它當作其 `anchor`。事件會在輸入框擁有焦點期間，每當游標移動時發出：隨選取範圍移動，以及輸入框的文字捲動或換行到其他行時。在 Rust 中，浮層會以 `.anchor_bounds(..)`
+相對於方框來定位。
 
 ```rust tabs
 let draft = signal(String::new());
@@ -512,15 +518,19 @@ const caret = signal<Bounds | null>(null);
 </View>;
 ```
 
-`pageBounds` 是事件送出時插入點所在的位置：在輸入下方捲動的頁面會移動輸入，但不會送出事件，因此請在頁面捲動時關閉建議清單，或將它們錨定在輸入本身。
+`pageBounds` 是事件發出時游標所在的位置：在輸入框下方捲動的頁面會移動輸入框，但不會發出事件，因此請在頁面捲動時關閉建議，或把建議錨定在輸入框本身。
 
 <a id="pasting-images-and-files"></a>
 
-## 貼上圖片與檔案
+## 貼上圖片和檔案
 
-貼上事件（`.on_paste(..)`，TSX 為 `onPaste`）會告知使用者貼上了什麼，來源可以是鍵盤快速鍵、選單的貼上，或鍵盤的圖片功能：`text`、`html`、`files` 與 `uris`。`html` 是帶有格式的相同內容，如同瀏覽器、辦公室軟體或富文字編輯器複製時的樣子（在 Linux 與 web 上）。`files` 是剪貼簿中以資料形式保存的內容，例如螢幕截圖或從網頁或其他 app 複製的圖片：其位元組可供 app 上傳或顯示的 `File`，名稱為 `image.png`（或其本身的類型）。`uris` 是在檔案管理員中複製的檔案的 `file:` URL，與檔案拖放的相同。平台只會在使用者貼上的當下讀取剪貼簿，之後不會再讀取。
+paste 事件（`.on_paste(..)`，TSX 為 `onPaste`）說明使用者貼上了甚麼，無論是來自鍵盤快速鍵、選單的「貼上」，還是鍵盤的圖片功能：`text`、`html`、`files` 和 `uris`。`html` 是同一內容連同其格式，就像瀏覽器、辦公軟件或富文字編輯器複製時的樣子（在 Linux 和 web 上）。`files` 是剪貼簿以資料形式持有的內容，例如螢幕截圖，或從網頁或其他應用程式複製的圖片：它們是 `File`，其位元組可供應用程式上傳或顯示，名稱為
+`image.png`（或其所屬類型）。`uris` 是在檔案管理員中複製的檔案的 `file:` URL，與檔案拖放的相同。
+平台只會在使用者貼上的當下讀取剪貼簿，其他時候不會讀取。
 
-輸入會一如往常自行插入貼上的文字：此事件會在該文字的 `onChange` 之前觸發。圖片與檔案絕不會被插入，因為輸入只存放文字。使用 `pasteBehavior` `"report"` 時，輸入不會插入任何內容，由 app 決定貼上要做什麼：將長文字作為附件送出，或插入清理後的版本。輸入會立即根據該屬性做出決定，因為系統是當場詢問它。
+輸入框一如往常，會自行插入貼上的文字：事件會在該文字的 `onChange` 之前發出。
+圖片和檔案絕不會被插入，因為輸入框只容納文字。若設定 `pasteBehavior` `"report"`，輸入框不會插入任何內容，由應用程式決定貼上的處理方式：把長文字作為附件送出，或插入清理過的版本。
+輸入框會根據該屬性即時決定，因為系統會當場詢問它。
 
 ```rust tabs
 let attachments = signal(Vec::<PastedFile>::new());
@@ -552,13 +562,15 @@ const attachments = signal<File[]>([]);
 />;
 ```
 
-貼上的檔案可像任何 `File` 一樣上傳，使用 `fetch` 與 `FormData`（`form.append("image", file)`）；其位元組在送出之前都保留在原生層。在 Android 上，插入圖片（GIF、貼圖）的鍵盤也以同樣方式回報。在 Linux 上，剪貼簿是非同步讀取的，因此事件可能會在其所插入文字的 `onChange` 之後才觸發。macOS 上的遮罩輸入會保留 AppKit 自己的貼上行為，且不回報任何內容。
+貼上的檔案可以像任何 `File` 一樣上傳，使用 `fetch` 和 `FormData`（`form.append("image", file)`）；在送出之前，其位元組會保留在原生層。在 Android 上，插入圖片（GIF、貼圖）的鍵盤也以同樣方式回報這些內容。在
+Linux 上，剪貼簿以非同步方式讀取，因此事件可能在其插入的文字的 `onChange` 之後才發出。
+macOS 上的遮罩輸入框沿用 AppKit 自己的貼上行為，不會回報任何內容。
 
 <a id="multiline-inputs-that-grow"></a>
 
-## 自動增高的多行輸入
+## 會隨內容增長的多行輸入框
 
-多行輸入（`.multiline(true)`，TSX 為 `multiline`）會在自身高度內捲動其文字。若要讓它隨內容增高，請將內容大小事件的高度（`.on_content_size_change(..)`，TSX 為 `onContentSizeChange`）回饋到它的樣式中，並設定上限：
+多行輸入框（`.multiline(true)`，TSX 為 `multiline`）會在自身高度內捲動文字。若要讓它隨內容增長，請把 content size 事件的高度（`.on_content_size_change(..)`，TSX 為 `onContentSizeChange`）回饋到它的樣式中，並設定上限：
 
 ```rust tabs
 let height = signal(px(0.0));
@@ -586,16 +598,16 @@ const height = signal(0);
 />
 ```
 
-回報的高度是文字的高度（以輸入的寬度計算），因此請如上所示自行加上垂直內距。
+回報的高度是文字本身的高度（以輸入框的寬度計算），因此請如上所示自行加上垂直 padding。
 <a id="keeping-inputs-above-the-keyboard"></a>
 
 ## 讓輸入框保持在鍵盤上方
 
 <a id="inside-scroll-views-automatic"></a>
 
-### 在 scroll view 內：自動處理
+### 在捲動視圖內:自動處理
 
-當鍵盤出現在位於 scroll view 或列表內、且已取得焦點的輸入框上方時，NSH 會為該 scroll view 加上與鍵盤等高的底部 inset，並將輸入框捲動到可見範圍。這是原生行為，不需要撰寫任何程式碼。一個長表單其實就是一個由輸入框組成的 scroll view：
+當鍵盤出現在位於捲動視圖或列表內的焦點輸入框上方時,NSH 會為該捲動視圖加上與鍵盤同高的底部內距,並將輸入框捲動至可見位置。這是原生行為,無需撰寫任何程式碼。長表單其實就是由多個輸入框組成的捲動視圖:
 
 ```rust tabs
 scroll()
@@ -613,15 +625,15 @@ scroll()
 </Scroll>
 ```
 
-關閉模式（`.keyboard_dismiss_mode(..)`，TSX 為 `keyboardDismissMode`：none、on drag、interactive）可讓使用者拖曳表單來收起鍵盤；處理點擊（`.keyboard_taps(KeyboardTaps::Handled)`，TSX 為 `keyboardShouldPersistTaps="handled"`）則讓鍵盤顯示時點擊按鈕能直接生效，而不是只用來關閉鍵盤。請參閱 [Scrolling](./scrolling.md#scroll-views-and-the-keyboard)。
+收起模式(`.keyboard_dismiss_mode(..)`,TSX 為 `keyboardDismissMode`:none、on drag、interactive)讓使用者拖動表單即可收起鍵盤;已處理的點按(`.keyboard_taps(KeyboardTaps::Handled)`,TSX 為 `keyboardShouldPersistTaps="handled"`)讓鍵盤顯示期間點按按鈕時可直接觸發按鈕,而不是只收起鍵盤。請參閱 [Scrolling](./scrolling.md#scroll-views-and-the-keyboard)。
 
 <a id="content-outside-scroll-views"></a>
 
-### scroll view 以外的內容
+### 捲動視圖以外的內容
 
-在 iOS 上，當鍵盤會遮住一個不在任何 scroll view 內、且已取得焦點的輸入框時，NSH 會沿著鍵盤的動畫曲線將其所在畫面（或對話框）的內容向上移動，直到輸入框剛好位於鍵盤上方；當鍵盤收起或輸入框失去焦點時，內容會再沿曲線移回原位，行為與 SwiftUI 相同（在 Android 上，處於 `adjustPan` 模式的視窗則由系統進行平移）。只有在應用程式自身的版面配置仍讓輸入框被遮住時，NSH 才會這麼做：如果應用程式已如下所述自行預留空間，就不會再次移動內容。
+在 iOS 上,當鍵盤會遮住不在任何捲動視圖內的焦點輸入框時,NSH 會沿著鍵盤的動畫曲線,將該畫面(或對話框)的內容向上移動,直至輸入框剛好位於鍵盤上方;當鍵盤收起或輸入框失去焦點時,內容會再向下移回,行為與 SwiftUI 相同(在 Android 上,處於 `adjustPan` 模式的視窗則由系統平移)。NSH 只會處理應用程式自身佈局仍未避開的被遮擋部分:如果應用程式已按下文方式自行預留空間,內容就不會再被移動。
 
-這樣會移動整個頁面。若要讓固定在畫面底部的訊息列跟著鍵盤上移，同時讓上方的內容縮小，請以 CSS 的 `env(keyboard-inset-height)`（`paddingBottom: "env(keyboard-inset-height)"`，Tailwind 為 `pb-[env(keyboard-inset-height)]`，Rust 為 `.pb_keyboard()`）為畫面底部加上 padding：它會在底部預留與鍵盤等高的空間，並與鍵盤同步以原生方式產生動畫。
+這種做法會移動整個頁面。如果希望固定在畫面底部的訊息欄隨鍵盤升起,而上方內容改為縮小,請為畫面底部加上 CSS 的 `env(keyboard-inset-height)`(`paddingBottom: "env(keyboard-inset-height)"`,Tailwind 為 `pb-[env(keyboard-inset-height)]`,Rust 為 `.pb_keyboard()`)內距:它會在底部預留與鍵盤同高的空間,並以原生方式與鍵盤同步產生動畫。
 
 ```rust tabs
 use nsh_core::prelude::*;
@@ -703,15 +715,15 @@ function ChatScreen() {
 }
 ```
 
-Padding（`.pb_keyboard()`）會縮小上方的內容，而背景仍延伸到畫面底部；底部 margin（`marginBottom: "env(keyboard-inset-height)"`、`.mb_keyboard()`）則會讓整個 view 在鍵盤頂端結束。`calc(env(keyboard-inset-height) + <length>)`（Rust 為 `.pb_keyboard_plus(..)`、`.mb_keyboard_plus(..)`）可加上一個長度，例如減去 view 下方 tab bar 的高度。
+內距(`.pb_keyboard()`)會令上方內容縮小,而背景仍然延伸至畫面底部;底部外距(`marginBottom: "env(keyboard-inset-height)"`、`.mb_keyboard()`)則會令整個視圖在鍵盤頂部結束。`calc(env(keyboard-inset-height) + <length>)`(Rust 為 `.pb_keyboard_plus(..)`、`.mb_keyboard_plus(..)`)可加上一個長度,例如減去視圖下方分頁列的高度。
 
-完整高度適用於延伸到介面底部的 view，例如畫面的內容。在視窗會因鍵盤而調整大小的 Android 主機上，視窗本身會縮小，此時該變數為 0。請參閱 [Keyboard](../elements/keyboard.md)。
+完整高度適用於延伸至介面底部的視圖,例如畫面的內容。在視窗會因鍵盤而調整大小的 Android 主機上,視窗本身會縮小,而該變數為 0。請參閱 [Keyboard](../elements/keyboard.md)。
 
 <a id="the-keyboard-accessor"></a>
 
 ### 鍵盤存取器
 
-Rust 中的 `keyboard_height()` 與 `keyboard_duration()`，以及 TSX 中來自 `nsh` 的 `keyboardFrame()`（一個 `{ height, duration }`）都是響應式的：分別表示鍵盤延伸進介面的距離（隱藏時為 0；包含其下方的底部安全區域），以及其動畫持續時間（單位為毫秒）。任何自訂需求都可以讀取它們：例如在輸入時隱藏浮動按鈕，或調整面板大小。在鍵盤開始移動的那次更新中，隨它們變化的內容會跟著鍵盤移動，沿用鍵盤的動畫曲線，並從鍵盤開始移動的時間點起算（`LayoutCurve::Keyboard`），就像 `env(keyboard-inset-height)` 一樣；若應用程式為該次更新設定了動畫（`LayoutAnimation.configureNext`），則以應用程式設定的動畫為準。
+Rust 中的 `keyboard_height()` 和 `keyboard_duration()`,以及 TSX 中從 `nsh` 匯入的 `keyboardFrame()`(一個 `{ height, duration }`),都是響應式的:分別代表鍵盤伸入介面的距離(隱藏時為 0;包含其下方的底部安全區域),以及其動畫的時長(以毫秒計)。需要自訂處理時可讀取它們,例如在輸入時隱藏浮動按鈕,或調整面板大小。在鍵盤開始移動的那次更新中,隨它們一同變化的內容會跟隨鍵盤移動,採用鍵盤的動畫曲線,並以鍵盤開始移動的時間點計時(`LayoutCurve::Keyboard`),與 `env(keyboard-inset-height)` 相同;如果應用程式為該次更新設定了動畫(`LayoutAnimation.configureNext`),則以應用程式的設定為準。
 
 ```rust tabs
 view().child(when(
@@ -730,9 +742,9 @@ import { View, keyboardFrame } from "nsh";
 
 <a id="a-bar-over-the-keyboard-ios-inputaccessoryview"></a>
 
-## 鍵盤上方的工具列（iOS）：InputAccessoryView
+## 鍵盤上方的工具列(iOS):InputAccessoryView
 
-Rust 中的 `input_accessory_view(id)` 與 TSX 中來自 `nsh/mobile` 的 `InputAccessoryView`，會在指定它的輸入框取得焦點時，顯示一個附著在鍵盤頂端的工具列：即 iOS 的 `inputAccessoryView`。它會以原生方式隨鍵盤移動，包括在互動式收起鍵盤的過程中。它在樹狀結構中的所在位置不佔用任何空間；輸入框透過其 id 來參照它（`.input_accessory(id)`，TSX 為 `ios={{ inputAccessoryViewID }}` 與 `nativeID`）：
+Rust 中的 `input_accessory_view(id)`,以及 TSX 中從 `nsh/mobile` 匯入的 `InputAccessoryView`,會在指定它的輸入框取得焦點期間,顯示一個附著於鍵盤頂部的工具列,即 iOS 的 `inputAccessoryView`。它會以原生方式隨鍵盤移動,包括在互動式收起期間。它在視圖樹中的位置不佔用任何空間;輸入框透過其 id 引用它(`.input_accessory(id)`,TSX 為 `ios={{ inputAccessoryViewID }}` 和 `nativeID`):
 
 ```rust tabs
 use nsh_core::prelude::*;
@@ -800,13 +812,13 @@ function Note() {
 }
 ```
 
-工具列的寬度與視窗相同，高度則由其內容決定。Input accessory 是 iOS 專有的功能：在 Android 上，該工具列是一個空的隱藏 view，因此請把這些控制項放到其他位置，例如輸入框上方（Rust 中為 `os() == Os::Android`，TSX 中為 `platform.os === "android"`）。
+該工具列的寬度與視窗相同,高度則由其內容決定。輸入輔助工具列是 iOS 專有的:在 Android 上,該工具列是一個空白的隱藏視圖,因此請把這些控制項放在其他位置,例如輸入框上方(Rust 中為 `os() == Os::Android`,TSX 中為 `platform.os === "android"`)。
 
 <a id="related"></a>
 
 ## 相關內容
 
-- [`Input`](../elements/input.md)：元素參考。
-- [Keyboard](../elements/keyboard.md) 與 [`Keyboard`](../modules/nsh.md#keyboard-and-keyboardframe)。
-- [`InputAccessoryView`](../modules/nsh-mobile.md#inputaccessoryview)：`InputAccessoryView`。
-- [Scrolling](./scrolling.md#scroll-views-and-the-keyboard)：scroll view 中的鍵盤收起與點擊。
+- [`Input`](../elements/input.md):元素參考。
+- [Keyboard](../elements/keyboard.md)與 [`Keyboard`](../modules/nsh.md#keyboard-and-keyboardframe)。
+- [`InputAccessoryView`](../modules/nsh-mobile.md#inputaccessoryview):`InputAccessoryView`。
+- [Scrolling](./scrolling.md#scroll-views-and-the-keyboard):捲動視圖中的鍵盤收起與點按。

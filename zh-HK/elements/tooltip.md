@@ -1,18 +1,18 @@
 ---
 title: "Tooltip"
-description: "Tooltip 元件:提供所在元素的提示說明,在桌面平台上當指標停留於該元素時顯示,樣式由應用程式自行定義。"
+description: "Tooltip 元件:用於提示所在元素的說明,在桌面平台上當指標停留於該元素時顯示,外觀由應用程式自行設定。"
 group: base
 demo: el-tooltip
+source_hash: bc1733626637e39f
 ---
+
 
 # Tooltip
 
-Tooltip 是緊鄰其對象的簡短提示：說明圖示按鈕的作用，或顯示被截斷標籤的完整文字。
-在桌面平台與桌面瀏覽器上，指標在觸發元素上停留 `delay`（500 ms）後顯示，指標離開或按下觸發元素時隱藏。手機與平板只有在應用程式開啟時才會顯示 Tooltip
-（`open`）。它不會攔截指標或按壓操作，因此觸發元素的運作方式與沒有 Tooltip 時完全相同。
+A Tooltip 是緊貼在其所指對象旁邊的簡短提示，例如說明圖示按鈕的作用，或顯示被截斷標籤的完整文字。
+在桌面平台及桌面瀏覽器上，指標在觸發元素上停留 `delay`（500 毫秒）後便會顯示，指標離開或按下觸發元素時則會隱藏。手機和平板電腦只會在應用程式開啟 Tooltip 時才顯示（`open`）。Tooltip 從不攔截指標或按下操作，因此觸發元素的運作與沒有 Tooltip 時完全一樣。
 
-來自 [`nsh/base`](../modules/nsh-base.md) 的 `Tooltip` 會作為每個元素都有的 `tooltip` prop 傳入
-（[Common props](index.md#tooltips)），即 GPUI 的 `.tooltip(..)`：該元素就是指標停留的對象，也是 Tooltip 定位時所依附的對象。Tooltip 本身就是氣泡：以 `class` / `style` 設定樣式，其子元素就是它所顯示的內容。
+來自 [`nsh/base`](../modules/nsh-base.md) 的 `Tooltip` 會作為每個元素都有的 `tooltip` 屬性傳入（[通用屬性](index.md#tooltips)），就像 GPUI 的 `.tooltip(..)`：該元素就是指標停留的對象，也是 Tooltip 定位所依據的對象。Tooltip 本身就是氣泡：用 `class` / `style` 設定其樣式，其子元素就是它所顯示的內容。
 
 ```rust tabs
 use nsh_base::tooltip;
@@ -58,9 +58,9 @@ function SaveButton(props: { onSave: () => void }) {
 }
 ```
 
-Tooltip 預設顯示在觸發元素上方（`placement`），空間不足時會改到另一側，並且始終保持在安全區域內。使用 `open` 時，由應用程式決定何時顯示：它會跟隨 `onOpenChange`，後者會回報指標停留在觸發元素上或離開觸發元素，並且可以在任何裝置上顯示。
+Tooltip 預設顯示在觸發元素上方（`placement`），空間不足時改到另一側，並保持在安全區域之內。使用 `open` 時由應用程式決定何時顯示：可跟隨 `onOpenChange` 的回報（指標停留在觸發元素上或離開），並可在任何裝置上顯示。
 
-它會隨著你的轉場效果出現與消失：`startingClass` 是它在第一個影格的外觀，`endingClass` 則是隱藏後的外觀，在其 `class` 的 `transition-*` class 執行期間會保持該外觀；`onClose` 隨後接續。
+它會隨你的過渡效果出現和消失：`startingClass` 是它第一幀的外觀，`endingClass` 是隱藏後的外觀，在其 `class` 的 `transition-*` 類別運行期間會保持該外觀；`onClose` 隨後觸發。
 
 ```tsx
 <Tooltip
@@ -72,31 +72,37 @@ Tooltip 預設顯示在觸發元素上方（`placement`），空間不足時會�
 </Tooltip>
 ```
 
-## Props
+<a id="props"></a>
 
-| Prop | Rust | 類型 | 預設值 | 說明 |
+## 屬性
+
+| 屬性 | Rust | 類型 | 預設值 | 說明 |
 |---|---|---|---|---|
-| `children` | `.child(..)` | `JSX.Element` | 無 | 它所顯示的內容。 |
-| `class`、`style` | `.app_class(..)`、`Styled` 方法 | `string`、`StyleProp<ViewStyle>` | 無 | 氣泡的外觀：即 Tooltip 本身。 |
-| `startingClass`、`startingStyle` | `.starting_class(..)`、`.starting_style(..)` | `string`、`StyleProp<ViewStyle>` | 無 | 它在第一個影格的外觀：其轉場效果從此開始執行。 |
-| `endingClass`、`endingStyle` | `.ending_class(..)`、`.ending_style(..)` | `string`、`StyleProp<ViewStyle>` | 無 | 它隱藏後的外觀：在其轉場效果執行期間會保持。 |
-| `open` | `.open(..)` | `boolean` | 無 | 顯示狀態，由應用程式控制。 |
-| `defaultOpen` | `.default_open(..)` | `boolean` | `false` | 初始即顯示，不需要 `open`。 |
-| `delay` | `.delay(..)` | `number` | `500` | 指標在觸發元素上停留多少毫秒後顯示；`Infinity`：不會自行顯示，只在應用程式開啟時顯示。 |
+| `children` | `.child(..)` | `JSX.Element` | 無 | 顯示的內容。 |
+| `class`, `style` | `.app_class(..)`, `Styled` 方法 | `string`, `StyleProp<ViewStyle>` | 無 | 氣泡的外觀：即 Tooltip 本身。 |
+| `startingClass`, `startingStyle` | `.starting_class(..)`, `.starting_style(..)` | `string`, `StyleProp<ViewStyle>` | 無 | 第一幀的外觀：過渡效果由此開始。 |
+| `endingClass`, `endingStyle` | `.ending_class(..)`, `.ending_style(..)` | `string`, `StyleProp<ViewStyle>` | 無 | 隱藏後的外觀：過渡效果運行期間會保持此外觀。 |
+| `open` | `.open(..)` | `boolean` | 無 | 是否顯示，由應用程式控制。 |
+| `defaultOpen` | `.default_open(..)` | `boolean` | `false` | 初始時是否顯示，不帶 `open`。 |
+| `delay` | `.delay(..)` | `number` | `500` | 指標在觸發元素上停留多少毫秒後才顯示；`Infinity`：不會自行顯示，只在應用程式開啟時才顯示。 |
 | `disabled` | `.disabled(..)` | `boolean` | `false` | 永不顯示。 |
-| `placement` | `.placement(..)` | `"top" \| "bottom" \| "left" \| "right"` | `"top"` | 它位於觸發元素的哪一側。 |
-| `align` | `.align(..)` | `"start" \| "center" \| "end"` | `"center"` | 它沿該側與觸發元素的對齊方式。 |
+| `placement` | `.placement(..)` | `"top" \| "bottom" \| "left" \| "right"` | `"top"` | 位於觸發元素的哪一側。 |
+| `align` | `.align(..)` | `"start" \| "center" \| "end"` | `"center"` | 沿該側與觸發元素的對齊方式。 |
 | `offset` | `.offset(..)` | `number` | `4` | 觸發元素與 Tooltip 之間的間距。 |
-| `margin` | `.margin(..)` | `number` | `4` | 它與安全區域邊緣保持的距離。 |
+| `margin` | `.margin(..)` | `number` | `4` | 與安全區域邊緣保持的距離。 |
 
-## Events
+<a id="events"></a>
+
+## 事件
 
 | 事件 | Rust | 說明 |
 |---|---|---|
 | `onOpenChange` | `.on_open_change(\|e\| ..)` | 指標停留在觸發元素上，或離開或按下觸發元素（`reason` `"hover"`）。 |
 | `onOpen` | `.on_open(\|\| ..)` | 已顯示。 |
-| `onClose` | `.on_close(\|\| ..)` | 已消失，於退場效果結束之後；應用程式將其隱藏時也會觸發。 |
+| `onClose` | `.on_close(\|\| ..)` | 已消失，即退出效果完成後；應用程式將其隱藏時亦會觸發。 |
 
-## Accessibility
+<a id="accessibility"></a>
 
-Tooltip 會向螢幕閱讀器重複其觸發元素所傳達的內容：也請為觸發元素提供 `accessibilityLabel`，讓每個人都能獲得這項提示。
+## 無障礙
+
+Tooltip 會向螢幕閱讀器重複其觸發元素所說的內容：也請為觸發元素加上 `accessibilityLabel`，讓每個人都能獲得該提示。

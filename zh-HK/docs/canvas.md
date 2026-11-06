@@ -1,14 +1,16 @@
 ---
 title: "Canvas"
-description: "在 Rust 與 TSX 中於 canvas 上繪圖：2D 操作、路徑與 SVG 路徑資料、漸層、文字、圖片、依據 signal 重新繪製，以及使用動畫值為繪圖加上動畫。"
+description: "在 Rust 和 TSX 中於畫布上繪圖:2D 操作、路徑與 SVG 路徑資料、漸變、文字、圖片、透過 signal 重繪,以及使用動畫值為繪圖加入動畫。"
 order: 44
 group: ui
 demo: guide-canvas
+source_hash: a49acbd4da5a3c5f
 ---
+
 
 # Canvas
 
-Canvas 是一種視圖，你可以用 HTML Canvas 2D API 的操作在上面繪圖：圖表、進度環、儀表、簽名、自訂圖示，以及任何用繪製比用視圖組合更容易實現的內容。在 Rust 中，`canvas(..)` 會顯示 `Painter` 所記錄的內容；在 TSX 中，來自 `nsh` 的 `Canvas` 接受一個 `draw` 函式，一次記錄完整的繪圖。平台會以原生方式重播這些繪圖（iOS 上使用 Core Graphics，Android 上使用 `android.graphics.Canvas`），並採用螢幕的解析度，因此無論像素密度為何，繪圖都能保持清晰。
+畫布（canvas）是一種視圖，你可以用 HTML Canvas 2D API 的操作在上面繪圖：圖表、進度環、儀表、簽名、自訂圖示，以及任何用繪圖比用視圖搭建更容易的內容。在 Rust 中，`canvas(..)` 會顯示 `Painter` 所記錄的內容；在 TSX 中，來自 `nsh` 的 `Canvas` 接受一個 `draw` 函數，一次過記錄整個繪圖。平台會以原生方式重播繪圖（iOS 使用 Core Graphics，Android 使用 `android.graphics.Canvas`），解像度與螢幕一致，因此不論像素密度為何，繪圖都保持清晰。
 
 ```rust tabs
 use std::f32::consts::TAU;
@@ -63,19 +65,19 @@ function App() {
 mount(App);
 ```
 
-Canvas 支援 [view](../elements/view.md) 支援的一切（樣式、class、觸控處理器、無障礙功能、ref），再加上它的繪圖內容。它需要從樣式或版面配置取得尺寸；它的內容就是繪圖。座標以 point 為單位，原點位於左上角。
+畫布支援[視圖](../elements/view.md)支援的一切（樣式、class、觸控處理器、無障礙功能、ref），另加繪圖內容。畫布需要由樣式或版面配置提供尺寸；它的內容就是繪圖。座標以點（point）為單位，原點位於左上角。
 
 <a id="when-the-drawing-is-made"></a>
 
 ## 繪圖的時機
 
-在 Rust 中，`canvas(move || ..)` 在一個 binding 中進行記錄：閉包會執行一次，並在它所讀取的 [signal](./reactivity.md) 變更時再次執行。如果繪圖取決於 canvas 的尺寸，請把來自 `.on_layout(..)` 的尺寸存放在 signal 中並讀取它，如上所示。在 TSX 中，`draw(cx, { width, height })` 會在以下時機執行：
+在 Rust 中，`canvas(move || ..)` 會在 binding 中記錄：閉包會執行一次，而當它讀取過的[signal](./reactivity.md)改變時會再執行。若繪圖取決於畫布的尺寸，可將 `.on_layout(..)` 提供的尺寸存放在 signal 中並讀取，如上例所示。在 TSX 中，`draw(cx, { width, height })` 會在以下時機執行：
 
-- canvas 的尺寸確定之後（首次版面配置之後）；
-- canvas 被調整大小時再次執行；
-- 它所讀取的 signal 變更時再次執行。
+- 畫布的尺寸確定之後（即首次版面配置之後）；
+- 畫布調整大小時；
+- 它讀取過的 signal 改變時。
 
-每次執行都會取代整個繪圖。在繪圖時讀取 signal，就是讓 canvas 跟隨資料變化的方式：
+每次執行都會取代整個繪圖。在繪圖時讀取 signal，就是讓畫布跟隨資料變化的方法：
 
 ```rust tabs
 let values = signal(vec![12.0_f32, 30.0, 22.0, 48.0, 36.0, 60.0]);
@@ -117,38 +119,38 @@ const values = signal([12, 30, 22, 48, 36, 60]);
 />
 ```
 
-繪圖呼叫只會進行記錄：繪圖是在記錄完成後由平台執行的，因此無法讀回像素。記錄內容會作為一次操作傳送給平台。
+繪圖呼叫只會記錄：繪圖是在記錄完成後由平台進行的，因此無法讀回像素。記錄內容會以單一操作傳送到平台。
 
 <a id="the-2d-operations"></a>
 
 ## 2D 操作
 
-這些操作是 HTML Canvas 2D API 的子集：在 TSX 中為 `CanvasRenderingContext2D`，在 Rust 中則是 `Painter` 的方法，並使用 Rust 的命名（`begin_path`、`fill_rect`、`line_width`、`set_transform`、`draw_image` 等；顏色透過 `fill_color` / `stroke_color`，漸層透過 `fill_style` / `stroke_style`）。支援的內容如下：
+這些操作是 HTML Canvas 2D API 的子集：在 TSX 中是 `CanvasRenderingContext2D`，在 Rust 中則是 `Painter` 的方法，並使用 Rust 的命名（`begin_path`、`fill_rect`、`line_width`、`set_transform`、`draw_image` 等；顏色透過 `fill_color` / `stroke_color`，漸變透過 `fill_style` / `stroke_style`）。支援的內容如下：
 
 **狀態**
 
 | 成員 | Rust | 說明 |
 |---|---|---|
-| `save()`、`restore()` | `.save()`、`.restore()` | 推入與彈出繪圖狀態（樣式、變換、裁剪）。 |
-| `fillStyle`、`strokeStyle` | `.fill_color(..)`、`.fill_style(..)`、`.stroke_color(..)`、`.stroke_style(..)` | CSS 顏色、漸層，或對顏色進行插值的動畫值。 |
+| `save()`、`restore()` | `.save()`、`.restore()` | 推入和彈出繪圖狀態（樣式、變換、裁剪）。 |
+| `fillStyle`、`strokeStyle` | `.fill_color(..)`、`.fill_style(..)`、`.stroke_color(..)`、`.stroke_style(..)` | CSS 顏色、漸變，或對顏色進行插值的動畫值。 |
 | `lineWidth`、`lineCap`、`lineJoin`、`miterLimit` | `.line_width(..)`、`.line_cap(..)`、`.line_join(..)`、`.miter_limit(..)` | 描邊形狀。 |
 | `setLineDash(segments)`、`getLineDash()`、`lineDashOffset` | `.line_dash(..)`、`.line_dash_offset(..)` | 虛線。 |
-| `globalAlpha` | `.global_alpha(..)` | 接下來繪製內容的不透明度，範圍 0..1。 |
+| `globalAlpha` | `.global_alpha(..)` | 其後繪製內容的不透明度，範圍為 0..1。 |
 | `globalCompositeOperation` | `.composite(Composite::DestinationOut)` | 合成方式：`"source-over"`、`"destination-out"`、`"multiply"`、`"screen"` 等。 |
 | `shadowColor`、`shadowBlur`、`shadowOffsetX`、`shadowOffsetY` | `.shadow(color, blur, offset)` | 陰影。 |
-| `font` | `.font(..)` | CSS `font` 簡寫：`"600 14px Inter"`（尺寸可用 px、pt 或 rem）；`small-caps` 與數字形式 `tabular-nums`、`oldstyle-nums` 等可以放在尺寸之前。 |
-| `fontVariantNumeric` | `.font_variant_numeric(..)` | `"tabular-nums"` 會讓每個數字的寬度相同，因此會變動的數字（計數器、價格、座標軸標籤）不會抖動；另外還有 `"proportional-nums"`、`"oldstyle-nums"`、`"lining-nums"`、`"normal"`。這是 NSH 的新增功能（對應 CSS 的 `font-variant-numeric`）；設定 `font` 會保留它。瀏覽器會忽略它。 |
+| `font` | `.font(..)` | CSS `font` 簡寫：`"600 14px Inter"`（尺寸可用 px、pt 或 rem）；`small-caps` 以及 `tabular-nums`、`oldstyle-nums` 等數字形式可放在尺寸之前。 |
+| `fontVariantNumeric` | `.font_variant_numeric(..)` | `"tabular-nums"` 會令每個數字的寬度一致，因此會變動的數字（計數器、價格、座標軸標籤）不會跳動；另有 `"proportional-nums"`、`"oldstyle-nums"`、`"lining-nums"`、`"normal"`。這是 NSH 的新增功能（對應 CSS 的 `font-variant-numeric`）；設定 `font` 時會保留此設定。瀏覽器會忽略它。 |
 | `textAlign`、`textBaseline` | `.text_align(..)`、`.text_baseline(..)` | 文字位置。 |
 
 **變換**：`translate(x, y)`、`scale(x, y)`、`rotate(angle)`（弧度，順時針）、`transform(a, b, c, d, e, f)`、`setTransform(a, b, c, d, e, f)`、`resetTransform()`。
 
-**路徑**：`beginPath()`、`moveTo`、`lineTo`、`quadraticCurveTo`、`bezierCurveTo`、`arc`、`arcTo`、`ellipse`、`rect`、`roundRect(x, y, w, h, radii)`、`closePath()`；接著是 `fill(rule?)`、`stroke()` 與 `clip(rule?)`，它們也都可以接受路徑（Rust 中為 `fill_path`、`stroke_path`、`clip_path`）。填充規則為 `"nonzero"` 與 `"evenodd"`。
+**路徑**：`beginPath()`、`moveTo`、`lineTo`、`quadraticCurveTo`、`bezierCurveTo`、`arc`、`arcTo`、`ellipse`、`rect`、`roundRect(x, y, w, h, radii)`、`closePath()`；然後是 `fill(rule?)`、`stroke()` 和 `clip(rule?)`，它們各自也可接受路徑（在 Rust 中為 `fill_path`、`stroke_path`、`clip_path`）。填充規則為 `"nonzero"` 和 `"evenodd"`。
 
 **矩形**：`fillRect`、`strokeRect`、`clearRect`。
 
-**文字**：`fillText(text, x, y, maxWidth?)`、`strokeText(...)`、`measureText(text)`（由平台的文字引擎以目前的 `font` 同步量測；僅支援 `width`）。在 Rust 中，`measure_text(font, text)` 會回傳寬度。
+**文字**：`fillText(text, x, y, maxWidth?)`、`strokeText(...)`、`measureText(text)`（由平台的文字引擎以目前的 `font` 同步量度；只有 `width`）。在 Rust 中，`measure_text(font, text)` 會給出寬度。
 
-**點擊測試**：`isPointInPath(path?, x, y, rule?)` 與 `isPointInStroke(path?, x, y)`（在 `Painter` 上則為 `path_contains`、`stroke_contains`、`is_point_in_path` 與 `is_point_in_stroke`）會同步回應，其結果根據已記錄的幾何資訊計算（目前的變換、路徑、`lineWidth` 與 `lineCap`）。請保留繪圖以及你所繪製的路徑，以找出被點擊位置下方的形狀：
+**點擊測試**：`isPointInPath(path?, x, y, rule?)` 和 `isPointInStroke(path?, x, y)`（在 `Painter` 上則為 `path_contains`、`stroke_contains`、`is_point_in_path` 和 `is_point_in_stroke`）會同步回應，結果由已記錄的幾何資料（目前的變換、路徑、`lineWidth` 和 `lineCap`）計算得出。請保留繪圖和你所繪製的路徑，以找出輕按位置下的形狀：
 
 ```rust tabs
 let slices: Rc<Vec<Path>> = Rc::new(vec![svg_path("M50 50 L100 50 A50 50 0 0 1 50 100 Z") /* , ... */]);
@@ -186,21 +188,21 @@ const slices = [new Path2D("M50 50 L100 50 A50 50 0 0 1 50 100 Z"), /* ... */];
 />
 ```
 
-描邊的測試採用圓角連接且不含虛線；以動畫值給定的座標一律視為 0。
+描邊在測試時按圓形接合處理，且不計虛線；以動畫值給出的座標會當作 0。
 
-**漸層**：`createLinearGradient`、`createRadialGradient`、`createConicGradient`，各自搭配 `addColorStop(offset, color)`（Rust 中為 `CanvasGradient::linear`、`radial`、`conic` 與 `add_color_stop`）。
+**漸變**：`createLinearGradient`、`createRadialGradient`、`createConicGradient`，各自配合 `addColorStop(offset, color)`（在 Rust 中為 `CanvasGradient::linear`、`radial`、`conic` 和 `add_color_stop`）。
 
-**圖片**：`drawImage(image, dx, dy)`、`drawImage(image, dx, dy, dw, dh)`、`drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)`（Rust 中為 `draw_image(url, dest)` 與 `draw_image_part(..)`）。
+**圖像**：`drawImage(image, dx, dy)`、`drawImage(image, dx, dy, dw, dh)`、`drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)`（在 Rust 中為 `draw_image(url, dest)` 和 `draw_image_part(..)`）。
 
-在 TSX 中，`cx.canvas.width` 與 `cx.canvas.height` 會給出 canvas 以 point 為單位的尺寸。
+在 TSX 中，`cx.canvas.width` 和 `cx.canvas.height` 會給出畫布以點為單位的尺寸。
 
-**支援的範圍**：繪圖操作。像素是由平台寫入的，因此 `getImageData` / `putImageData` 及其他像素存取都不在範圍內，`filter` 以及 `drawImage` 中的 SVG 圖片也是如此。無效的顏色或字型會捨棄該項操作，與 HTML Canvas 相同。
+**支援的範圍**：繪圖操作。像素由平台寫入，因此 `getImageData` / `putImageData` 及其他像素存取不在支援範圍內，`filter` 和 `drawImage` 中的 SVG 圖像亦然。無效的顏色或字型只會令該項操作被略過，與 HTML Canvas 相同。
 
 <a id="paths-and-svg-path-data"></a>
 
 ## 路徑與 SVG 路徑資料
 
-建立一次的路徑可以被多次填充、描邊或裁剪：Rust 中使用 `svg_path(d)`，TSX 中使用 `Path2D`。兩者都接受 SVG 路徑資料，並由原生端解析，讓圖示的製作變得容易：
+只需建立一次的路徑，便可多次填充、描邊或用作裁剪：在 Rust 中是 `svg_path(d)`，在 TSX 中是 `Path2D`。兩者都接受 SVG 路徑資料，並以原生方式解析，令圖示製作更容易：
 
 ```rust tabs
 use nsh_core::canvas::{FillRule, svg_path};
@@ -238,11 +240,11 @@ function Heart(props: { size: number; color: string }) {
 }
 ```
 
-`Path2D` 擁有與 context 相同的路徑方法（`moveTo`、`arc`、`roundRect` 等）以及 `addPath(other)`。`new Path2D(other)` 會複製一個路徑。
+`Path2D` 擁有與繪圖情境相同的路徑方法（`moveTo`、`arc`、`roundRect` 等）以及 `addPath(other)`。`new Path2D(other)` 會複製路徑。
 
 <a id="gradients"></a>
 
-## 漸層
+## 漸變
 
 ```rust tabs
 canvas(move || {
@@ -287,7 +289,7 @@ canvas(move || {
 />
 ```
 
-圓錐漸層（`createConicGradient(startAngle, x, y)`、`CanvasGradient::conic(start_angle, center)`）會圍繞某個點掃過各種顏色；其起始角度以弧度表示，從 x 軸起順時針計算。在描邊的圓弧上使用圓錐漸層，就能做出漸層進度環。
+圓錐漸變（`createConicGradient(startAngle, x, y)`、`CanvasGradient::conic(start_angle, center)`）會圍繞一點掃過各種顏色；其起始角度以弧度計，由 x 軸起順時針方向。在描邊的圓弧上使用圓錐漸變，便可製作漸變進度環。
 
 <a id="text"></a>
 
@@ -316,15 +318,15 @@ const label = "100";
 cx.fillText(label, 32 - 6 - cx.measureText(label).width, 16);
 ```
 
-字型家族與樣式中相同：系統字型家族，以及你的應用程式隨附的字型名稱（請參閱 [Fonts](./fonts.md)）。
+字型家族與樣式中的相同：系統字型家族，以及你的應用程式內附的字型名稱（參閱[字型](./fonts.md)）。
 
 <a id="images"></a>
 
-## 圖片
+## 圖像
 
-在 Rust 中，繪製圖片需要一個 URL（資產的 URL 為 `LOGO.url`）；在 TSX 中，則可使用 URL 或匯入的資產（`import logo from "./logo.png"`）。圖片由原生端載入，載入完成後 canvas 會重新繪製，因此你不需要自行追蹤載入狀態。遠端 URL 受應用程式的[網路權限](./sandbox-and-capabilities.md)限制。
+在 Rust 中，繪製圖像需要 URL（資源的 URL 為 `LOGO.url`）；在 TSX 中，則可使用 URL 或匯入的資源（`import logo from "./logo.png"`）。圖像會以原生方式載入，載入完成後畫布會重新繪製，因此你無需自行追蹤載入狀態。遠端 URL 受應用程式的[網絡權限](./sandbox-and-capabilities.md)約束。
 
-iOS、macOS、Android、Windows、Linux 與 GPUI 上的 canvas 可繪製點陣圖片（PNG、JPEG、GIF、WebP 等）；在這些平台上，SVG 來源會被視為載入失敗的圖片，並由日誌指出其名稱。請使用 [`<Image>`](./images-and-assets.md#svg-images) 顯示 SVG 圖片，或將其形狀繪製為 `Path2D` 路徑。在 web 上，canvas 會繪製瀏覽器所能繪製的內容，包括 SVG。
+iOS、macOS、Android、Windows、Linux 和 GPUI 上的畫布會繪製點陣圖像（PNG、JPEG、GIF、WebP 等）；在這些平台上，SVG 來源會被視為載入失敗的圖像，並由日誌指出其名稱。請使用 [`<Image>`](./images-and-assets.md#svg-images) 顯示 SVG 圖像，或將其形狀繪製為 `Path2D` 路徑。在網頁上，畫布會繪製瀏覽器所能繪製的內容，包括 SVG。
 
 ```rust tabs
 const LOGO: ImageAsset = asset!("logo.png");
@@ -358,13 +360,13 @@ import logo from "./logo.png";
 />
 ```
 
-九個參數的形式（`draw_image_part`）以圖片的像素為單位指定來源矩形。
+九個參數的形式（`draw_image_part`）以圖像的像素為單位指定來源矩形。
 
 <a id="driving-drawings-with-animated-values"></a>
 
 ## 以動畫值驅動繪圖
 
-繪圖呼叫中的任何數字參數，以及填充與描邊的顏料，都可以是[動畫值](./animation.md#animated-values)或由它衍生的節點。這類參數會在平台繪製時被讀取；當該值產生動畫時，平台會自行逐幀重繪，無需重新記錄繪圖，也不會執行你的任何程式碼。
+繪圖呼叫的任何數字參數，以及填充和描邊的顏料，都可以是[動畫值](./animation.md#animated-values)或由它衍生的節點。這類參數會在平台繪圖時讀取；當該值產生動畫時，平台會自行每一幀重新繪製，無需再次記錄繪圖，也無需執行你的任何程式碼。
 
 ```rust tabs
 use std::f32::consts::{FRAC_PI_2, TAU};
@@ -463,15 +465,15 @@ function Ring() {
 mount(Ring);
 ```
 
-圓弧的結束角度是 `progress.mul(2π).sub(π/2)`：它是一個節點，因此進度環會以原生方式在 900 毫秒內掃過，而繪圖只被記錄了一次（標籤因為讀取了 signal，所以會再記錄一次）。時鐘的秒針也以同樣方式運作：`rotate(seconds.mul(π / 30))` 搭配以線性方式產生動畫的 `seconds`。
+圓弧的結束角度是 `progress.mul(2π).sub(π/2)`：這是一個節點，因此進度環會以原生方式在 900 毫秒內掃過，而繪圖只記錄了一次（標籤因為讀取 signal，所以多記錄一次）。時鐘的秒針也是同樣的做法：`rotate(seconds.mul(π / 30))` 配合線性動畫的 `seconds`。
 
-顏色也能以同樣的方式產生動畫：Rust 中使用 `.fill_style(&t.interpolate_colors(&[0.0, 1.0], &[rgb(0x54aeff), rgb(0xcf222e)]))`，TSX 中使用 `cx.fillStyle = t.interpolate({ inputRange: [0, 1], outputRange: ["#54aeff", "#cf222e"] })`。
+顏色也以同樣方式產生動畫：在 Rust 中是 `.fill_style(&t.interpolate_colors(&[0.0, 1.0], &[rgb(0x54aeff), rgb(0xcf222e)]))`，在 TSX 中是 `cx.fillStyle = t.interpolate({ inputRange: [0, 1], outputRange: ["#54aeff", "#cf222e"] })`。
 
 <a id="touch-on-a-canvas"></a>
 
-## Canvas 上的觸控
+## 畫布上的觸控
 
-Canvas 是一種視圖，因此它支援按壓事件以及 [responder system](./touch-and-gestures.md#the-responder-system)。手指繪圖會把點記錄在 signal 中並加以繪製：
+畫布是視圖，因此可處理按壓和[響應者系統](./touch-and-gestures.md#the-responder-system)。手指繪圖時，會將各點記錄在 signal 中並繪製出來：
 
 ```rust tabs
 let strokes = signal(Vec::<Vec<(f32, f32)>>::new());
@@ -535,15 +537,15 @@ const strokes = signal<[number, number][][]>([]);
 
 ## 效能
 
-- 繪圖在 Rust 中被記錄（在 TSX 中則是以 JS 呼叫 context），並作為一次操作傳送給平台；不會有每次呼叫都跨越橋接的情況。
-- 每次繪圖都會重新記錄所有內容。請讓工作量與所顯示的內容成正比，並將每一幀都會變動的資料放在動畫值中，而不是 signal 中。
-- 若繪圖包含靜態部分與頻繁變動的部分，請將它拆成兩個上下堆疊的 canvas，這樣只有其中一個會重繪。
-- 在可縮放的 scroll view 內，canvas 會在縮放結束時以縮放後的解析度重新繪製。
+- 在 Rust 中繪圖會被記錄下來（在 TSX 中，則是以 JS 呼叫情境的方式記錄），並以單一操作傳送到平台；每次呼叫都不會跨越橋接。
+- 每次繪圖都會重新記錄所有內容。請令工作量與顯示的內容成正比，並將每一幀都會改變的資料保存在動畫值而非 signal 中。
+- 如果繪圖包含靜態部分和經常變動的部分，請將它們拆分為兩個上下疊放的畫布，這樣只有一個需要重新繪製。
+- 在可縮放的捲動視圖內，縮放結束時，畫布會以縮放後的解像度重新繪製。
 
 <a id="related"></a>
 
 ## 相關內容
 
 - [`Canvas` 元素](../elements/canvas.md)：參考文件。
-- [Animation](./animation.md)：動畫值、`interpolate` 與 `Easing`。
-- [Images and assets](./images-and-assets.md)：應用程式的圖片。
+- [動畫](./animation.md)：動畫值、`interpolate` 和 `Easing`。
+- [圖像與資源](./images-and-assets.md)：應用程式的圖像。

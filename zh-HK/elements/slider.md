@@ -1,13 +1,15 @@
 ---
 title: "Slider"
-description: "Slider 元件：沿著軌道選取單一數值或由兩個數值構成的範圍，支援在觸控螢幕與滑鼠上的點按與拖曳，每個滑塊皆提供 WAI-ARIA 的 slider 按鍵操作以及供螢幕閱讀器使用的數值，並可由應用程式自訂軌道、指示器、範圍與滑塊的樣式。"
+description: "Slider 元件:沿軌道選取單一數值或由兩個數值組成的範圍,支援在觸控螢幕上按壓和拖曳,以及使用滑鼠操作;每個滑塊均提供 WAI-ARIA 的 slider 按鍵操作,並為螢幕閱讀器提供數值;軌道、指示器、範圍和滑塊的樣式均可由應用程式自行設定。"
 group: base
 demo: el-slider
+source_hash: 5dfd7ea970e4cd98
 ---
+
 
 # Slider
 
-滑桿讓使用者沿著軌道選取一個值(例如音量、亮度),或是選取由兩個值構成的區間,每個值各有一個滑塊(例如價格區間)。滑桿自行負責其行為:在軌道上按下時,會將較近的滑塊移到該處;滑塊會跟隨拖曳,無論使用滑鼠或手指;值會對齊到 `step`;每個滑塊都是鍵盤焦點的一個停駐點,可用方向鍵移動,對螢幕閱讀器而言則是可調整的元素,並各自帶有自己的值。外觀由應用程式決定:`Slider` 本身沒有顏色、尺寸、圓角或動態效果。它由軌道組成,軌道內有指示條,範圍區段與滑塊位於指示條上,接著是其子元素(標籤、以文字呈現的值),由應用程式為各部分設定樣式。
+滑桿沿軌道選取一個值（例如音量、亮度），或以兩個滑塊各取一值組成區間（例如價格區間）。它自行處理行為：按一下軌道，較近的滑塊會移到該處；滑塊會跟隨拖曳，無論使用滑鼠還是手指；值會貼齊`step`；每個滑塊都是鍵盤焦點的停靠點，可用方向鍵移動，對螢幕閱讀器來說也是可調整元素，各有自己的值。外觀由應用程式決定：`Slider` 本身沒有顏色、尺寸、圓角或動態效果。它由軌道組成，軌道內有指示器，範圍區段和滑塊位於指示器上，然後是其子項（標籤、以文字顯示的值），應用程式為每個部件設定樣式。
 
 ```rust tabs
 use nsh_base::{SliderValue, slider, theme};
@@ -80,13 +82,13 @@ function App() {
 mount(App);
 ```
 
-`Slider` 來自 [`nsh/base`](../modules/nsh-base.md),即 Rust 中的 `nsh-base` crate。在 Rust 中,`slider()` 會建立一個滑桿,每個屬性有對應的 setter(`.value(..)`、`.thumb_style(..)`),每個事件有對應的監聽方法(`.on_change(..)`),滑桿本身使用具型別的樣式方法,其標籤則使用 `.child(..)`。其值為 `SliderValue`:`Single(f64)` 或 `Range(f64, f64)`。
+`Slider` 來自 [`nsh/base`](../modules/nsh-base.md)，即 Rust 中的 `nsh-base` crate。在 Rust 中，`slider()` 會建立一個滑桿，每個屬性有一個 setter（`.value(..)`、`.thumb_style(..)`），每個事件有一個監聽方法（`.on_change(..)`），滑桿本身有型別化的樣式方法，其標籤則使用 `.child(..)`。它的值是 `SliderValue`：`Single(f64)` 或 `Range(f64, f64)`。
 
 <a id="value"></a>
 
 ## 值
 
-值可以是一個數字,或是具有兩個滑塊的 `[start, end]` 區間;值的形態決定滑塊的數量。應用程式可以透過 `value` 擁有該值,並設定 `onChange` 所回報的值,與 `nsh/base` 的所有控制項相同;也可以透過 `defaultValue` 將值交給滑桿管理,同樣能收到變更通知。拖曳期間,滑塊與範圍區段會在同一個影格中以原生方式跟隨指標;指標抬起後,畫面會再次顯示應用程式的 `value`,也就是應用程式針對該次拖曳最後一次變更所設定的值;拖曳進行時,螢幕閱讀器會即時聽到拖曳過程中的值,否則聽到的是結束時的值。
+值可以是一個數字，也可以是 `[start, end]`（有兩個滑塊的區間）；值的形態決定滑塊的數量。應用程式以 `value` 持有該值，並設定 `onChange` 所報告的值，與 `nsh/base` 的所有控制項一樣；或者以 `defaultValue` 把值交給滑桿自行管理，同樣可以收到變更通知。拖曳期間，滑塊和範圍區段會在同一影格內於原生層跟隨指標；指標放開後，會再次顯示應用程式的 `value`，即應用程式針對該次拖曳最後一次變更所設定的值；拖曳進行期間，螢幕閱讀器會隨之讀出拖曳過程中的值，否則讀出結束時的值。
 
 ```tsx
 const price = signal<[number, number]>([200, 800]);
@@ -103,34 +105,34 @@ const price = signal<[number, number]>([200, 800]);
 />;
 ```
 
-- `onChange` 會回報使用者要求的每一個新值:在軌道上按下時、拖曳的每一個步進、每次按鍵。每次回報都是一個新值。
-- `onChangeEnd` 會回報該次變更結束時的值,且只回報一次:在設定了值的按下或拖曳之後指標抬起時,以及每次按鍵或螢幕閱讀器步進之後(每一次都是一次完整的變更)。請在此儲存或傳送該值。
-- 值會對齊到 `step`,從 `min` 開始計算(`min={1} step={2}` 會得到 1、3、5……),並保持在 `min` 與 `max` 之間;`max` 一律可以到達,因此當範圍不是步進的整數倍時,最後一步會較短。`step={0}` 可接受任何值。
-- 區間的兩個滑塊不會交叉:被拖曳的滑塊會停在另一個滑塊處。若拖曳從兩個位於同一值的滑塊上開始,則移動能朝指標方向前進的那一個。
-- 顯示的值是應用程式提供的值,並受 `min` 與 `max` 限制(區間的兩端會依序排列);不在步進網格上的值會顯示在其實際位置,使用者的下一次變更才會對齊。
+- `onChange` 會報告使用者要求的每個新值：按一下軌道時、拖曳的每一步、每次按鍵。每次報告都是一個新值。
+- `onChangeEnd` 只會報告一次變更結束時的值：在設定了值的按壓或拖曳之後指標放開時，以及每次按鍵或螢幕閱讀器步進之後（每一次都是一次完整的變更）。請在此儲存或傳送該值。
+- 值會貼齊 `step`，從 `min` 起算（`min={1} step={2}` 得出 1、3、5……），並保持在 `min` 與 `max` 之間；`max` 一定可以到達，因此當值域不是步長的整數倍時，最後一步會較短。`step={0}` 可接受任何值。
+- 區間的滑塊不會交叉：被拖曳的滑塊會停在另一個滑塊處。若拖曳始於兩個滑塊處於同一值的位置，則移動能朝指標方向前進的那一個。
+- 顯示的值是應用程式的值，並受 `min` 和 `max` 限制（區間的兩端按順序排列）；不在步長網格上的值會顯示在其實際位置，使用者下一次變更時才會貼齊。
 
 <a id="props"></a>
 
 ## 屬性
 
-| 屬性 | Rust | 型別 | 預設值 | 說明 |
+| 屬性 | Rust | 類型 | 預設值 | 說明 |
 |---|---|---|---|---|
-| `value` | `.value(..)` | `number \| [number, number]` | 無 | 值(受控):一個數字,或具有兩個滑塊的區間。應用程式設定 `onChange` 所回報的值。 |
-| `defaultValue` | `.default_value(..)` | `number \| [number, number]` | `0` | 在未設定 `value` 時的初始值;此時滑桿會自行保存值。 |
+| `value` | `.value(..)` | `number \| [number, number]` | 無 | 值（受控）：一個數字，或有兩個滑塊的區間。應用程式設定 `onChange` 所報告的值。 |
+| `defaultValue` | `.default_value(..)` | `number \| [number, number]` | `0` | 在未設定 `value` 時的初始值；之後由滑桿自行保存值。 |
 | `min` | `.min(..)` | `number` | `0` | 最小值。 |
-| `max` | `.max(..)` | `number` | `100` | 最大值;若低於 `min`,則為 `min`。 |
-| `step` | `.step(..)` | `number` | `1` | 值對齊的步進,從 `min` 開始計算;`0` 可接受任何值。 |
-| `scale` | `.scale(..)` | `"linear" \| "logarithmic"` | `"linear"` | 值在軌道上的分佈方式:均勻分佈,或依數量級分佈(從 1 到 1000,三分之一處為 10)。對數刻度需要 `min` 大於 0;若 `min` 更低,則為線性。 |
-| `axis` | `.axis(..)` | `"horizontal" \| "vertical"` | `"horizontal"` | 軌道的方向:`min` 位於起點(左側,在由右至左的版面中則為右側),或位於底部。在建立滑桿時讀取。 |
-| `disabled` | `.disabled(..)` | `boolean` | `false` | 指標、鍵盤或螢幕閱讀器皆無法變更值;`disabled:` 類別會套用到滑桿及其各部分。 |
-| `accessibilityLabel` | `.accessibility_label(..)` | `string` | 無 | 螢幕閱讀器為滑塊朗讀的內容(在區間上則是結束端滑塊)。 |
-| `startAccessibilityLabel` | `.start_accessibility_label(..)` | `string` | `accessibilityLabel` | 螢幕閱讀器為區間起始滑塊朗讀的內容。 |
-| `trackClass`、`trackStyle` | `.track_style(\|s\| ..)` | `string`、`StyleProp<ViewStyle>` | 無 | 軌道:接收按下與拖曳的區域。 |
-| `indicatorClass`、`indicatorStyle` | `.indicator_style(\|s\| ..)` | `string`、`StyleProp<ViewStyle>` | 無 | 指示條,即值所對應的軌條。 |
-| `rangeClass`、`rangeStyle` | `.range_style(\|s\| ..)` | `string`、`StyleProp<ViewStyle>` | 無 | 範圍區段,從 `min` 到滑塊(在區間中則位於兩個滑塊之間),由滑桿負責定位。 |
-| `thumbClass`、`thumbStyle` | `.thumb_style(\|s\| ..)` | `string`、`StyleProp<ViewStyle>` | 無 | 每個滑塊,以其值為中心。 |
-| `children` | `.child(..)` | `JSX.Element` | 無 | 軌道之後的內容:標籤、以文字呈現的值。 |
-| `class`、`style` | 樣式方法 | `string`、`StyleProp<ViewStyle>` | 無 | 滑桿本身:包住軌道與標籤的直欄(或橫列)。 |
+| `max` | `.max(..)` | `number` | `100` | 最大值；低於 `min` 的值視為 `min`。 |
+| `step` | `.step(..)` | `number` | `1` | 值貼齊的步長，從 `min` 起算；`0` 可接受任何值。 |
+| `scale` | `.scale(..)` | `"linear" \| "logarithmic"` | `"linear"` | 值沿軌道的分佈方式：均勻分佈，或按數量級分佈（由 1 到 1000，走到三分之一處是 10）。對數刻度需要 `min` 大於 0；`min` 較低時則為線性。 |
+| `axis` | `.axis(..)` | `"horizontal" \| "vertical"` | `"horizontal"` | 軌道的方向：`min` 位於起點（左側，在由右至左的版面中為右側），或位於底部。建立滑桿時讀取。 |
+| `disabled` | `.disabled(..)` | `boolean` | `false` | 指標、鍵盤或螢幕閱讀器都無法更改值；`disabled:` 類別會套用到滑桿及其部件。 |
+| `accessibilityLabel` | `.accessibility_label(..)` | `string` | 無 | 螢幕閱讀器為滑塊讀出的內容（在區間中則為結束端的滑塊）。 |
+| `startAccessibilityLabel` | `.start_accessibility_label(..)` | `string` | `accessibilityLabel` | 螢幕閱讀器為區間起始滑塊讀出的內容。 |
+| `trackClass`、`trackStyle` | `.track_style(\|s\| ..)` | `string`、`StyleProp<ViewStyle>` | 無 | 軌道：接收按壓和拖曳的區域。 |
+| `indicatorClass`、`indicatorStyle` | `.indicator_style(\|s\| ..)` | `string`、`StyleProp<ViewStyle>` | 無 | 指示器，即值所對應的軌條。 |
+| `rangeClass`、`rangeStyle` | `.range_style(\|s\| ..)` | `string`、`StyleProp<ViewStyle>` | 無 | 範圍區段，從 `min` 到滑塊（區間則在兩個滑塊之間），由滑桿放置。 |
+| `thumbClass`、`thumbStyle` | `.thumb_style(\|s\| ..)` | `string`、`StyleProp<ViewStyle>` | 無 | 每個滑塊，以其值為中心。 |
+| `children` | `.child(..)` | `JSX.Element` | 無 | 軌道之後的內容：標籤、以文字顯示的值。 |
+| `class`、`style` | 樣式方法 | `string`、`StyleProp<ViewStyle>` | 無 | 滑桿本身：包住軌道和標籤的直欄（或橫列）。 |
 
 <a id="events"></a>
 
@@ -138,67 +140,67 @@ const price = signal<[number, number]>([200, 800]);
 
 | 事件 | Rust | 負載 | 時機 |
 |---|---|---|---|
-| `onChange` | `.on_change(\|value: &SliderValue\| ..)` | `{ value: number \| [number, number] }` | 使用者要求新值:在軌道上按下、拖曳的一個步進、一次按鍵、螢幕閱讀器的增加或減少。 |
-| `onChangeEnd` | `.on_change_end(\|value: &SliderValue\| ..)` | `{ value: number \| [number, number] }` | 變更結束:指標抬起、一次按鍵或螢幕閱讀器的步進完成。每次變更只觸發一次。 |
+| `onChange` | `.on_change(\|value: &SliderValue\| ..)` | `{ value: number \| [number, number] }` | 使用者要求新值：按一下軌道、拖曳的每一步、按鍵、螢幕閱讀器的增加或減少。 |
+| `onChangeEnd` | `.on_change_end(\|value: &SliderValue\| ..)` | `{ value: number \| [number, number] }` | 變更結束：指標放開、按鍵或螢幕閱讀器的步進完成。每次變更一次。 |
 
 <a id="parts"></a>
 
-## 組成部分
+## 部件
 
-| 部分 | 位置 | 樣式設定 |
+| 部件 | 位於 | 樣式設定 |
 |---|---|---|
 | 滑桿 | | `class`、`style` |
-| 軌道 | 位於滑桿內,排在最前 | `trackClass`、`trackStyle` |
-| 指示條 | 位於軌道內 | `indicatorClass`、`indicatorStyle` |
-| 範圍區段 | 位於指示條內,依值定位 | `rangeClass`、`rangeStyle` |
-| 滑塊(區間有兩個) | 位於指示條內,以其值為中心 | `thumbClass`、`thumbStyle` |
-| 標籤 | 位於滑桿內,排在軌道之後 | 其自身的元素(`children`) |
+| 軌道 | 滑桿內，第一個 | `trackClass`、`trackStyle` |
+| 指示器 | 軌道內 | `indicatorClass`、`indicatorStyle` |
+| 範圍區段 | 指示器內，按值放置 | `rangeClass`、`rangeStyle` |
+| 滑塊（區間有兩個） | 指示器內，以其值為中心 | `thumbClass`、`thumbStyle` |
+| 標籤 | 滑桿內，位於軌道之後 | 其本身的元素（`children`） |
 
-軌道接收按下與拖曳。指示條的長度即值的範圍,從其前緣的 `min` 開始(垂直時則從底部開始);滑桿會將範圍區段與滑塊放置在指示條上,無論滑塊大小為何,都以其值為中心。有兩種配置方式:
+軌道接收按壓和拖曳。指示器的長度就是值域，`min` 位於其起始邊緣（垂直時位於底部）；滑桿會把範圍區段和滑塊放在指示器上，滑塊無論大小，都以其值為中心。有兩種排版方式：
 
-- 軌道本身就是軌條(如上方範例):`h-2 px-2 rounded-full bg-muted` 搭配 `h-full` 指示條。內距會讓滑塊在兩端都保持在軌條之內,而範圍區段的 `-ml-2` 則讓填色從軌條自身的邊緣開始。
-- 軌道是環繞軌條的一個帶狀區域,高度較大,讓手指在觸控螢幕上更容易點到:`h-8 justify-center` 搭配 `h-2 rounded-full` 指示條(垂直滑桿則為 `w-8 items-center` 與 `w-2 h-full`)。
+- 軌道就是軌條（上面的範例）：`h-2 px-2 rounded-full bg-muted` 配合 `h-full` 指示器。內距讓滑塊在兩端都保持在軌條之內，而範圍區段的 `-ml-2` 則讓填充從軌條本身的邊緣開始。
+- 軌道是環繞軌條的一條帶狀區域，較高，方便手指在觸控螢幕上找到：`h-8 justify-center` 配合 `h-2 rounded-full` 指示器（垂直滑桿則使用 `w-8 items-center` 和 `w-2 h-full`）。
 
-各部分會呈現的狀態:
+各部件顯示的狀態：
 
-- 滑塊:指標位於其上時為 `hover:`,被拖曳時為 `active:`,具有鍵盤焦點時為 `focus:`,以及 `disabled:`。
-- 軌道:在按下並拖曳期間為 `active:`;它是一個 `group`,因此指示條、範圍區段與滑塊會由它取得 `group-hover:` 與 `group-active:`。
-- 每個部分:滑桿處於 `disabled:` 時,各部分也處於該狀態。
+- 滑塊：`hover:` 為指標在其上方，`active:` 為被拖曳時，`focus:` 為擁有鍵盤焦點時，`disabled:`。
+- 軌道：按壓並拖曳時為 `active:`；它是 `group`，因此指示器、範圍區段和滑塊會從它取得 `group-hover:` 和 `group-active:`。
+- 每個部件：滑桿處於 `disabled:` 時亦同。
 
-滑塊會隨值的變化而移動,並立即跟隨拖曳。滑塊各狀態的動態效果由應用程式決定(例如讓滑塊在 `hover:` 與 `active:` 時變亮,可使用 `transition`),而 `motion-reduce:` 會讓要求減少動態效果的使用者看到靜止的畫面。鍵盤焦點屬於滑塊:當滑塊具有焦點時,軌道上的 `focus-within:` 會為整條軌條加上焦點環,而滑塊的 `focus:outline-none` 會取代平台本身的焦點外框。
+滑塊會隨值的變化而移動，並即時跟隨拖曳。滑塊各狀態的動態效果由應用程式決定（例如 `transition`，讓滑塊在 `hover:` 和 `active:` 時變亮），而 `motion-reduce:` 會讓要求減少動態效果的使用者看到靜止的效果。鍵盤焦點屬於滑塊：滑塊擁有焦點時，軌道上的 `focus-within:` 會為整條軌條加上焦點環，而滑塊的 `focus:outline-none` 會取代平台本身的焦點外框。
 
 <a id="keyboard"></a>
 
 ## 鍵盤
 
-在 macOS 與網頁上,每個滑塊都是鍵盤焦點(Tab)的一個停駐點,取得焦點的滑塊可使用 WAI-ARIA 的滑桿按鍵:
+在 macOS 和網頁上，每個滑塊都是鍵盤焦點（Tab）的停靠點，獲得焦點的滑塊支援 WAI-ARIA 的滑桿按鍵：
 
 | 按鍵 | 作用 |
 |---|---|
-| Right、Up | 增加一個步進(垂直滑桿上亦同)。 |
-| Left、Down | 減少一個步進。 |
-| Page Up、Page Down | 沿刻度增加或減少範圍的十分之一,至少為一個步進。 |
-| Home、End | 移到滑塊所能到達的最低或最高值(區間的起始滑塊最高到其結束端)。 |
+| 右方向鍵、上方向鍵 | 增加一步（垂直滑桿亦然）。 |
+| 左方向鍵、下方向鍵 | 減少一步。 |
+| Page Up、Page Down | 向上或向下移動值域的十分之一（沿刻度計算），至少一步。 |
+| Home、End | 移到滑塊能到達的最低或最高處（區間的起始滑塊最高到結束滑塊處）。 |
 
-在由右至左的版面中,水平滑桿從右側開始,其 `min` 位於右端:Left 為增加一個步進,Right 為減少一個步進,向左拖曳則會提高值。垂直滑桿仍以 Right 與 Up 作為增加一個步進。
+在由右至左的版面中，水平滑桿由右側開始，其 `min` 位於右端：左方向鍵為增加一步，右方向鍵為減少一步，向左拖曳會提高值。垂直滑桿仍以右方向鍵和上方向鍵增加一步。
 
-每個會改變值的按鍵都會先回報 `onChange`,再回報 `onChangeEnd`。方向鍵與翻頁鍵在按住時會重複觸發。只有在沒有文字輸入正在編輯時,按鍵才會傳到滑桿。
+每個更改值的按鍵都會先報告 `onChange`，再報告 `onChangeEnd`。方向鍵和翻頁鍵按住時會重複。只有在沒有文字輸入框正在編輯時，按鍵才會傳到滑桿。
 
 <a id="accessibility"></a>
 
-## 無障礙
+## 無障礙功能
 
-- 每個滑塊都是可調整的元素(`"adjustable"`,在瀏覽器中為 slider),帶有其標籤、其值,以及它可取的值:區間的起始滑塊從 `min` 到結束端,結束滑塊從起始端到 `max`,因此螢幕閱讀器可以讀取並設定兩者。朗讀的值為數字,並依步進的小數位數呈現(`2.5`)。
-- 螢幕閱讀器的增加與減少動作(VoiceOver 的上下滑動)會讓滑塊步進,效果與方向鍵相同。
-- 滑塊是螢幕閱讀器所見的滑桿元素,以 `accessibilityLabel` 命名(區間的起始滑塊則以 `startAccessibilityLabel` 命名);子元素中可見的標籤則會在其所在位置被朗讀。
-- 在 `disabled` 時,螢幕閱讀器會說明滑塊已變暗,且滑塊不接受任何動作。
+- 每個滑塊都是可調整元素（`"adjustable"`，在瀏覽器中為 slider），具有標籤、值以及可取的值：區間的起始端由 `min` 到結束端，結束端由起始端到 `max`，因此螢幕閱讀器可以讀取並設定兩者。值會以數字加上步長的小數位讀出（`2.5`）。
+- 螢幕閱讀器的增加和減少動作（VoiceOver 的向上和向下滑動）會讓滑塊步進，與方向鍵相同。
+- 對螢幕閱讀器而言，滑塊就是滑桿的元素，由 `accessibilityLabel` 命名（區間的起始端則由 `startAccessibilityLabel` 命名）；子項中的可見標籤會在其所在位置被讀出。
+- 當 `disabled` 時，螢幕閱讀器會表示滑塊已變暗，且不接受任何動作。
 
-關於標籤、角色與動作的一般說明,請參閱[無障礙](../docs/accessibility.md)。
+標籤、角色和動作的一般說明，請參閱[無障礙功能](../docs/accessibility.md)。
 
 <a id="platform-notes"></a>
 
-## 平台說明
+## 平台備註
 
-- 每個平台都會繪製應用程式所設定的樣式。按下與拖曳是在核心中追蹤的,適用於滑鼠、觸控筆或手指,而滑桿周圍的捲動檢視不會接管從滑桿上開始的拖曳。
-- 在 macOS 與網頁上,Tab 會在滑塊之間移動鍵盤焦點,取得焦點的滑塊可使用滑桿按鍵。
-- 螢幕閱讀器:VoiceOver(iOS、macOS)與 TalkBack 可調整每個滑塊;UI Automation(Windows)、GTK 的無障礙功能(Linux)以及瀏覽器(`role="slider"`、`aria-valuenow`、`aria-valuetext`)則可取得其範圍與值。
+- 每個平台都會繪製應用程式所設定的樣式。按壓和拖曳由核心追蹤，適用於滑鼠、手寫筆或手指，而滑桿外圍的捲動檢視不會接管始於滑桿上的拖曳。
+- 在 macOS 和網頁上，Tab 會在滑塊之間移動鍵盤焦點，獲得焦點的滑塊支援滑桿按鍵。
+- 螢幕閱讀器：VoiceOver（iOS、macOS）和 TalkBack 可調整每個滑塊；UI Automation（Windows）、GTK 的無障礙功能（Linux）和瀏覽器（`role="slider"`、`aria-valuenow`、`aria-valuetext`）可取得其範圍和值。

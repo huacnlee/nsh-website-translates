@@ -1,20 +1,22 @@
 ---
 title: "Toast"
-description: "Toast、ToastStack 與 ToastManager:與 gpui-base 相同的無樣式 toast,具備語意化根元素與轉場狀態,以及將 toast 以層疊方式排列的堆疊元件,還有它們的 headless 生命週期。"
+description: "Toast、ToastStack 和 ToastManager:與 gpui-base 一致的無樣式 toast、帶有過渡狀態的語義化根元素、以分層方式排列 toast 的堆疊,以及它們的無介面生命週期。"
 group: base
 demo: el-toast
+source_hash: 8e86cb66a9413fab
 ---
+
 
 # Toast
 
-Toast 是在應用程式上方短暫顯示的簡短訊息:「已複製」、「草稿已刪除 · 復原」、「無法傳送」。
-`nsh/base` 以三個無樣式的部分提供其行為,與 GPUI Kit 的 `gpui-base` 相同:
+Toast 是短暫顯示於應用程式上方的簡短訊息，例如「已複製」、「草稿已刪除 · 復原」、「無法傳送」。
+`nsh/base` 以三個無樣式的部分提供其行為，與 GPUI Kit 的 `gpui-base` 相同：
 
-- **`ToastManager`** 依序保存各個 toast 及其生命週期:每個 toast 先是 `"starting"`,動畫時長過後變為 `"present"`,在存在且未暫停時倒數其逾時,並在退出動畫的時長內維持 `"ending"`,之後才被移除。
-- **`ToastStack`** 測量其 toast 並從某個邊緣開始排版,最新的最靠近該邊緣:收合時為重疊的層,展開時(指標位於其上,或手指按在其上)為清單,並以彈簧動畫移動。
-- **`Toast`** 是每個 toast 的根:`alert` 角色、供應用程式樣式使用的 `transitionStatus`、要求關閉它的滑動手勢,以及在其顯示時由螢幕閱讀器朗讀其標籤。
+- **`ToastManager`** 按順序保存各 Toast 及其生命週期：每個 Toast 先是 `"starting"`，待動態效果的時長過去後變為 `"present"`，在顯示且未暫停期間倒數其逾時，並在退出時長內保持 `"ending"`，之後才被移除。
+- **`ToastStack`** 量度其 Toast，並由某一邊開始排列，最新的最靠近該邊：收合時為重疊的層疊，展開時（指標在其上，或手指按在其上）為列表，並以彈簧移動。
+- **`Toast`** 是每個 Toast 的根：具備 `alert` 角色、供應用程式樣式使用的 `transitionStatus`、請求關閉該 Toast 的滑動手勢，以及在 Toast 顯示時由螢幕閱讀器朗讀其標籤。
 
-外觀與內容由應用程式決定,從任何地方顯示 toast 的便利性也是:應用程式在這些元件之上建構自己的 `toast(...)`,如 gallery 所做的(`examples/gallery/toast.tsx`),GPUI Kit 的通知也是建構在 `gpui-base` 的 toast 之上。
+外觀與內容由應用程式決定，在任何地方顯示 Toast 的便利做法亦然：應用程式可在這些部分之上自行建立 `toast(...)`，如範例庫所做（`examples/gallery/toast.tsx`），GPUI Kit 的通知亦是建基於 `gpui-base` 的 Toast。
 
 ```rust tabs
 use std::time::Duration;
@@ -125,54 +127,48 @@ export function Toaster() {
 }
 ```
 
-`Toast`、`ToastStack` 與 `ToastManager` 來自 [`nsh/base`](../modules/nsh-base.md)。在 Rust 中,它們是 `nsh_base` 的 `toast`、`toast_stack` 與 `ToastManager`。
+`Toast`、`ToastStack` 和 `ToastManager` 來自 [`nsh/base`](../modules/nsh-base.md)。在 Rust 中，它們是 `nsh_base` 的 `toast`、`toast_stack` 和 `ToastManager`。
 
 ## ToastManager
 
-管理器是 headless 的:不渲染任何內容,也不執行計時器。應用程式推入 toast,連同其狀態渲染 `visible(limit)` 回傳的那些 toast,並在任何 toast 已掛載時以計時器呼叫 `advance`,在堆疊展開時傳入 `paused`。在 Rust 中它是針對應用程式的 id 與值的 `ToastManager<I, T>`,每個呼叫各有一個 `Instant`;在 TS 中它是針對字串 id 與任何 JSON 值的類別,使用引擎的時鐘(包含測試的手動時鐘)。
+Manager 是無介面的：它不渲染任何內容，也不運行任何計時器。應用程式推入 Toast，連同其狀態渲染 `visible(limit)` 所返回的 Toast，並在有任何 Toast 掛載時，按計時器呼叫 `advance`，於堆疊展開時傳入 `paused`。在 Rust 中，它是以應用程式的 id 和值為基礎的 `ToastManager<I, T>`，每次呼叫都有一個 `Instant`；在 TS 中，它是一個以字串 id 和任意 JSON 值為基礎的類別，使用引擎的時鐘（包括測試用的手動時鐘）。
 
-- `push(id, value, options)` 新增最新的 toast,並取代具有相同 id 的 toast(回傳其值);`options.timeout` 為其顯示時間,單位為毫秒(無:持續到被關閉為止)。
-- `dismiss(id)` 開始某個 toast 的退出;`dismissAll()` 開始所有 toast 的退出,並回傳其 id。
-- `advance(paused)` 推進生命週期並回報有何變化:`presented`、`ending`(其逾時已到)、`removed`(連同其值),以及 `changed`。
-- `visible(limit)` 是最新的 `limit` 個未在退出的 toast,加上正在退出的 toast,最舊的在前;`entries()`(Rust 為 `iter()`)是全部;`get(id)`、`len()`、`isEmpty()`。
+- `push(id, value, options)` 加入最新的 Toast，並取代具有相同 id 的 Toast（返回被取代 Toast 的值）；`options.timeout` 是其顯示時間（以毫秒計；無：保持顯示直至被關閉）。
+- `dismiss(id)` 開始某個 Toast 的退出；`dismissAll()` 開始所有 Toast 的退出，並返回它們的 id。
+- `advance(paused)` 推進生命週期並回報有何變化：`presented`、`ending`（其逾時已耗盡）、`removed`（連同其值），以及 `changed`。
+- `visible(limit)` 是最新的 `limit` 個未在結束中的 Toast，加上結束中的 Toast，由最舊的開始排列；`entries()`（Rust 為 `iter()`）是全部 Toast；另有 `get(id)`、`len()`、`isEmpty()`。
 
-`ToastMotion` 保存兩者的 token:`duration`(400 ms:進場的期限與堆疊的彈簧回應時間)、`exitDuration`(200 ms)、`collapsedPeek`(14)、`expandedGap`(14)、`collapsedScaleStep`(0.05)與 `collapsedVisible`(3),預設值皆取自 Sonner(Rust 中為 `ToastMotion::sonner()`;TS 中省略的欄位會保留這些值)。
+`ToastMotion` 存放兩者的 token：`duration`（400 ms：進場的截止時間及堆疊彈簧的響應時間）、`exitDuration`（200 ms）、`collapsedPeek`（14）、`expandedGap`（14）、`collapsedScaleStep`（0.05）和 `collapsedVisible`（3），均為 Sonner 的預設值（Rust 中為 `ToastMotion::sonner()`；TS 中省略的欄位會保留這些預設值）。
 
 ## ToastStack
 
-堆疊的子元素即為其 toast,最舊的在前。從其 `placement` 邊緣(預設為 `"topRight"`;底部錨點向上排版)開始,收合的 toast 彼此相距 `collapsedPeek` 重疊,每多一個就窄 `collapsedScaleStep`,且只會顯示 `collapsedVisible`;展開時則為彼此相距 `expandedGap` 的清單。toast 的到來與離開,以及展開,都以臨界阻尼彈簧移動。當指標在其上或手指按在其上時即為展開(`onExpandedChange({ expanded })`;Rust 為 `ToastStackState`,由 `is_expanded()` 讀取),因此應用程式會在使用者閱讀或觸碰 toast 時暫停逾時。
+Stack 的子元素就是其 Toast，由最舊的開始排列。從其 `placement` 邊（預設為 `"topRight"`；底部的錨點會向上排列）開始，收合的 Toast 彼此重疊並相隔 `collapsedPeek`，每多一個便窄 `collapsedScaleStep`，而且只顯示 `collapsedVisible` 個；展開時，它們是相隔 `expandedGap` 的列表。Toast 的到達、離開以及展開，都以臨界阻尼彈簧移動。當指標在其上，或有手指按在其上時（`onExpandedChange({ expanded })`；Rust 為 `ToastStackState`，由 `is_expanded()` 讀取），它便處於展開狀態，因此應用程式可在用戶閱讀或觸碰 Toast 時暫停逾時計時。
 
-堆疊由應用程式擺放:放在邊緣的 [Overlay](./overlay.md) 中,位於安全區域內。其 `class` 與 `style` 決定其寬度。當它持有 toast 時,會接收 Escape 與 Android 返回鍵(`onCancel`;`closeOnEscape={false}` 則將它們留給應用程式的其餘部分):關閉最新的 toast。
-
-<a id="toast-1"></a>
+應用程式負責放置 Stack：放在邊緣的 [Overlay](./overlay.md) 中，並位於安全區域之內。其 `class` 和 `style` 決定其寬度。當它持有 Toast 時，會接收 Escape 和 Android 返回鍵（`onCancel`；`closeOnEscape={false}` 則讓應用程式其餘部分處理這些按鍵）：關閉最新的 Toast。
 
 ## Toast
 
-Toast 是應用程式內容外圍的 `alert` 角色。其 `transitionStatus` 來自管理器,其狀態 class 透過其 `class` 跟隨它:`"starting"` 時,其第一個影格帶有 `startingClass`,使其 `transition` class 從它開始動畫(Tailwind 的 `starting:`,CSS 的 `@starting-style`);`"ending"` 時帶有 `endingClass`,持續退出動畫的時長;指標滑動它時帶有 `swipingClass`(`transition-none` 使其停留在手指下)。
+Toast 是圍繞應用程式內容的 `alert` 角色。其 `transitionStatus` 由 manager 提供，其狀態 class 會透過其 `class` 跟隨：在其首個影格中，當 `"starting"` 時為 `startingClass`，因此其 `transition` class 會由此開始動畫（Tailwind 的 `starting:`、CSS 的 `@starting-style`）；當 `"ending"` 時為 `endingClass`，維持退出的時長；當指標正在滑動它時為 `swipingClass`（`transition-none` 使其跟隨手指）。
 
-手指或滑鼠朝 `swipeDirection`(預設為 `"right"`;`null` 會關閉滑動)拖曳時會移動它,但要等指標移動之後才開始,因此其按鈕仍然是按鈕;放開時若超過 `swipeThreshold` 點(50)或是快速甩動,它會繼續移出並要求被關閉(`onDismissRequest`),未達則會回到原位。螢幕閱讀器會在其顯示時朗讀其 `accessibilityLabel`。
+用手指或滑鼠朝 `swipeDirection` 拖動（預設為 `"right"`；`null` 會關閉滑動），指標移動後便會帶動它，因此其按鈕仍然是按鈕；放開時若超過 `swipeThreshold` 點（50）或是快速撥動，它會繼續移出並請求被關閉（`onDismissRequest`），未達此距離則會返回原位。螢幕閱讀器會在 Toast 顯示時朗讀其 `accessibilityLabel`。
 
-<a id="toast-props"></a>
+## Toast props
 
-## Toast 屬性
-
-| 屬性 | Rust | 型別 | 預設值 | 說明 |
+| 屬性 | Rust | 類型 | 預設值 | 說明 |
 |---|---|---|---|---|
 | `transitionStatus` | `.transition_status(..)` | `"starting" \| "present" \| "ending"` | `"starting"` | 其生命週期階段。 |
-| `startingClass`, `endingClass`, `swipingClass` | `.starting_class(..)`, ... | `string` | 無 | 其在第一個影格、退出中、被滑動時的 class。 |
-| `swipeDirection` | `.swipe_direction(..)` | `"right" \| "left" \| "up" \| "down" \| null` | `"right"` | 其被滑開的方向。 |
-| `swipeThreshold` | `.swipe_threshold(..)` | `number` | `50` | 滑動多遠之後,放開才會要求關閉它。 |
+| `startingClass`、`endingClass`、`swipingClass` | `.starting_class(..)`, ... | `string` | 無 | 其在首個影格、結束中、被滑動時的 class。 |
+| `swipeDirection` | `.swipe_direction(..)` | `"right" \| "left" \| "up" \| "down" \| null` | `"right"` | 其被滑走的方向。 |
+| `swipeThreshold` | `.swipe_threshold(..)` | `number` | `50` | 滑動多遠後放開才會請求關閉它。 |
 | `accessibilityLabel` | `.accessibility_label(..)` | `string` | 無 | 螢幕閱讀器在其顯示時朗讀的內容。 |
-| `onDismissRequest` | `.on_dismiss_request(..)` | `() => void` | 無 | 使用者將其滑開。 |
+| `onDismissRequest` | `.on_dismiss_request(..)` | `() => void` | 無 | 用戶將其滑走。 |
 
-<a id="toaststack-props"></a>
+## ToastStack props
 
-## ToastStack 屬性
-
-| 屬性 | Rust | 型別 | 預設值 | 說明 |
+| 屬性 | Rust | 類型 | 預設值 | 說明 |
 |---|---|---|---|---|
 | `motion` | `.motion(..)` | `ToastMotion` | Sonner 的預設值 | 其動態 token。 |
-| `placement` | `.placement(..)` | `"topLeft" \| "topCenter" \| "topRight" \| "bottomLeft" \| "bottomCenter" \| "bottomRight" \| "leftCenter" \| "rightCenter"` | `"topRight"` | 其排版所從出發的邊緣。 |
-| `closeOnEscape` | `.close_on_escape(..)` | `boolean` | `true` | 持有 toast 時,接收 Escape 與返回。 |
-| `onExpandedChange` | `.on_expanded_change(..)`, `.state(..)` | `(e: { expanded: boolean }) => void` | 無 | 互動使其展開或收合。 |
-| `onCancel` | `.on_cancel(..)` | `() => void` | 無 | Escape 或返回:關閉最新的 toast。 |
+| `placement` | `.placement(..)` | `"topLeft" \| "topCenter" \| "topRight" \| "bottomLeft" \| "bottomCenter" \| "bottomRight" \| "leftCenter" \| "rightCenter"` | `"topRight"` | 其排列所由的邊緣。 |
+| `closeOnEscape` | `.close_on_escape(..)` | `boolean` | `true` | 持有 Toast 時接收 Escape 和返回鍵。 |
+| `onExpandedChange` | `.on_expanded_change(..)`、`.state(..)` | `(e: { expanded: boolean }) => void` | 無 | 互動令其展開或收合。 |
+| `onCancel` | `.on_cancel(..)` | `() => void` | 無 | Escape 或返回鍵：關閉最新的 Toast。 |

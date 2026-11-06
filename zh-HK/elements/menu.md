@@ -1,18 +1,20 @@
 ---
 title: "選單"
-description: "Menu 與 ContextMenu，搭配 MenuItem、MenuSeparator 和 Submenu：在桌面平台上為具有串接子選單的彈出式選單，在手機上則為子選單就地展開的面板，並可由應用程式自訂樣式。"
+description: "Menu 和 ContextMenu 配合 MenuItem、MenuSeparator 及 Submenu 使用:在桌面平台上以彈出視窗顯示並支援層疊子選單,在手機上則以面板形式顯示並在原位展開子選單,外觀可由應用程式自行設定樣式。"
 group: base
 demo: el-menu
+source_hash: 31bd57113d599fac
 ---
 
-# Menu
 
-選單是由觸發元件開啟的動作清單。同一個結構適用於所有裝置，並依各裝置的慣例呈現：
+# 選單
 
-- 在桌面平台與桌面瀏覽器上，於觸發元件處顯示彈出視窗；`Submenu` 會在指標移到或按下其項目時，於該項目旁展開。
-- 在手機與平板上，於螢幕底部顯示覆蓋在背景遮罩上的面板（sheet）；`Submenu` 會在面板中以自己的項目取代選單的項目，並提供一列由你自訂的項目用來返回。
+選單是由觸發元件開啟的一列動作。同一個結構適用於所有裝置，並按各裝置的慣例呈現：
 
-選擇項目、在外部按下、按 Escape、Android 返回鍵以及 VoiceOver 的跳出手勢都會關閉選單。`ContextMenu` 是同一種選單，透過次要按鈕（右鍵點擊）在指標處開啟，或在觸控螢幕上以手指長按其觸發元件開啟。
+- 在桌面平台和桌面瀏覽器上，於觸發元件旁彈出視窗；`Submenu` 會在指標移到其項目上或按下時，於該項目旁邊層疊展開。
+- 在手機和平板電腦上，於螢幕底部、背景遮罩之上顯示面板；`Submenu` 會在面板內取代選單本身的項目來顯示其項目，並附有一列由你提供的項目用來返回。
+
+選擇項目、在選單外按一下、Escape、Android 返回按鈕和 VoiceOver 的退出手勢都會關閉選單。`ContextMenu` 是同一個選單，由次要按鈕（右鍵）在指標位置開啟，或在觸控螢幕上以手指按住其觸發元件開啟。
 
 ```rust tabs
 use nsh_base::{menu, menu_item, menu_separator, submenu};
@@ -79,13 +81,13 @@ function FileMenu() {
 }
 ```
 
-這五個都來自 [`nsh/base`](../modules/nsh-base.md)。項目會自行找到所屬的選單，因此你可以自由編排：在 view 中分組、加上標籤，或搭配 `If` 讓項目出現與消失。`popupClass` 為桌面上的彈出視窗與手機上的面板設定樣式；若兩者的樣式不同，可以將 `platform.idiom`（`nsh`）與 `"desktop"` 比較。
+這五個全部來自 [`nsh/base`](../modules/nsh-base.md)。項目會自行傳到所屬選單，所以你可以自由排列：以 view 分組、標籤、以 `If` 出現或消失的項目。`popupClass` 為桌面平台上的彈出視窗和手機上的面板設定樣式；若兩者的樣式不同，可以用 `platform.idiom`（`nsh`）與 `"desktop"` 比較。
 
 <a id="menu-bars"></a>
 
 ## 選單列
 
-當多個選單的觸發元件是同一個 `Toolbar` 的項目時，它們會構成選單列：其中一個選單開啟時，指標移到另一個選單的觸發元件上，就會改為開啟該選單，方向鍵則可在各觸發元件之間移動。
+由同一個 `Toolbar` 的項目作為觸發元件的選單會組成選單列：其中一個選單開啟時，指標移到另一個選單的觸發元件上，便會改為開啟該選單，方向鍵則可在各觸發元件之間移動。
 
 ```tsx
 <Toolbar accessibilityLabel="Menu bar">
@@ -111,13 +113,13 @@ import { ContextMenu, MenuItem } from "nsh/base";
 </ContextMenu>
 ```
 
-在桌面平台上，次要按鈕會在指標所在處開啟它。在觸控螢幕上，手指長按觸發元件會以面板開啟；觸發元件本身的按下操作與周圍的捲動檢視仍可正常運作，手指移動則會取消長按。
+在桌面平台上，次要按鈕會在指標所在位置開啟選單。在觸控螢幕上，以手指按住觸發元件會以面板形式開啟；觸發元件本身的按壓操作和周圍的捲動視圖仍然有效，而移動手指則會取消按住。
 
 <a id="checkable-items"></a>
 
 ## 可勾選項目
 
-`checked` 會讓項目變成可勾選項目：可以是選單所顯示的設定（「Show sidebar」），或搭配 `role="menuitemradio"` 表示群組中的單一選擇（「Sort by」）。值由你管理：選擇項目時會呼叫 `onSelect`，由你設定下一個值，項目隨之顯示。勾選時，其 `checked:` classes 與 `checkedStyle` 會生效，其指示器也一樣：指示器是內容之前的部分（`indicatorClass`、`indicatorStyle`），圍繞著你提供的記號（`indicator`）。記號只會建立一次並保留；可用指示器的 `checked:` classes 顯示與隱藏它，或使用記號自己的 `group-checked:` classes，並搭配 `group`（位於 `indicatorClass` 中）。`closeOnSelect={false}` 會讓選單保持開啟，因此設定能立即顯示新的值。
+`checked` 令項目可被勾選：可以是選單顯示的設定（"Show sidebar"），或配合 `role="menuitemradio"` 成為一組中的單一選項（"Sort by"）。值由你管理：選擇項目時會呼叫 `onSelect`，由你設定下一個值，項目便會顯示該值。勾選時，其 `checked:` classes 和 `checkedStyle` 會生效，其指示器的亦然：指示器是內容之前的部分（`indicatorClass`、`indicatorStyle`），圍繞著你提供的標記（`indicator`）。標記只建立一次並保留；可用指示器的 `checked:` classes 來顯示和隱藏它，或使用標記自己的 `group-checked:` classes 配合 `indicatorClass` 中的 `group`。`closeOnSelect={false}` 會保持選單開啟，讓設定即時顯示新值。
 
 ```rust tabs
 use nsh_base::{menu, menu_item};
@@ -200,13 +202,13 @@ function ViewMenu() {
 }
 ```
 
-位於尾端邊緣的記號則放在內容中，並以項目上 `group` 之下的 `group-checked:` classes 設定樣式。
+位於尾端的標記則改放在內容中，並以項目上 `group` 下的 `group-checked:` classes 設定樣式。
 
 <a id="entrance-and-exit"></a>
 
-## 進場與退場
+## 進場與離場
 
-在桌面平台上，彈出視窗會隨你的轉場出現與消失，與 [Popover](./popover.md#entrance-and-exit) 相同：`popupStartingClass` 是其第一個畫格的外觀，`popupEndingClass` 是關閉後的外觀，在 `popupClass` 的 `transition-*` classes 執行期間會保持此外觀，之後接著 `onClose`。子選單採用相同的外觀，並隨其選單一同關閉。手機上的面板則自行滑入與滑出。
+在桌面平台上，彈出視窗隨你的 transition 出現和消失，與 [Popover](./popover.md#entrance-and-exit) 相同：`popupStartingClass` 是它第一個影格的外觀，`popupEndingClass` 是關閉後的外觀，在 `popupClass` 的 `transition-*` classes 執行期間會一直保持，之後是 `onClose`。子選單採用相同的外觀，並隨所屬選單關閉。手機的面板會自行滑入和滑出。
 
 ```tsx
 <Menu
@@ -223,64 +225,62 @@ function ViewMenu() {
 
 ## 開啟狀態
 
-未使用 `open` 時，選單會自行維持狀態（從 `defaultOpen` 對應 `Menu` 開始）。使用 `open` 時，狀態由應用程式持有，並在 `onOpenChange({ open, reason })` 中變更：`"triggerPress"`、`"select"`、`"pressOutside"`、`"backdropPress"`、`"cancel"`、`"contextMenu"` 或 `"longPress"`。
+沒有 `open` 時，選單自行保持狀態（由 `defaultOpen` 起始，對應 `Menu`）。有 `open` 時，狀態由應用程式擁有，並在 `onOpenChange({ open, reason })` 中更改：`"triggerPress"`、`"select"`、`"pressOutside"`、`"backdropPress"`、`"cancel"`、`"contextMenu"` 或 `"longPress"`。
 
 ## Props
 
-<a id="menu-1"></a>
-
 ### Menu
 
-| Prop | Rust | 型別 | 預設值 | 說明 |
+| Prop | Rust | 類型 | 預設值 | 說明 |
 |---|---|---|---|---|
 | `open` | `.open(..)` | `boolean` | 無 | 開啟狀態，由應用程式控制。 |
-| `defaultOpen` | `.default_open(..)` | `boolean` | `false` | 在未使用 `open` 時，一開始即開啟。 |
-| `placement` | `.placement(..)` | `"top" \| "bottom" \| "left" \| "right"` | `"bottom"` | 桌面：放置於觸發元件的哪一側。 |
-| `align` | `.align(..)` | `"start" \| "center" \| "end"` | `"start"` | 桌面：與觸發元件的對齊方式。 |
-| `offset` | `.offset(..)` | `number` | `0` | 桌面：觸發元件與彈出視窗之間的間距。 |
-| `margin` | `.margin(..)` | `number` | `0` | 桌面：與安全區域邊緣保持的距離。 |
-| `popupClass`, `popupStyle` | `.popup_class(..)`, `.popup_style(..)` | `string`, `StyleProp<ViewStyle>` | 無 | 彈出視窗（桌面）或面板（手機），以及子選單的彈出視窗。 |
-| `popupStartingClass`, `popupStartingStyle` | `.popup_starting_class(..)`, `.popup_starting_style(..)` | `string`, `StyleProp<ViewStyle>` | 無 | 桌面：彈出視窗在第一個畫格的外觀，疊加在其自身樣式之上。 |
-| `popupEndingClass`, `popupEndingStyle` | `.popup_ending_class(..)`, `.popup_ending_style(..)` | `string`, `StyleProp<ViewStyle>` | 無 | 桌面：彈出視窗關閉後的外觀，在其轉場執行期間保持。 |
-| `backdropClass`, `backdropStyle` | `.backdrop_class(..)`, `.backdrop_style(..)` | `string`, `StyleProp<ViewStyle>` | 無 | 手機：面板後方的背景遮罩。 |
-| `trigger` | `.trigger(..)` | `JSX.Element` | 無 | 按下時用來開啟選單的元件。選單開啟時，其 `aria-expanded:` classes 與 `expandedStyle` 會生效。 |
+| `defaultOpen` | `.default_open(..)` | `boolean` | `false` | 初始為開啟，適用於沒有 `open` 的情況。 |
+| `placement` | `.placement(..)` | `"top" \| "bottom" \| "left" \| "right"` | `"bottom"` | 桌面平台：放在觸發元件的哪一邊。 |
+| `align` | `.align(..)` | `"start" \| "center" \| "end"` | `"start"` | 桌面平台：與觸發元件的對齊方式。 |
+| `offset` | `.offset(..)` | `number` | `0` | 桌面平台：觸發元件與彈出視窗之間的間距。 |
+| `margin` | `.margin(..)` | `number` | `0` | 桌面平台：與安全區域邊緣保持的距離。 |
+| `popupClass`、`popupStyle` | `.popup_class(..)`、`.popup_style(..)` | `string`、`StyleProp<ViewStyle>` | 無 | 彈出視窗（桌面平台）或面板（手機），以及子選單的彈出視窗。 |
+| `popupStartingClass`、`popupStartingStyle` | `.popup_starting_class(..)`、`.popup_starting_style(..)` | `string`、`StyleProp<ViewStyle>` | 無 | 桌面平台：彈出視窗在第一個影格的外觀，疊加於它們本身的外觀之上。 |
+| `popupEndingClass`、`popupEndingStyle` | `.popup_ending_class(..)`、`.popup_ending_style(..)` | `string`、`StyleProp<ViewStyle>` | 無 | 桌面平台：彈出視窗關閉後的外觀，在其 transition 執行期間保持。 |
+| `backdropClass`、`backdropStyle` | `.backdrop_class(..)`、`.backdrop_style(..)` | `string`、`StyleProp<ViewStyle>` | 無 | 手機：面板後方的背景遮罩。 |
+| `trigger` | `.trigger(..)` | `JSX.Element` | 無 | 按下時開啟選單的元件。選單開啟期間，其 `aria-expanded:` classes 和 `expandedStyle` 會生效。 |
 | `children` | `.child(..)` | `JSX.Element` | 無 | 項目，每次開啟時建立。 |
 
 ### ContextMenu
 
-`open`、`popupClass` / `popupStyle`、起始與結束外觀、`backdropClass` / `backdropStyle`、`trigger` 與 `children` 皆與 `Menu` 相同，另外還有：
+`open`、`popupClass` / `popupStyle`、起始和結束外觀、`backdropClass` / `backdropStyle`、`trigger` 和 `children` 與 `Menu` 相同，另有：
 
-| Prop | Rust | 型別 | 預設值 | 說明 |
+| Prop | Rust | 類型 | 預設值 | 說明 |
 |---|---|---|---|---|
-| `disabled` | `.disabled(..)` | `boolean` | `false` | 次要按鈕與長按的手指不會有任何作用。 |
-| `offset` | `.offset(..)` | `number` | `0` | 桌面：指標與彈出視窗之間的間距。 |
-| `margin` | `.margin(..)` | `number` | `0` | 桌面：與安全區域邊緣保持的距離。 |
+| `disabled` | `.disabled(..)` | `boolean` | `false` | 次要按鈕和按住的手指均不起作用。 |
+| `offset` | `.offset(..)` | `number` | `0` | 桌面平台：指標與彈出視窗之間的間距。 |
+| `margin` | `.margin(..)` | `number` | `0` | 桌面平台：與安全區域邊緣保持的距離。 |
 
 ### MenuItem
 
-| Prop | Rust | 型別 | 預設值 | 說明 |
+| Prop | Rust | 類型 | 預設值 | 說明 |
 |---|---|---|---|---|
-| `disabled` | `.disabled(..)` | `boolean` | `false` | 不可選擇；`disabled:` 樣式會生效。 |
-| `checked` | `.checked(..)` | `boolean` | 無 | 是否已勾選，這會使它成為可勾選項目；由應用程式管理。 |
-| `checkedStyle` | `.checked_style(..)` | `StyleProp<ViewStyle>` | 無 | 勾選時的樣式，以 `checked:` classes 表示。 |
-| `role` | `.role(..)` | `AccessibilityRole` | 搭配 `checked` 時為 `"menuitemcheckbox"`，否則為 `"menuitem"` | 螢幕閱讀器如何理解它；`"menuitemradio"` 表示群組中的單一選擇。 |
-| `indicatorClass`, `indicatorStyle` | `.indicator_class(..)`, `.indicator_style(..)` | `string`, `StyleProp<ViewStyle>` | 無 | 指示器，即其內容之前的部分；其 `checked:` 與 `disabled:` classes 會跟隨項目。 |
-| `indicator` | `.indicator(..)` | `JSX.Element` | 無 | 指示器內的記號。 |
+| `disabled` | `.disabled(..)` | `boolean` | `false` | 不可選擇；套用 `disabled:` 樣式。 |
+| `checked` | `.checked(..)` | `boolean` | 無 | 是否已勾選，令它成為可勾選項目；由應用程式擁有。 |
+| `checkedStyle` | `.checked_style(..)` | `StyleProp<ViewStyle>` | 無 | 勾選時的樣式，以 `checked:` classes 設定。 |
+| `role` | `.role(..)` | `AccessibilityRole` | 有 `checked` 時為 `"menuitemcheckbox"`，否則為 `"menuitem"` | 螢幕閱讀器如何理解它；`"menuitemradio"` 用於一組中的單一選項。 |
+| `indicatorClass`、`indicatorStyle` | `.indicator_class(..)`、`.indicator_style(..)` | `string`、`StyleProp<ViewStyle>` | 無 | 指示器，即內容之前的部分；其 `checked:` 和 `disabled:` classes 跟隨項目。 |
+| `indicator` | `.indicator(..)` | `JSX.Element` | 無 | 指示器內的標記。 |
 | `closeOnSelect` | `.close_on_select(..)` | `boolean` | `true` | 選擇它會關閉選單。 |
-| `accessibilityLabel` | `.accessibility_label(..)` | `string` | 無 | 螢幕閱讀器朗讀的內容，用於內容本身不足以說明時。 |
-| `children`, `class`, `style` | `.child(..)`、樣式方法 | | 無 | 其內容與外觀，含 `hover:`、`active:` 與 `checked:` 狀態。 |
+| `accessibilityLabel` | `.accessibility_label(..)` | `string` | 無 | 內容不足時，螢幕閱讀器所讀出的內容。 |
+| `children`、`class`、`style` | `.child(..)`、樣式方法 | | 無 | 內容和外觀，附有 `hover:`、`active:` 和 `checked:` 狀態。 |
 
 ### Submenu
 
-| Prop | Rust | 型別 | 預設值 | 說明 |
+| Prop | Rust | 類型 | 預設值 | 說明 |
 |---|---|---|---|---|
 | `trigger` | `.trigger(..)` | `JSX.Element` | 無 | 開啟它的項目。 |
-| `back` | `.back(..)` | `JSX.Element` | 無 | 手機：位於其項目上方、可返回周圍項目的一列。 |
-| `disabled` | `.disabled(..)` | `boolean` | `false` | 它不會開啟。 |
-| `offset` | `.offset(..)` | `number` | `0` | 桌面：其周圍選單與其彈出視窗之間的間距。 |
+| `back` | `.back(..)` | `JSX.Element` | 無 | 手機：位於其項目上方、用來返回上一層項目的一列。 |
+| `disabled` | `.disabled(..)` | `boolean` | `false` | 不會開啟。 |
+| `offset` | `.offset(..)` | `number` | `0` | 桌面平台：所屬選單與其彈出視窗之間的間距。 |
 | `children` | `.child(..)` | `JSX.Element` | 無 | 它的項目。 |
 
-`MenuSeparator` 是你自行設定樣式的 view（`class`、`style`），會與其所在層級的項目一同顯示。
+`MenuSeparator` 是你可設定樣式的 view（`class`、`style`），與所屬層級的項目一同顯示。
 
 <a id="events"></a>
 
@@ -288,15 +288,15 @@ function ViewMenu() {
 
 | 事件 | Rust | 說明 |
 |---|---|---|
-| `onOpenChange`（`Menu`、`ContextMenu`） | `.on_open_change(\|e\| ..)` | 已開啟或關閉，並附帶原因。 |
-| `onOpen`（`Menu`、`ContextMenu`） | `.on_open(\|\| ..)` | 已顯示；作為面板時，是在進場完成之後。 |
-| `onClose`（`Menu`、`ContextMenu`） | `.on_close(\|\| ..)` | 已消失：作為面板時是在離場之後，作為彈出視窗時是在其退場之後。應用程式關閉它時也會觸發。 |
-| `onPosition`（`Menu`、`ContextMenu`） | `.on_position(\|e\| ..)` | 桌面：彈出視窗已就定位：`placement`（它所放置的一側）、`bounds`、`available`。 |
-| `onCancel`（`Menu`、`ContextMenu`） | `.on_cancel(\|\| ..)` | 使用者嘗試不經選擇就關閉它（Escape 或返回、在外部或背景遮罩上按下）。 |
-| `onSelect`（`MenuItem`） | `.on_select(\|\| ..)` | 項目已被選擇；可勾選項目會要求其另一個值。 |
+| `onOpenChange`（`Menu`、`ContextMenu`） | `.on_open_change(\|e\| ..)` | 已開啟或關閉，並附上原因。 |
+| `onOpen`（`Menu`、`ContextMenu`） | `.on_open(\|\| ..)` | 已顯示；作為面板時，在滑入完成後觸發。 |
+| `onClose`（`Menu`、`ContextMenu`） | `.on_close(\|\| ..)` | 已消失：作為面板時在滑出之後，作為彈出視窗時在其離場之後。應用程式將其關閉時亦會觸發。 |
+| `onPosition`（`Menu`、`ContextMenu`） | `.on_position(\|e\| ..)` | 桌面平台：彈出視窗已定位：`placement`（所放置的一邊）、`bounds`、`available`。 |
+| `onCancel`（`Menu`、`ContextMenu`） | `.on_cancel(\|\| ..)` | 使用者嘗試不作選擇而關閉（Escape 或返回、在選單外或背景遮罩上按下）。 |
+| `onSelect`（`MenuItem`） | `.on_select(\|\| ..)` | 項目已被選擇；可勾選項目會要求取得其另一個值。 |
 
 <a id="accessibility"></a>
 
 ## 無障礙
 
-對螢幕閱讀器而言，彈出視窗或面板是選單，其項目是選單項目；觸發元件會告知選單是否已展開。可勾選項目是核取方塊或選項按鈕選單項目，朗讀為已勾選或未勾選；其指示器是項目的一部分。在 TSX 中，觸發元件是你傳入的元素，可以是 `Button` 或你自己的 view：它會自行接管按下操作與展開狀態，因此在按下期間，其自身的 `active:` classes 與 `activeStyle` 會生效，其自身的 `onPress` 也會執行。畫面上只有目前所顯示層級的項目，因此螢幕閱讀器朗讀的就是當下所見的內容。
+對螢幕閱讀器而言，彈出視窗或面板是選單，其項目是選單項目；觸發元件會表明選單是否已展開。可勾選項目是核取方塊或選項按鈕選單項目，會讀作已勾選或未勾選；其指示器是項目的一部分。在 TSX 中，觸發元件是你傳入的元素，即 `Button` 或你自己的 view：它會自行接收按壓和展開狀態，所以按下時，其自身的 `active:` classes 和 `activeStyle` 會顯示，其自身的 `onPress` 也會執行。畫面上只有當前所顯示層級的項目，所以螢幕閱讀器會讀出目前存在的內容。

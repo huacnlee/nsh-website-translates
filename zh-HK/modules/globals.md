@@ -1,35 +1,37 @@
 ---
 title: "全域 API"
-description: "每個 NSH 應用程式無需匯入即可使用的全域物件——fetch、streams、URL、編碼、Blob 與 FormData、事件與 abort signal、Intl、計時器與 console——皆以 Rust 原生實作。"
+description: "每個 NSH 應用程式無需匯入即可使用的全域物件,包括 fetch、streams、URL、編碼、Blob 與 FormData、事件與中止訊號、Intl、計時器及 console,全部以 Rust 原生實作。"
 order: 15
+source_hash: 94d1f5292081a56d
 ---
+
 
 # 全域 API
 
-除了 ECMAScript 標準函式庫之外，NSH 應用程式的 JS 環境還有一組標準全域物件：`fetch`（含 `Headers`、`Request` 與 `Response`）、Streams Standard、`URL` 與 `URLSearchParams`、`TextEncoder` / `TextDecoder`、`Blob`、`File` 與 `FormData`、`EventTarget`、`Event` 與 `AbortController`、計時器、`requestAnimationFrame` 與 `console`，以及用於數字與日期格式化的 `Intl`。它們以 Rust 原生實作，遵循 WHATWG 標準，不需要 import，因此許多建立在這些標準之上的 JavaScript 函式庫（HTTP 用戶端、URL 與編碼輔助工具、串流工具）可以直接使用。
+除了 ECMAScript 標準庫之外，NSH 應用程式的 JS 環境還有一組標準全域物件：`fetch` 連同 `Headers`、`Request` 和 `Response`；Streams Standard；`URL` 和 `URLSearchParams`；`TextEncoder` / `TextDecoder`；`Blob`、`File` 和 `FormData`；`EventTarget`、`Event` 和 `AbortController`；計時器、`requestAnimationFrame` 和 `console`；以及用於數字和日期格式化的 `Intl`。它們以 Rust 原生實現，遵循 WHATWG 標準，毋須 import，因此許多建基於這些標準的 JavaScript 程式庫（HTTP 客戶端、URL 與編碼輔助工具、串流工具）可以原封不動地運作。
 
-本頁列出應用程式擁有的所有全域物件。這些屬於 TSX 環境；Rust 程式碼則改用 Rust 標準函式庫、crates.io 與 NSH 的 `nsh_core::prelude` 服務（`fetch`、計時器、任務；參閱 [以 Rust 建置](../docs/rust.md)），對應項目列於表格的 Rust 欄。UI 以[元素](../elements/index.md)與應用程式自己的元件建構，應用程式用到的其他一切則來自它所匯入的[模組](./index.md)。
+本頁列出應用程式擁有的所有全域物件。這些屬於 TSX 環境：Rust 程式碼改用 Rust 的標準庫、crates.io 以及 NSH 的 `nsh_core::prelude` 服務（`fetch`、計時器、任務；見 [以 Rust 構建](../docs/rust.md)），並列於表格的 Rust 一欄。UI 以 [元素](../elements/index.md)和應用程式自己的元件構建，應用程式使用的其他一切則來自它所 import 的[模組](./index.md)。
 
-這些全域物件的 TypeScript 宣告會產生於 `.nsh/types/nsh/globals.d.ts`（參閱[專案結構](../docs/project-structure.md)）。
+所有這些全域物件的 TypeScript 宣告都會生成到 `.nsh/types/nsh/globals.d.ts`（見[專案結構](../docs/project-structure.md)）。
 
-| 群組 | 全域物件 | Rust |
+| 分類 | 全域物件 | Rust |
 |---|---|---|
-| [Console 與計時](#console-and-timing) | `console`、`performance` | `log` crate（`log::info!` 等）、`nsh_core::time::now()` |
-| [計時器與影格](#timers-and-frames) | `setTimeout`、`setInterval`、`clearTimeout`、`clearInterval`、`queueMicrotask`、`requestAnimationFrame`、`cancelAnimationFrame` | `set_timeout`、`set_interval`、`timer(delay).await`、`request_animation_frame`、`next_frame().await`、`Spawned::cancel()` |
+| [控制台與計時](#console-and-timing) | `console`、`performance` | `log` crate（`log::info!` 等）、`nsh_core::time::now()` |
+| [計時器與幀](#timers-and-frames) | `setTimeout`、`setInterval`、`clearTimeout`、`clearInterval`、`queueMicrotask`、`requestAnimationFrame`、`cancelAnimationFrame` | `set_timeout`、`set_interval`、`timer(delay).await`、`request_animation_frame`、`next_frame().await`、`Spawned::cancel()` |
 | [Base64 與錯誤](#base64-and-errors) | `atob`、`btoa`、`DOMException` | `base64` crate、`Result` |
 | [事件與中止訊號](#events-and-abort-signals) | `EventTarget`、`Event`、`CustomEvent`、`AbortController`、`AbortSignal` | 訊號與閉包；`Spawned::cancel()` 會結束任務 |
 | [URL](#urls) | `URL`、`URLSearchParams` | `url` crate |
 | [文字編碼](#text-encoding) | `TextEncoder`、`TextDecoder` | `str::as_bytes`、`String::from_utf8` |
 | [Blob 與表單資料](#blobs-and-form-data) | `Blob`、`File`、`FormData` | `HttpRequest` 的 `Vec<u8>` 本文 |
 | [Fetch](#fetch) | `fetch`、`Headers`、`Request`、`Response` | `fetch`、`HttpRequest`、`HttpResponse` |
-| [數字與日期格式化](#number-and-date-formatting) | `Intl.NumberFormat`、`Intl.DateTimeFormat`、`toLocaleString` | `format!` 與 crates.io 的格式化 crate，搭配 `locale()` |
-| [Streams](#streams) | `ReadableStream`、`WritableStream`、`TransformStream`、reader、writer、controller、`ByteLengthQueuingStrategy`、`CountQueuingStrategy`、`TextEncoderStream`、`TextDecoderStream` | `fetch` 提供完整本文；`background` 任務在原生目標上執行長連線 |
+| [數字與日期格式化](#number-and-date-formatting) | `Intl.NumberFormat`、`Intl.DateTimeFormat`、`toLocaleString` | `format!` 及 crates.io 的格式化 crate，配合 `locale()` |
+| [串流](#streams) | `ReadableStream`、`WritableStream`、`TransformStream`、讀取器、寫入器、控制器、`ByteLengthQueuingStrategy`、`CountQueuingStrategy`、`TextEncoderStream`、`TextDecoderStream` | `fetch` 提供完整本文；`background` 任務在原生目標上執行長時間連線 |
 
-原生主機也提供 `Buffer`、`crypto`、`process` 與 `WebSocket`；其模組、權限與資源限制請參閱[標準模組](./standard-modules.md)。
+原生宿主還提供 `Buffer`、`crypto`、`process` 和 `WebSocket`；其模組、權限和資源限制見[標準模組](./standard-modules.md)。
 
 <a id="console-and-timing"></a>
 
-## Console 與計時
+## 控制台與計時
 
 ```ts
 declare var console: {
@@ -46,18 +48,18 @@ declare var performance: {
 };
 ```
 
-在 Rust 中，`log` crate 的巨集（`log::info!`、`log::warn!` 等）會寫入同一份日誌，也會顯示在 `nsh run` 的終端機中。`console` 每次呼叫會將一行寫入執行階段的日誌（target 為 `js`）：`log` 與 `info` 為 info 等級，`debug`、`warn` 與 `error` 則為各自的等級。引數會以空格連接；字串原樣輸出，錯誤連同堆疊輸出，函式輸出為 `[Function name]`，物件與陣列輸出為 JSON（遇到循環參照時退回使用 `String(value)`）。
+在 Rust 中，`log` crate 的巨集（`log::info!`、`log::warn!` 等）會寫入同一份日誌，並同樣顯示在 `nsh run` 的終端機中。`console` 每次呼叫向執行環境的日誌（target 為 `js`）寫入一行：`log` 和 `info` 屬 info 級別，`debug`、`warn` 和 `error` 則屬各自的級別。引數以空格連接；字串原樣輸出，錯誤連同其堆疊追蹤，函式輸出為 `[Function name]`，物件和陣列輸出為 JSON（遇到循環參照時改用 `String(value)`）。
 
-當裝置連線到開發伺服器時，其日誌行會顯示在執行 `nsh run` / `nsh dev` 的終端機中，並以裝置名稱作為前綴；參閱[開發伺服器與除錯](../docs/dev-server-and-debugging.md)。
+當裝置連接到開發伺服器時，其日誌行會顯示在執行 `nsh run` / `nsh dev` 的終端機中，並以裝置名稱作前綴；見[開發伺服器與除錯](../docs/dev-server-and-debugging.md)。
 
 > [!NOTE]
-> 只有上述五個方法存在。沒有 `console.table`、`console.group`、`console.time` 或 `console.assert`，也沒有 `%s` / `%o` 格式替換。
+> 只有上述五個方法。沒有 `console.table`、`console.group`、`console.time` 或 `console.assert`，也沒有 `%s` / `%o` 格式替換。
 
-`performance.now()` 是 `requestAnimationFrame` 傳給其回呼的時鐘；在 Rust 中，`nsh_core::time::now()` 以及 `request_animation_frame` 和 `next_frame()` 所提供的 `Instant` 就是這個時鐘。`performance` 沒有其他成員。
+`performance.now()` 是 `requestAnimationFrame` 傳給其回呼的時鐘；在 Rust 中，`nsh_core::time::now()` 以及 `Instant` 從 `request_animation_frame` 和 `next_frame()` 取得的值就是該時鐘。`performance` 沒有其他成員。
 
 <a id="timers-and-frames"></a>
 
-## 計時器與影格
+## 計時器與幀
 
 ```ts
 function setTimeout(handler: (...args: any[]) => void, timeout?: number, ...args: any[]): number;
@@ -70,12 +72,12 @@ function requestAnimationFrame(callback: (time: number) => void): number;
 function cancelAnimationFrame(id: number): void;
 ```
 
-Rust：`set_timeout(delay, f)` 與 `set_interval(period, f)` 會回傳 `Spawned` 控制代碼，其 `cancel()` 可清除計時器，`timer(delay).await` 在任務中等待，`request_animation_frame(f)` / `next_frame().await` 提供下一個影格的時間；它們都會隨建立它們的元件一同結束。計時器的行為與瀏覽器相同：缺少、為負數或非有限的延遲視為 0，回傳的 id 是正整數，清除未知的 id 不會有任何作用。`handler` 必須是函式（不會求值字串處理常式）。計時器不會把巢狀延遲限制為 4 ms。
+Rust：`set_timeout(delay, f)` 和 `set_interval(period, f)` 會返回 `Spawned` 控制代碼，其 `cancel()` 可清除計時器，`timer(delay).await` 在任務中等待，`request_animation_frame(f)` / `next_frame().await` 給出下一幀的時間；它們全部都會隨建立它們的元件一同結束。計時器的行為與瀏覽器一致：缺少、為負數或非有限的延遲視為 0，返回的 id 是正整數，清除未知的 id 則不會有任何作用。`handler` 必須是函式（不會評估字串處理器）。計時器不會把巢狀延遲限制為 4 ms。
 
 > [!WARNING]
-> `setTimeout` / `setInterval` 額外的 `...args` 雖有宣告，但目前不會傳給處理常式。請改用閉包：`setTimeout(() => save(id), 100)`。
+> `setTimeout` / `setInterval` 額外的 `...args` 雖已宣告，但目前不會傳給處理器。請改用閉包：`setTimeout(() => save(id), 100)`。
 
-`requestAnimationFrame` 回呼只會執行一次，在引擎產生的下一個影格執行，且所有回呼都使用相同的 `performance.now()` 時間。若回呼要求另一個影格，則會在下一個影格被呼叫，因此常見的迴圈寫法可以正常運作：
+`requestAnimationFrame` 回呼只會執行一次，在引擎產生的下一幀執行，且全部使用相同的 `performance.now()` 時間。若回呼再請求另一幀，則會在隨後的一幀被呼叫，因此常見的迴圈寫法可以正常運作：
 
 ```rust tabs
 spawn(async move {
@@ -102,7 +104,7 @@ requestAnimationFrame(tick);
 ```
 
 > [!TIP]
-> 在 QuickJS 中以 JS 逐影格驅動動畫，會在每個影格執行你的程式碼。對於樣式與變形的動畫，建議改用 [`nsh` 的動畫 API](./nsh.md#animation)，其驅動器以原生方式執行，不需回呼到 JS（參閱[動畫](../docs/animation.md)）。
+> 在 QuickJS 中由 JS 逐幀驅動動畫，會在每一幀都執行你的程式碼。對於樣式和變換的動畫，請優先使用 [`nsh` 的動畫 API](./nsh.md#animation)，其驅動器在原生層執行，無需回呼到 JS（見[動畫](../docs/animation.md)）。
 
 <a id="base64-and-errors"></a>
 
@@ -120,7 +122,7 @@ class DOMException extends Error {
 }
 ```
 
-`atob` / `btoa` 在二進位字串與 Base64 之間轉換，行為與瀏覽器相同。`DOMException` 是被中止的操作所用的拒絕原因：沒有原因的 `AbortController.abort()` 會產生名為 `"AbortError"` 的 `DOMException`，而 `AbortSignal.timeout` 則產生名為 `"TimeoutError"` 的錯誤。
+`atob` / `btoa` 在二進位字串與 Base64 之間轉換，與瀏覽器相同。`DOMException` 是被中止的操作用來 reject 的錯誤：沒有原因的 `AbortController.abort()` 會產生名為 `"AbortError"` 的 `DOMException`，而 `AbortSignal.timeout` 則產生名為 `"TimeoutError"` 的錯誤。
 
 <a id="events-and-abort-signals"></a>
 
@@ -186,7 +188,7 @@ class AbortSignal extends EventTarget {
 }
 ```
 
-這些是 DOM Standard 的類別，但有一個差異：沒有樹狀結構，因此事件只會分派給其目標。先執行 capture 監聽器，再執行其他監聽器，與 DOM 在目標上的行為相同；`bubbles` 沒有作用。這些類別可以被子類別化，因此 `EventTarget` 可以作為小型事件發射器：
+這些是 DOM Standard 的類別，只有一個差異：這裡沒有樹狀結構，因此事件只會派發給其目標。捕獲監聽器先執行，然後才是其他監聽器，與 DOM 在目標處的行為相同；`bubbles` 沒有作用。這些類別可以被繼承，因此 `EventTarget` 可成為一個小型事件發射器：
 
 ```ts
 class Channel extends EventTarget {
@@ -200,9 +202,9 @@ channel.addEventListener("message", (e) => console.log((e as CustomEvent<string>
 channel.send("hello");
 ```
 
-這些事件與元素的事件（`onPress`、`onChange` 等）無關，後者是 props；參閱[觸控與手勢](../docs/touch-and-gestures.md)。
+這些事件與元素的事件（`onPress`、`onChange` 等）無關，後者是 props；見[觸控與手勢](../docs/touch-and-gestures.md)。
 
-`AbortSignal` 會取消 `fetch` 請求與串流管線，並移除以 `{ signal }` 加入的監聽器。在 Rust 中，請求在任務中執行，取消任務即可取消請求：
+`AbortSignal` 可取消 `fetch` 請求和串流管道，並移除以 `{ signal }` 加入的監聽器。在 Rust 中，請求在任務內執行，取消該任務即可取消請求：
 
 ```rust tabs
 let search = spawn(async move {
@@ -270,7 +272,7 @@ class URLSearchParams {
 }
 ```
 
-URL 依據 URL Standard 解析。URL 的 `searchParams` 是雙向即時連動的：變更參數會改寫查詢字串，而設定 `search` 或 `href` 則會重新解析。Rust 程式碼使用 `url` crate，它遵循相同的標準：
+URL 依照 URL Standard 解析。URL 的 `searchParams` 在兩個方向上都是即時連動的：更改參數會改寫查詢字串，而設定 `search` 或 `href` 則會重新解析它。Rust 程式碼使用遵循同一標準的 `url` crate：
 
 ```rust tabs
 let mut url = url::Url::parse("https://api.example.com")?.join("/v1/items")?;
@@ -285,9 +287,9 @@ url.searchParams.append("tag", "new");
 url.href; // "https://api.example.com/v1/items?page=2&tag=new"
 ```
 
-`URLSearchParams`（以及 `Headers` 與 `FormData`）的迭代器會遍歷建立迭代器時所取得的快照，並具有迭代器輔助方法（`map`、`filter`、`toArray` 等）。
+`URLSearchParams` 的迭代器（以及 `Headers` 和 `FormData` 的迭代器）會遍歷建立迭代器時所取的快照，並具備迭代器輔助方法（`map`、`filter`、`toArray` 等）。
 
-`URL.createObjectURL(blob)` 會回傳一個 `blob:` URL，在呼叫 `revokeObjectURL` 之前，`fetch`（搭配 `GET`）可以讀取它。`<Image>` 可將其顯示為 `src` 或 `placeholder`（[Image](../elements/image.md)）。
+`URL.createObjectURL(blob)` 會返回一個 `blob:` URL，在呼叫 `revokeObjectURL` 之前，`fetch`（連同 `GET`）都可以讀取它。`<Image>` 可將其顯示為其 `src` 或 `placeholder`（[Image](../elements/image.md)）。
 
 <a id="text-encoding"></a>
 
@@ -310,7 +312,7 @@ class TextDecoder {
 }
 ```
 
-`TextDecoder` 支援的編碼比瀏覽器少：UTF-8、UTF-16LE、UTF-16BE 與 windows-1252（依 Encoding Standard 的規定，標籤 `latin1`、`iso-8859-1`、`ascii` 等也指向它）。其他標籤會擲出 `RangeError`。使用 `{ stream: true }` 時，被切在兩個區塊之間的多位元組序列會保留到下一次呼叫。
+`TextDecoder` 支援的編碼比瀏覽器少：UTF-8、UTF-16LE、UTF-16BE 和 windows-1252（標籤 `latin1`、`iso-8859-1`、`ascii` 等也指向它，與 Encoding Standard 的規定一致）。其他標籤會拋出 `RangeError`。使用 `{ stream: true }` 時，被切在兩個區塊之間的多位元組序列會保留至下一次呼叫。
 
 <a id="blobs-and-form-data"></a>
 
@@ -354,9 +356,9 @@ class FormData {
 type BlobPart = ArrayBuffer | ArrayBufferView | Blob | string;
 ```
 
-Blob 將其位元組保存在記憶體中，而 `slice` 是共用這些位元組而非複製。Blob 僅是記憶體內的值：`File` 背後沒有檔案系統存取，`FormData` 也沒有從表單元素建立的建構函式。
+Blob 將其位元組保存在記憶體中，而 `slice` 會共用這些位元組而非複製。Blob 只是記憶體內的值：`File` 背後沒有檔案系統存取，`FormData` 也沒有由表單元素建構的建構函式。
 
-`FormData` 本文會以 `multipart/form-data` 送出，而 `Response.formData()` / `Request.formData()` 可解析 `multipart/form-data` 與 `application/x-www-form-urlencoded`。
+`FormData` 本文會以 `multipart/form-data` 發送，而 `Response.formData()` / `Request.formData()` 可解析 `multipart/form-data` 和 `application/x-www-form-urlencoded` 兩種格式。
 
 ```ts
 const form = new FormData();
@@ -398,7 +400,7 @@ type HeadersInit = Headers | Record<string, string> | Iterable<[string, string]>
 type BodyInit = ReadableStream<Uint8Array> | Blob | BufferSource | FormData | URLSearchParams | string;
 ```
 
-`fetch` 透過平台自身的網路堆疊送出 HTTP 與 HTTPS 請求：iOS 與 Mac Catalyst 使用 `NSURLSession`，Android 使用 `HttpURLConnection`。因此系統的代理伺服器設定、TLS 設定與憑證信任都會生效。`data:` URL 與 `blob:` URL（來自 `URL.createObjectURL`）會在本機直接回應，不會接觸網路；其他任何 scheme 都會被拒絕。Rust 的 `fetch(request)` 經過同一個堆疊並使用相同的 capabilities，接受 URL 或 `HttpRequest`，並以包含完整本文的 `HttpResponse` 解析（[網路](../docs/networking.md#from-rust-components)）：
+`fetch` 透過平台自身的網絡堆疊發送 HTTP 和 HTTPS 請求：在 iOS 和 Mac Catalyst 上使用 `NSURLSession`，在 Android 上使用 `HttpURLConnection`。因此系統的代理伺服器設定、TLS 設定和憑證信任都會生效。`data:` URL 和 `blob:` URL（來自 `URL.createObjectURL`）會在本機直接回應，不經過網絡；任何其他協定都會 reject。Rust 的 `fetch(request)` 經由同一個堆疊和同樣的 capabilities，接受 URL 或 `HttpRequest`，並以包含完整本文的 `HttpResponse` resolve（[Networking](../docs/networking.md#from-rust-components)）：
 
 ```rust tabs
 #[derive(serde::Deserialize)]
@@ -503,9 +505,9 @@ class Response implements Body {
 
 <a id="streaming"></a>
 
-### 串流
+### 串流傳輸
 
-回應的 `body` 是隨網路傳來資料而逐步填入的位元組串流，因此大型或長時間存在的回應（下載、server-sent events、串流的模型輸出）可以在抵達的同時處理。當有超過 1 MiB 的資料等待讀取時，請求會暫停，直到應用程式再次讀取。
+回應的 `body` 是一個隨網絡傳來資料而逐步填充的位元組串流，因此大型或長時間的回應（下載、server-sent events、串流輸出的模型結果）可以在抵達的同時處理。當有超過 1 MiB 的資料等待讀取時，請求會暫停，直至應用程式再次讀取。
 
 ```ts
 const res = await fetch("https://api.example.com/events");
@@ -515,7 +517,7 @@ for await (const chunk of lines) {
 }
 ```
 
-`ReadableStream` 請求本文會在網路要求時逐區塊上傳；請依 Fetch Standard 的要求傳入 `duplex: "half"`：
+`ReadableStream` 請求本文會在網絡要求時逐塊上傳；請按 Fetch Standard 的要求傳入 `duplex: "half"`：
 
 ```ts
 await fetch("https://api.example.com/upload", {
@@ -529,19 +531,21 @@ await fetch("https://api.example.com/upload", {
 
 ### 與瀏覽器的差異
 
-- **沒有 CORS，也沒有 origin。** 應用程式不是網頁：它可以與其[capabilities](../docs/sandbox-and-capabilities.md)允許的任何主機通訊。`mode` 會被接受但忽略。
-- **沒有禁用的標頭。** 應用程式可以設定 `Cookie`、`User-Agent`、`Origin` 以及任何其他標頭。未提供 `Accept` 標頭時，會送出 `Accept: */*`。
-- **`redirect: "manual"` 會直接傳回 3xx 回應本身**，包含其狀態與 `Location` 標頭，而不是不透明的過濾後回應。`"follow"` 會跟隨重新導向（每一跳都會依 capabilities 檢查）；`"error"` 在回應為重新導向時會拒絕。
-- **`FormData` 本文一律會帶有 `Content-Type: multipart/form-data; boundary=…`**，即使已設定 `Content-Type` 標頭也一樣。HTTP 函式庫常會設定預設的 content type，並且只在偵測到瀏覽器時才清除；若沒有 boundary，伺服器就無法解析本文。
-- **`credentials`、`cache`、`referrer`、`referrerPolicy`、`integrity`、`keepalive` 與 `priority`** 會經過驗證並保留在 `Request` 物件上，但不會傳給網路堆疊：快取與 cookie 的處理由平台的堆疊決定。
-- **Capabilities。** 當應用程式在 `nsh.json` 中宣告 `network` capabilities（或嵌入的應用程式授予的權限較少）時，對不被允許的主機的請求不會到達網路，`fetch` 會以 `TypeError` 拒絕，其 `code` 為 `"ERR_ACCESS_DENIED"`，`permission` 為 `"network"`，`resource` 為被拒絕的 URL。參閱[沙箱與 capabilities](../docs/sandbox-and-capabilities.md)。
-- **錯誤。** 網路失敗會以 `TypeError` 拒絕，其訊息以 `Network request failed:` 開頭；中止則以訊號的 `reason` 拒絕。
+- **沒有 CORS，也沒有 origin。** 應用程式不是網頁：只要其 [capabilities](../docs/sandbox-and-capabilities.md) 允許，它可以與任何主機通訊。`mode` 會被接受但被忽略。
+- **沒有禁用標頭。** 應用程式可以設定 `Cookie`、`User-Agent`、`Origin` 及任何其他標頭。若未給出 `Accept` 標頭，則會發送 `Accept: */*`。
+- **`redirect: "manual"` 會直接交付 3xx 回應本身**，包括其狀態碼和 `Location` 標頭，而不是不透明的過濾回應。`"follow"` 會跟隨重新導向（每一跳都會按 capabilities 檢查）；`"error"` 則在回應為重新導向時 reject。
+- **`FormData` 本文一律帶有 `Content-Type: multipart/form-data; boundary=…`**，即使已設定 `Content-Type` 標頭亦然。HTTP 程式庫通常會設定預設的內容類型，只在偵測到瀏覽器時才清除；沒有 boundary，伺服器便無法解析本文。
+- **`credentials`、`cache`、`referrer`、`referrerPolicy`、`integrity`、`keepalive` 和 `priority`** 會被驗證並保留在 `Request` 物件上，但不會傳給網絡堆疊：快取和 cookie 處理由平台的堆疊負責。
+- **Capabilities。** 當應用程式在 `nsh.json` 中宣告了 `network` capabilities（或嵌入式應用程式授予的權限較少）時，向不被允許的主機發出的請求不會到達網絡，`fetch` 會以 `TypeError` reject，其 `code` 為 `"ERR_ACCESS_DENIED"`，`permission` 為 `"network"`，而 `resource` 為被拒絕的 URL。見[沙盒與 capabilities](../docs/sandbox-and-capabilities.md)。
+- **錯誤。** 網絡故障會以 `TypeError` reject，其訊息以 `Network request failed:` 開頭；中止則以訊號的 `reason` reject。
 
-關於在元件中載入資料的指南，請參閱[網路](../docs/networking.md)。
+有關在元件中載入資料的指南，見 [Networking](../docs/networking.md)。
 
-## Streams
+<a id="streams"></a>
 
-完整的 WHATWG Streams Standard：readable stream（預設與位元組串流、BYOB reader、`tee`、`pipeTo` / `pipeThrough`、`ReadableStream.from`、非同步迭代）、writable stream、transform stream、兩種佇列策略，以及文字編碼串流。
+## 串流
+
+完整的 WHATWG Streams Standard：可讀串流（預設串流和位元組串流、BYOB 讀取器、`tee`、`pipeTo` / `pipeThrough`、`ReadableStream.from`、非同步迭代）、可寫串流、轉換串流、兩種佇列策略，以及文字編碼串流。
 
 ```ts
 class ReadableStream<R = any> {
@@ -663,11 +667,11 @@ class TextDecoderStream {
 }
 ```
 
-底層的 source、sink 與 transformer 物件（`UnderlyingDefaultSource`、`UnderlyingByteSource`、`UnderlyingSink`、`Transformer`）以及 `StreamPipeOptions`（`preventAbort`、`preventCancel`、`preventClose`、`signal`）都具有標準的形狀；其完整宣告位於 `globals.d.ts`。
+底層的 source、sink 和 transformer 物件（`UnderlyingDefaultSource`、`UnderlyingByteSource`、`UnderlyingSink`、`Transformer`）以及 `StreamPipeOptions`（`preventAbort`、`preventCancel`、`preventClose`、`signal`）均為標準形態；其完整宣告見 `globals.d.ts`。
 
-`TextEncoderStream` 會將被切在兩個字串區塊之間的代理對（surrogate pair）保持在一起，`TextDecoderStream` 則會對被切在兩個位元組區塊之間的多位元組序列做同樣的處理。
+`TextEncoderStream` 會將被切在兩個字串區塊之間的代理對保持在一起，`TextDecoderStream` 則對被切在兩個位元組區塊之間的多位元組序列做同樣處理。
 
-一個將文字切分為行的 transform stream：
+一個將文字拆分為行的轉換串流：
 
 ```ts
 function lines(): TransformStream<string, string> {
@@ -694,7 +698,7 @@ for await (const line of res.body!.pipeThrough(new TextDecoderStream()).pipeThro
 
 ## 數字與日期格式化
 
-QuickJS 本身沒有 `Intl`；NSH 加入了一個，以 Rust 進行格式化：`Intl.NumberFormat`、`Intl.DateTimeFormat` 與 `Intl.getCanonicalLocales`，以及數字與 BigInt 的 `toLocaleString`，還有日期的 `toLocaleString` / `toLocaleDateString` / `toLocaleTimeString`，它們接受相同的 `locales` 與 `options`。其宣告是 TypeScript 自帶的（`ES2023` 函式庫），因此不在 `globals.d.ts` 中。
+QuickJS 本身沒有 `Intl`；NSH 加入了一個，並以 Rust 進行格式化：`Intl.NumberFormat`、`Intl.DateTimeFormat` 和 `Intl.getCanonicalLocales`，以及數字和 BigInt 的 `toLocaleString`，還有日期的 `toLocaleString` / `toLocaleDateString` / `toLocaleTimeString`，它們接受相同的 `locales` 和 `options`。其宣告是 TypeScript 自帶的（`ES2023` 程式庫），因此不在 `globals.d.ts` 中。
 
 ```ts
 (1234567.891).toLocaleString();                                              // "1,234,567.891" (en-US)
@@ -705,15 +709,15 @@ new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: 
 new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(date); // "Oct 16, 2026, 3:04 PM"
 ```
 
-未提供 `locales` 時，會使用裝置的地區設定：其區域格式（iOS 為 `NSLocale.currentLocale`，Android 為 `Locale.getDefault()`），在 `nsh test` 與網頁上則為 `en-US`。
+若沒有 `locales`，則使用裝置的地區設定：其區域格式（iOS 的 `NSLocale.currentLocale`、Android 的 `Locale.getDefault()`），在 `nsh test` 和網頁上則為 `en-US`。
 
-- **數字**：`decimal`、`percent`、`currency`（`currencyDisplay` `symbol`、`narrowSymbol`、`code`）與 `unit`（常見單位：長度、質量、時間長度、資料大小、溫度、速度）樣式；`minimumIntegerDigits`、`minimum` / `maximumFractionDigits`、`minimum` / `maximumSignificantDigits`、`roundingPriority`、`trailingZeroDisplay`、`useGrouping`、`signDisplay`；`standard`、`scientific`、`engineering` 與 `compact` 記法（`compactDisplay` `short` / `long`）。捨入採用四捨五入（遠離零），以數字的書寫形式為準（`1.005` 會捨入為 `1.01`，與瀏覽器相同）。`format` 也能精確地接受 BigInt 與十進位字串。`formatToParts` 與 `resolvedOptions` 的運作方式與瀏覽器相同。
-- **日期**：`weekday`、`year`、`month`（`numeric`、`2-digit`、`short`、`long`、`narrow`）、`day`、`hour`、`minute`、`second`、`fractionalSecondDigits`、`hour12` / `hourCycle`、`timeZoneName` 與 `dateStyle` / `timeStyle`，使用格里曆。`timeZone` 採用裝置的時區（在瀏覽器中則為瀏覽器的時區）、`UTC` 或偏移量（`"+08:00"`）；其他時區名稱會擲出 `RangeError`（沒有時區資料庫）。
-- **地區設定**：地區設定資料是一張常見語言的表（英文、德文、法文、西班牙文、義大利文、葡萄牙文、荷蘭文、俄文、瑞典文、波蘭文、土耳其文、印尼文、越南文、泰文、印地文、中文、日文、韓文）及其地區變體（`en-GB`、`en-IN`、`de-CH`、`es-MX`、`pt-PT`、`zh-TW` 等），而非完整的 CLDR，因此細節可能與瀏覽器的輸出不同。沒有資料的地區設定會退回到下一個被要求的地區設定，然後是裝置的，最後是 `en-US`；俄文、瑞典文、波蘭文、土耳其文、印尼文、越南文、泰文與印地文的日期沒有月份名稱（月份以數字書寫，星期以英文書寫）。數字一律使用拉丁數字。
-- **不提供**：`Intl.Collator`（`String.prototype.localeCompare` 是 QuickJS 的，它會忽略地區設定）、`PluralRules`、`RelativeTimeFormat`、`ListFormat`、`DisplayNames`、`Segmenter` 與 `Intl.Locale`；`currencySign: "accounting"` 與 `currencyDisplay: "name"` 會格式化為 `standard` 與 `code`。
+- **數字**：`decimal`、`percent`、`currency`（`currencyDisplay` `symbol`、`narrowSymbol`、`code`）和 `unit`（常見單位：長度、質量、時間長度、資料大小、溫度、速度）樣式；`minimumIntegerDigits`、`minimum` / `maximumFractionDigits`、`minimum` / `maximumSignificantDigits`、`roundingPriority`、`trailingZeroDisplay`、`useGrouping`、`signDisplay`；`standard`、`scientific`、`engineering` 和 `compact` 記數法（`compactDisplay` `short` / `long`）。捨入為四捨五入（遠離零），並按所寫的數字進行（`1.005` 捨入為 `1.01`，與瀏覽器相同）。`format` 也可精確地接受 BigInt 和十進位字串。`formatToParts` 和 `resolvedOptions` 的運作與瀏覽器相同。
+- **日期**：`weekday`、`year`、`month`（`numeric`、`2-digit`、`short`、`long`、`narrow`）、`day`、`hour`、`minute`、`second`、`fractionalSecondDigits`、`hour12` / `hourCycle`、`timeZoneName` 以及 `dateStyle` / `timeStyle`，採用公曆。`timeZone` 取裝置的時區（在瀏覽器中則為瀏覽器的時區）、`UTC` 或偏移量（`"+08:00"`）；其他時區名稱會拋出 `RangeError`（沒有時區資料庫）。
+- **地區設定**：地區設定資料是一張常見語言的表（英語、德語、法語、西班牙語、意大利語、葡萄牙語、荷蘭語、俄語、瑞典語、波蘭語、土耳其語、印尼語、越南語、泰語、印地語、中文、日語、韓語）及其地區變體（`en-GB`、`en-IN`、`de-CH`、`es-MX`、`pt-PT`、`zh-TW` 等），並非完整的 CLDR，因此細節可能與瀏覽器的輸出有所不同。沒有資料的地區設定會回退到所要求的下一個地區設定，然後是裝置的，最後是 `en-US`；俄語、瑞典語、波蘭語、土耳其語、印尼語、越南語、泰語和印地語的日期沒有月份名稱（月份以數字書寫，星期則以英文書寫）。數字一律使用拉丁數字。
+- **未提供**：`Intl.Collator`（`String.prototype.localeCompare` 是 QuickJS 的，會忽略地區設定）、`PluralRules`、`RelativeTimeFormat`、`ListFormat`、`DisplayNames`、`Segmenter` 和 `Intl.Locale`；`currencySign: "accounting"` 和 `currencyDisplay: "name"` 的格式化結果分別為 `standard` 和 `code`。
 
 <a id="performance"></a>
 
 ## 效能
 
-這些類別全都是原生的：URL 解析、文字編碼與解碼、建立 multipart 本文，以及搬移串流區塊，都在 Rust 中進行，而不是在 QuickJS 中。不過，每次從 JS 的呼叫都會跨入執行階段，因此請優先使用整個緩衝區的操作（`res.json()`、`res.text()`、`encoder.encode(s)`），而不是在 JS 中逐位元組的迴圈。參閱[效能](../docs/performance.md)。
+所有這些類別都是原生的：解析 URL、文字編碼與解碼、構建 multipart 本文以及搬移串流區塊，都在 Rust 中進行，而不是在 QuickJS 中。儘管如此，從 JS 發出的每次呼叫都要跨入執行環境，因此請優先使用整個緩衝區的操作（`res.json()`、`res.text()`、`encoder.encode(s)`），而不要在 JS 中逐位元組迴圈。見[效能](../docs/performance.md)。

@@ -1,14 +1,16 @@
 ---
 title: "鍵盤"
-description: "keyboard-inset-height 環境變數、Keyboard.dismiss 與鍵盤高度:讓內容保持在軟體鍵盤上方,並隨鍵盤一同移動。"
+description: "keyboard-inset-height 環境變數、Keyboard.dismiss 以及鍵盤高度:讓內容保持在軟件鍵盤上方,並隨鍵盤一同移動。"
 order: 120
 group: primitives
 demo: el-keyboard
+source_hash: d083e22be8d06de9
 ---
+
 
 # 鍵盤
 
-`env(keyboard-inset-height)` 是軟體鍵盤在畫面表面上方的高度，鍵盤隱藏時為 0。將它用作 view 的底部 padding 或 margin，可讓內容保持在鍵盤上方：當鍵盤顯示或隱藏時，view 會依鍵盤的高度騰出空間，且這項變化會以原生方式與鍵盤同步動畫。它適用於捲動檢視之外的內容，例如聊天畫面底部的訊息列；位於[捲動檢視](./scroll.md)或 [List](./list.md) 內的輸入欄位，則會以原生方式捲動至可見範圍。與它搭配的還有用來隱藏鍵盤的 `Keyboard.dismiss()`，以及鍵盤高度本身，可用於您自訂的版面配置。
+`env(keyboard-inset-height)` 是軟件鍵盤在 surface 上方的高度，鍵盤隱藏時為 0。把它用作 view 的底部 padding 或 margin，可令內容保持在鍵盤之上：鍵盤顯示或隱藏時，view 會按鍵盤的高度騰出空間，而且這個變化會以原生方式配合鍵盤一同播放動畫。它適用於 scroll view 以外的內容，例如聊天畫面底部的訊息列；位於 [scroll view](./scroll.md) 或 [List](./list.md) 內的輸入欄位，則會以原生方式自動捲動到可見位置。與它搭配的有 `Keyboard.dismiss()`（用來隱藏鍵盤）和鍵盤高度，可用於自行設計的版面。
 
 ```rust tabs
 use nsh_core::prelude::*;
@@ -65,7 +67,7 @@ function App() {
 mount(App);
 ```
 
-完整的鍵盤高度適用於延伸至螢幕底部的 view，例如整個畫面的內容。當 view 下方還有其他元素（例如分頁列）時，請以長度值將其扣除：`calc(env(keyboard-inset-height) + -49px)` 會讓 view 保持在 49 pt 分頁列的上方，而 `calc(env(keyboard-inset-height) + 12px)` 則會在鍵盤上方加入間距。padding 最小為 0。
+完整的鍵盤高度適合延伸至螢幕底部的 view，例如整個畫面的內容。如果 view 下方還有其他元素（例如 tab bar），就要用一個長度值把那部分減去：`calc(env(keyboard-inset-height) + -49px)` 可令 view 保持在 49 pt 的 tab bar 之上，而 `calc(env(keyboard-inset-height) + 12px)` 則會在鍵盤上方加入間距。padding 最小為 0。
 
 <a id="padding-or-margin"></a>
 
@@ -73,10 +75,10 @@ mount(App);
 
 | 樣式 | 騰出空間的方式 |
 |---|---|
-| `paddingBottom: "env(keyboard-inset-height)"`（Tailwind `pb-[env(keyboard-inset-height)]`，Rust `.pb_keyboard()`） | 上方的內容會縮小；背景仍會延伸至螢幕底部。 |
-| `marginBottom: "env(keyboard-inset-height)"`（Tailwind `mb-[env(keyboard-inset-height)]`，Rust `.mb_keyboard()`） | 整個 view（包含其背景）會在鍵盤頂端結束。 |
+| `paddingBottom: "env(keyboard-inset-height)"`（Tailwind `pb-[env(keyboard-inset-height)]`，Rust `.pb_keyboard()`） | 上方的內容會縮小；背景仍然延伸至螢幕底部。 |
+| `marginBottom: "env(keyboard-inset-height)"`（Tailwind `mb-[env(keyboard-inset-height)]`，Rust `.mb_keyboard()`） | 整個 view（包括背景）終止於鍵盤頂部。 |
 
-鍵盤的高度只會加到同一個宣告中的長度上，因此 view 若要將它與自身的間距結合，請在 `calc()` 中處理。在 Rust 中，可使用 `.pb_keyboard_plus(px(..))` 與 `.mb_keyboard_plus(px(..))` 來加上長度。
+鍵盤高度只會加到同一個宣告內的長度值上，所以 view 若要把它與自己的間距結合，須在 `calc()` 中處理。在 Rust 中，`.pb_keyboard_plus(px(..))` 和 `.mb_keyboard_plus(px(..))` 可加上一個長度值。
 
 ```rust tabs
 use nsh_core::prelude::*;
@@ -97,13 +99,13 @@ fn sign_in() -> impl IntoElement {
 </View>
 ```
 
-在此範例中，view 下方的 49 pt 分頁列已經遮住了一部分的鍵盤高度。若要關閉騰出空間的行為，請不要在樣式中使用該變數，例如依據 signal 設定條件。
+在這個例子中，view 下方的 49 pt tab bar 已經遮住了部分鍵盤高度。如要停用騰出空間的效果，只需在樣式中不使用該變數，例如以 signal 作為條件。
 
 <a id="hiding-the-keyboard"></a>
 
 ## 隱藏鍵盤
 
-來自 `nsh` 的 `Keyboard.dismiss()` 會讓目前取得焦點的輸入欄位失去焦點，進而隱藏鍵盤。若沒有任何輸入欄位取得焦點，則不會有任何變動。Rust 元件則呼叫 `dismiss_keyboard()`。
+來自 `nsh` 的 `Keyboard.dismiss()` 會令目前取得焦點的輸入欄位失去焦點，從而隱藏鍵盤。如果沒有任何輸入欄位取得焦點，則一切維持不變。Rust 元件則呼叫 `dismiss_keyboard()`。
 
 ```rust tabs
 use nsh_base::button;
@@ -134,17 +136,17 @@ function Done() {
 ```
 
 > [!TIP]
-> 若要在使用者拖曳捲動檢視時隱藏鍵盤，請在[捲動檢視](./scroll.md)或 [List](./list.md) 上設定 `keyboardDismissMode="on-drag"` 或 `"interactive"`。
+> 如要在使用者拖曳 scroll view 時隱藏鍵盤，請在 [scroll view](./scroll.md) 或 [List](./list.md) 上設定 `keyboardDismissMode="on-drag"` 或 `"interactive"`。
 
 <a id="the-keyboards-height"></a>
 
-## 鍵盤的高度
+## 鍵盤高度
 
-| TSX | Rust | 傳回值 |
+| TSX | Rust | 回傳值 |
 |---|---|---|
-| `keyboardFrame()` | `keyboard_height()`、`keyboard_duration()` | 軟體鍵盤在 NSH 畫面表面上方的高度（以點為單位，隱藏時為 0），以及其顯示或隱藏動畫的持續時間（以毫秒為單位）。 |
+| `keyboardFrame()` | `keyboard_height()`、`keyboard_duration()` | 軟件鍵盤在 NSH surface 上方的高度（以 point 為單位，隱藏時為 0），以及其顯示或隱藏動畫的時長（以毫秒為單位）。 |
 
-兩者皆為響應式：當鍵盤顯示、隱藏或高度改變時，讀取它們的 effect、JSX 運算式或樣式 closure 都會重新執行。
+兩者都是響應式的：讀取它們的 effect、JSX 表達式或樣式 closure，會在鍵盤顯示、隱藏或高度改變時重新執行。
 
 ```rust tabs
 use nsh_core::prelude::*;
@@ -187,18 +189,18 @@ function MessageBar() {
 }
 ```
 
-此高度是指鍵盤與 NSH 畫面表面重疊的部分。當視窗本身因鍵盤而縮小（例如會調整大小的 Android activity），或 NSH 嵌入在終止於鍵盤上方的 view 中時，高度為 0。
+這個高度是指鍵盤與 NSH surface 重疊的部分。當視窗本身因鍵盤而縮小（例如會調整大小的 Android activity），或 NSH 嵌入在一個終止於鍵盤上方的 view 中時，高度為 0。
 
 > [!NOTE]
-> 若要讓內容保持在鍵盤上方，`env(keyboard-inset-height)` 是更簡單的做法：它會以原生方式與鍵盤同步動畫，且無需執行程式碼。
+> 如要令內容保持在鍵盤之上，`env(keyboard-inset-height)` 是更簡單的做法：它無需執行程式碼，便能以原生方式配合鍵盤播放動畫。
 
 <a id="platform-notes"></a>
 
-## 平台說明
+## 平台備註
 
-- **iOS**：騰出的空間會以鍵盤本身的持續時間與 ease-in-ease-out 曲線進行動畫。
-- **Android**：當視窗因鍵盤而縮小（會調整大小的 activity）時，內容本來就會在鍵盤上方結束，此變數為 0。當鍵盤覆蓋在 view 上方時，其騰出空間的方式與 iOS 相同。
-- **桌面平台與 Mac Catalyst** 使用實體鍵盤輸入：此變數為 0，view 會維持原有的版面配置。
-- **Web**：此變數為瀏覽器本身提供的變數（即 VirtualKeyboard API 的變數）。
+- **iOS**：騰出空間的動畫會採用鍵盤本身的時長，以及 ease-in-ease-out 曲線。
+- **Android**：如果視窗會因鍵盤而縮小（會調整大小的 activity），內容本來就終止於鍵盤上方，變數為 0。如果鍵盤覆蓋在 view 上方，則會像 iOS 一樣騰出空間。
+- **桌面平台和 Mac Catalyst** 使用實體鍵盤輸入：變數為 0，view 會保持原有版面。
+- **Web**：變數採用瀏覽器本身的（即 VirtualKeyboard API 的）值。
 
-關於焦點順序、return 鍵與輸入附屬工具列，請參閱[表單與鍵盤](../docs/forms-and-keyboard.md)；關於其他環境變數，請參閱[安全區域](./safe-area.md)。
+有關焦點順序、return 鍵和輸入附件，請參閱 [Forms and keyboard](../docs/forms-and-keyboard.md)；有關其他環境變數，請參閱 [Safe area](./safe-area.md)。

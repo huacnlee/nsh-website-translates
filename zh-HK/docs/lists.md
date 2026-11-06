@@ -1,14 +1,16 @@
 ---
-title: "清單"
-description: "在 Rust 與 TSX 中處理長清單與無限清單：項目回收、列識別、欄位、黏性標頭、反向聊天清單、水平清單、頁面中的清單、載入更多、可見性偵測，以及捲動至指定項目。"
+title: "列表"
+description: "在 Rust 和 TSX 中處理長列表及無限列表：元件回收、列識別、多欄、固定標題列、反向聊天列表、水平列表、頁面內的列表、載入更多、可視性偵測，以及捲動至指定項目。"
 order: 40
 group: ui
 demo: guide-lists
+source_hash: fb4ffb925cc99200
 ---
+
 
 # 列表
 
-列表(Rust 中為 `virtual_list(..)`,TSX 中為來自 `nsh` 的 `List`)在原生捲動視圖上呈現大量資料,而且只會建立靠近螢幕的列。哪些列存在、它們放在哪裡、欄位、黏性標頭,以及哪些項目可見,全都由原生端計算;你的程式碼只需要在原生端要求時,把內容填入儲存格。一百萬筆項目的列表,成本與三十筆的列表相差無幾。
+列表（Rust 中是 `virtual_list(..)`，TSX 中是 `nsh` 提供的 `List`）在原生捲動視圖上呈現大量資料，同時只建立螢幕附近的列。哪些列存在、列放在哪裡、欄數、黏性標題，以及哪些項目可見，全部由原生端計算；你的程式碼只會在原生端要求時，才為儲存格填入內容。一個有一百萬個項目的列表，成本與一個有三十個項目的列表相若。
 
 ```rust tabs
 use std::rc::Rc;
@@ -52,17 +54,17 @@ function App() {
 mount(App);
 ```
 
-在 Rust 中,`virtual_list(count, row)` 接收列數(可以是值、signal 或 closure),以及一個根據位置(`at.index()`)建立列的函式;各列透過該索引讀取你的資料。在 TSX 中,`each` 接收項目,而列函式會取得該項目。與[捲動視圖](./scrolling.md)一樣,列表本身就是視埠,需要由父層提供尺寸(`.flex_1()`、`flex: 1` 或高度)。
+在 Rust 中，`virtual_list(count, row)` 接受列數（可以是數值、signal 或閉包），以及一個根據位置（`at.index()`）建立列的函數；各列透過該索引讀取你的資料。在 TSX 中，`each` 接受項目，而列函數會取得該項目。與[捲動視圖](./scrolling.md)一樣，列表本身就是可視區域，需要由其父層提供尺寸（`.flex_1()`、`flex: 1` 或高度）。
 
 <a id="how-recycling-works"></a>
 
-## 回收機制如何運作
+## 回收的運作方式
 
-列函式並不是每個項目呼叫一次,而是**每個儲存格呼叫一次**,而且儲存格會被重複使用:當某一列捲動到遠離螢幕的位置時,它的儲存格會被分配給另一列,其位置(Rust 中為 `at.index()`,TSX 中為 `item()` 與 `index()`)隨之改變。列中所有讀取該位置的內容都會就地更新,就像任何其他 [signal](./reactivity.md) 一樣。
+列函數並不是每個項目呼叫一次，而是**每個儲存格呼叫一次**，而且儲存格會被重用：當某一列捲動到遠離螢幕的位置，它的儲存格就會被分配給另一列，其位置（Rust 中的 `at.index()`，TSX 中的 `item()` 和 `index()`）也隨之改變。列中所有讀取該位置的內容都會原地更新，與任何其他 [signal](./reactivity.md) 一樣。
 
-由此產生兩條規則:
+由此衍生出兩條規則：
 
-**在使用位置的地方才讀取它。** 在列函式開頭複製出來的值,會屬於該儲存格最初顯示的那一列。
+**在使用位置的地方才讀取它。** 在列函數開頭複製出來的值，只屬於該儲存格最初顯示的那一列。
 
 ```rust tabs
 // Wrong: `title` stays the first row's title when the cell is reused.
@@ -89,7 +91,7 @@ virtual_list(count, move |at| {
 {(item) => <Text>{item().title}</Text>}
 ```
 
-**將每個項目的狀態放在資料中,而不是列裡。** 在列內建立的 signal 屬於儲存格,並會隨儲存格移到下一個項目。請將「這一列是否展開/選取/按讚」儲存在項目中,或以 id 為鍵的集合中:
+**把每個項目的狀態放在你的資料中，而不是列裡面。** 在列內建立的 signal 屬於儲存格，並會跟著儲存格轉到下一個項目。請把「此列是否展開／選取／已按讚」儲存在項目本身，或以 id 作為鍵的集合中：
 
 ```rust tabs
 let liked = signal(HashSet::<u32>::new());
@@ -135,66 +137,68 @@ const toggle = (id: number) =>
 </List>
 ```
 
-各列的高度可以不同。在某一列被測量之前,列表會假設其為預估項目大小(預設 50 點);請傳入接近你一般列高的值,讓捲動指示器與跳轉到遠處項目的位置從一開始就準確。
+各列的高度可以不同。在某一列被量度之前，列表會假設使用預估項目大小（預設為 50 點）；請傳入一個接近你一般列高的值，這樣捲動指示器和跳轉到遠處項目時，一開始就會準確。
 
 <a id="changing-the-data"></a>
 
-## 變更資料
+## 更改資料
 
-在 Rust 中,將列數以 signal 或 closure(`move || posts.with(Vec::len)`)提供:列表會就地增減。在尾端新增或移除列不需要其他處理;當列在其他位置出現或消失時,請用 `.keys(move || posts.with(|p| p.iter().map(|p| p.id).collect::<Vec<_>>()))` 提供它們的身分識別,列表會保留相同的開頭與結尾,並將中間部分視為已移除並重新插入。
+在 Rust 中，把列數以 signal 或閉包（`move || posts.with(Vec::len)`）傳入：列表會原地增長和縮減。在末尾新增或移除列時，不需要其他處理；當列在其他位置出現或消失時，請以 `.keys(move || posts.with(|p| p.iter().map(|p| p.id).collect::<Vec<_>>()))` 提供它們的身分，列表會保留相同的開頭和結尾，並把中間部分視為已移除和已插入。
 
-在 TSX 中,傳入新的陣列即可變更項目:`posts.set([...posts(), ...more])`。列表會**依項目身分**(`===`)比較新舊陣列,保留相同的開頭與結尾,並將中間部分視為已移除並重新插入。
+在 TSX 中，傳入新陣列即可更改項目：`posts.set([...posts(), ...more])`。列表會**按項目身分**（`===`）比較新舊陣列，保留相同的開頭和結尾，並把中間部分視為已移除和已插入。
 
-兩種情況下,測量結果都會保留在各自的列上;當在螢幕上的列之上插入新列時,可見的列會留在原處而不會跳動。
+在兩種情況下，量度結果都會跟著各自的列，而且當列插入到螢幕上所見列的上方時，可見的列會留在原處，不會跳動。
 
-- 在 TSX 中,請以不可變方式更新:建立新陣列,並重複使用未變更的項目物件。就地修改陣列(`push`)不會被偵測到。
-- 已變更的項目應為新的物件(`{ ...post, title }`),這樣它的列才會顯示變更。
-- 在前面插入(新訊息、重新整理的動態消息)會保留使用者目前的位置。
+- 在 TSX 中，請以不可變方式更新：使用新陣列，並重用未改變的項目物件。就地修改陣列（`push`）是不會被偵測到的。
+- 已改變的項目應該是新物件（`{ ...post, title }`），這樣它的列才會顯示變更。
+- 在前面插入（新訊息、重新整理的動態）會保持使用者目前的位置。
 
-`keyExtractor` 在可視性 token(見下文)中為項目命名;預設的鍵依序為 `item.key`、`item.id`,然後是索引。它不影響 TSX 中變更的比對方式,後者一律依身分比對。
+`keyExtractor` 在可見性 token（見下文）中為項目命名；預設的鍵是 `item.key`，然後是 `item.id`，最後是索引。它不會影響 TSX 中變更的比對方式，TSX 中永遠是按身分比對。
 
-## Props
+<a id="props"></a>
 
-列表接受捲動視圖中所有適用於列表的捲動 prop(`pagingEnabled`、`snapToInterval`、`snapToOffsets`、`snapToAlignment`、`decelerationRate`、`disableIntervalMomentum`、`bounces`、`scrollable`、`contentInset`、`contentOffset`、`keyboardShouldPersistTaps`、`keyboardDismissMode`、`scrollEventThrottle`、`onScroll`、`onScrollDragStart`、`onScrollDragEnd`、`onMomentumStart`、`onMomentumEnd`、`onScrollEnd`、`scrollValue`、`pullValue`;在 Rust 中是與捲動視圖相同的方法),詳見[捲動](./scrolling.md)。列表的縮放比例固定為 1。其專屬的 prop 如下:
+## 屬性
 
-| Prop | Rust | 型別 | 預設值 | 說明 |
+列表接受捲動視圖中所有適用於列表的捲動屬性（`pagingEnabled`、`snapToInterval`、`snapToOffsets`、`snapToAlignment`、`decelerationRate`、`disableIntervalMomentum`、`bounces`、`scrollable`、`contentInset`、`contentOffset`、`keyboardShouldPersistTaps`、`keyboardDismissMode`、`scrollEventThrottle`、`onScroll`、`onScrollDragStart`、`onScrollDragEnd`、`onMomentumStart`、`onMomentumEnd`、`onScrollEnd`、`scrollValue`、`pullValue`；在 Rust 中是與捲動視圖相同的方法），詳見[捲動](./scrolling.md)。列表的縮放比例固定為 1。它自己的屬性如下：
+
+| 屬性 | Rust | 類型 | 預設值 | 說明 |
 |---|---|---|---|---|
-| `each` | `virtual_list(count, ..)` | `readonly T[]` | | 項目;在 Rust 中為列數。 |
-| `children` | `virtual_list(.., row)` | `(item: () => T, index: () => number) => JSX.Element` | | 繪製儲存格;每個儲存格呼叫一次,請見[回收機制](#how-recycling-works)。 |
-| `estimatedItemSize` | `.estimated_item_size(px(..))` | `number` | `50` | 尚未測量的列的大小,單位為點。 |
+| `each` | `virtual_list(count, ..)` | `readonly T[]` | | 項目；在 Rust 中是列數。 |
+| `children` | `virtual_list(.., row)` | `(item: () => T, index: () => number) => JSX.Element` | | 呈現一個儲存格；每個儲存格呼叫一次，見[回收](#how-recycling-works)。 |
+| `estimatedItemSize` | `.estimated_item_size(px(..))` | `number` | `50` | 尚未量度的列的大小，單位為點。 |
 | `horizontal` | `.horizontal()` | `boolean` | `false` | 橫向捲動。 |
-| `viewport` | `.viewport(ListViewport::..)` | `"own" \| "parent"` | `"own"` | `"own"`:列表在自己的捲動視圖中捲動。`"parent"`:列表以完整長度置於周圍的捲動視圖中,由該視圖與頁面其餘內容一起捲動(請見[頁面中的列表](#lists-in-a-page-viewportparent))。於建立列表時選定。 |
-| `numColumns` | `.columns(n)` | `number` | `1` | 每列的項目數(垂直列表)。 |
-| `inverted` | `.inverted()` | `boolean` | `false` | 第 0 個項目位於底部(聊天);從結尾開始,並保持與結尾的距離。 |
-| `maintainVisibleContentPosition` | `.follow_end(px(..))` | `{ autoscrollToBottomThreshold?: number }` | | 未反轉的列表在內容增長時,只要距離結尾在這麼多點之內,就會停留在結尾(見下文)。 |
-| `stickyHeaderIndices` | `.sticky_header_indices(..)` | `number[]` | | 捲過後會黏在頂端的項目(單欄、未反轉)。 |
-| `stickyHeaderOffset` | `.sticky_header_offset(px(..))`、`.bind_sticky_header_offset(&node)` | `number \| AnimatedNode` | `0` | 黏性項目黏在頂端下方多遠處,如同 CSS `position: sticky` 的 `top`;內容會繼續捲動到它們上方的空間之下。動畫值會在每一幀移動它們。 |
-| `contentStyle` | `.content_padding(..)`、`.content_padding_x(..)`、...、`.row_gap(..)`、`.column_gap(..)` | `{ padding*, gap, rowGap, columnGap }` | | 內容的內距與間距,僅限數字。 |
-| `contentClass` | | `string` | | 與 class 相同(`p-*`、`gap-*`);`contentStyle` 的優先順序較高。 |
+| `viewport` | `.viewport(ListViewport::..)` | `"own" \| "parent"` | `"own"` | `"own"`：列表在自己的捲動視圖中捲動。`"parent"`：列表以完整長度置於周圍的捲動視圖內，並與頁面其餘內容一起被捲動（見[頁面中的列表](#lists-in-a-page-viewportparent)）。在建立列表時選定。 |
+| `numColumns` | `.columns(n)` | `number` | `1` | 每列的項目數（垂直列表）。 |
+| `inverted` | `.inverted()` | `boolean` | `false` | 項目 0 在底部（聊天）；由末端開始，並保持與末端的距離。 |
+| `maintainVisibleContentPosition` | `.follow_end(px(..))` | `{ autoscrollToBottomThreshold?: number }` | | 未反轉的列表在內容增長時，只要與末端的距離在這個點數以內，就會停留在末端（見下文）。 |
+| `stickyHeaderIndices` | `.sticky_header_indices(..)` | `number[]` | | 捲過時黏附在頂部的項目（單欄，未反轉）。 |
+| `stickyHeaderOffset` | `.sticky_header_offset(px(..))`、`.bind_sticky_header_offset(&node)` | `number \| AnimatedNode` | `0` | 黏性項目黏附在頂部以下多遠的位置，類似 CSS `position: sticky` 的 `top`；內容會繼續在它們上方的空間下捲動。動畫值會每一幀移動它們。 |
+| `contentStyle` | `.content_padding(..)`、`.content_padding_x(..)`、...、`.row_gap(..)`、`.column_gap(..)` | `{ padding*, gap, rowGap, columnGap }` | | 內容的內距和間距，只接受數字。 |
+| `contentClass` | | `string` | | 與 class（`p-*`、`gap-*`）相同；`contentStyle` 的優先級高於它們。 |
 | `header` | `.header(..)` | 元件或元素 | | 位於項目之前。 |
 | `footer` | `.footer(..)` | 元件或元素 | | 位於項目之後。 |
-| `empty` | `.empty(..)` | 元件或元素 | | 沒有項目時,顯示於項目的位置。 |
-| `separator` | `.separator(\|\| ..)` | 元件或元素 | | 位於項目之間(單欄)。 |
+| `empty` | `.empty(..)` | 元件或元素 | | 在沒有項目時取代項目顯示。 |
+| `separator` | `.separator(\|\| ..)` | 元件或元素 | | 位於項目之間（單欄）。 |
 | `initialScrollIndex` | `.initial_scroll_index(i)` | `number` | | 在第一幀之前捲動到此項目。 |
-| `onLoadMore` | `.on_load_more(..)` | `() => void` | | 接近結尾(見下文)。 |
-| `loadMoreThreshold` | `.load_more_threshold(..)` | `number` | `1` | 距離結尾多近(以視埠為單位)時觸發 `onLoadMore`。 |
-| `onLoadMoreAtStart` | `.on_load_more_at_start(..)` | `() => void` | | 捲動之後接近開頭(見下文)。 |
-| `loadMoreAtStartThreshold` | `.load_more_at_start_threshold(..)` | `number` | `1` | 距離開頭多近(以視埠為單位)時觸發 `onLoadMoreAtStart`。 |
-| `onViewableItemsChange` | `.on_viewable_items_change(..)` | `(info) => void` | | 項目變為可視或不再可視。 |
-| `viewabilityConfig` | `.viewability(..)`、`.minimum_view_time(..)` | `ViewabilityConfig` | | 項目在何時算作可視。 |
-| `keyExtractor` | `.keys(..)` | `(item, index) => string` | | 可視性 token 中的鍵;在 Rust 中為各列的身分識別。 |
+| `onLoadMore` | `.on_load_more(..)` | `() => void` | | 接近末端（見下文）。 |
+| `loadMoreThreshold` | `.load_more_threshold(..)` | `number` | `1` | 距離末端多近（以可視區域數計）時觸發 `onLoadMore`。 |
+| `onLoadMoreAtStart` | `.on_load_more_at_start(..)` | `() => void` | | 在捲動後接近開頭（見下文）。 |
+| `loadMoreAtStartThreshold` | `.load_more_at_start_threshold(..)` | `number` | `1` | 距離開頭多近（以可視區域數計）時觸發 `onLoadMoreAtStart`。 |
+| `onViewableItemsChange` | `.on_viewable_items_change(..)` | `(info) => void` | | 項目變為可見或不再可見。 |
+| `viewabilityConfig` | `.viewability(..)`、`.minimum_view_time(..)` | `ViewabilityConfig` | | 項目何時算作可見。 |
+| `keyExtractor` | `.keys(..)` | `(item, index) => string` | | 可見性 token 中的鍵；在 Rust 中是各列的身分。 |
 | `refreshing` / `onRefresh` | `.refreshing(..)` / `.on_refresh(..)` | `boolean` / `() => void` | | 下拉重新整理。 |
-| `refreshIndicator` | `.refresh_indicator(..)` | `{ height: number }` | | 應用程式自己的下拉重新整理指示器,取代平台的旋轉指示器(請見[捲動](./scrolling.md#an-indicator-of-your-own))。 |
-| `scrollbar` | `.scrollbar(..)` | `boolean \| ScrollbarTheme` | `true` | 是否顯示捲動指示器:使用平台的,或在應用程式設定主題後使用應用程式的[內建捲軸](../elements/scrollbar.md#built-in-bars);物件則是該視圖自己的主題。在桌面與桌面瀏覽器上,橫向視圖會保留它:它就是滑鼠的捲軸。 |
+| `refreshIndicator` | `.refresh_indicator(..)` | `{ height: number }` | | 應用程式自己的下拉重新整理指示器，取代平台的載入圖示（見[捲動](./scrolling.md#an-indicator-of-your-own)）。 |
+| `scrollbar` | `.scrollbar(..)` | `boolean \| ScrollbarTheme` | `true` | 是否顯示捲動指示器：使用平台的指示器，或在應用程式設定主題後使用其[內建捲動條](../elements/scrollbar.md#built-in-bars)；物件則是該視圖自己的主題。在桌面平台和桌面瀏覽器上，橫向視圖會保留它：它就是滑鼠的捲動條。 |
 | `ref` | `.element_ref(&list)` | `ListRef` | | `scrollToIndex`、`scrollToOffset`、`scrollToEnd`、`scrollTo`。 |
 
-標頭、頁尾與空白狀態的插槽接受元素(在 TSX 中也可以是元件:`header={Header}`)。它們是獨立的儲存格,永不回收,並且與其他元素一樣具有響應性。
+標題、頁尾和空白插槽接受元素（在 TSX 中也可以是元件：`header={Header}`）。它們是各自獨立的儲存格，永遠不會被回收，而且與任何其他元素一樣具有響應性。
 
 <a id="columns-and-grids"></a>
 
-## 欄位與網格
+## 欄與網格
 
-`numColumns`(`.columns(n)`)會將項目依該欄數排成一列;內容內距位於內容四周,列與欄之間有間距。網格中各列的高度可以不同:每一列的高度等於其中最高的項目。
+`numColumns`（`.columns(n)`）會把項目按指定的欄數排成列；內容內距包圍整個內容，列與欄之間有間距。網格中的各列高度可以不同：每一列的高度等於其中最高的項目。
 
 ```rust tabs
 let count = photos.len();
@@ -224,9 +228,9 @@ virtual_list(count, move |at| {
 
 <a id="sticky-headers"></a>
 
-## 黏性標頭
+## 黏性標題
 
-`stickyHeaderIndices` 列出會黏在視埠頂端的項目,內容會從它們下方捲過,直到下一個黏性項目將它們推出。分區是由標頭與列項目組成的同一個列表;標頭的索引會被黏住。固定動作由原生端在每個捲動幀上完成。
+`stickyHeaderIndices` 列出在內容捲過時黏附在可視區域頂部的項目，直到下一個黏性項目把它們推走為止。各區段是由標題項目和列項目組成的同一個列表；標題的索引會被黏附。黏附由原生端在每一個捲動幀完成。
 
 ```rust tabs
 #[derive(Clone, PartialEq)]
@@ -285,11 +289,11 @@ for (const [letter, names] of groups) {
 </List>
 ```
 
-由於同一個儲存格可能現在顯示標頭、稍後顯示名稱,列會用 [`when` / `<If>`](../elements/control-flow.md) 來決定要繪製什麼,並在列變更時切換。黏性標頭需要單欄且未反轉的列表。
+由於同一個儲存格可能現在顯示標題、稍後顯示名稱，列需要使用 [`when` / `<If>`](../elements/control-flow.md) 來決定呈現什麼，它會在列改變時切換。黏性標題需要單欄且未反轉的列表。
 
-`stickyHeaderOffset`(Rust 中為 `.sticky_header_offset(..)`)會讓標頭改為黏在頂端下方那麼多點的位置,如同 CSS `position: sticky` 的 `top`:在一個 56 點高的半透明列之下,`stickyHeaderOffset={56}`(`.sticky_header_offset(px(56.0))`)會讓每個標頭保持在該列下方,而各列繼續在其下捲動,下一個標頭再從那裡將它推出。負的偏移量會讓標頭有一部分在視野之外。
+`stickyHeaderOffset`（Rust 中是 `.sticky_header_offset(..)`）可讓標題改為黏附在頂部以下指定的點數處，就像 CSS `position: sticky` 的 `top` 一樣：在一個 56 點高的半透明列下方，`stickyHeaderOffset={56}`（`.sticky_header_offset(px(56.0))`）會讓每個標題保持在該列之下，而各列繼續在它下方捲動，下一個標題則由該處把它推走。負偏移會令標題的一部分落在可視範圍之外。
 
-偏移量可以是[動畫值](./animation.md#animated-values)(Rust 中為 `.bind_sticky_header_offset(&node)`):標頭會在 UI 執行緒上每一幀跟隨它,因此能始終停留在會移動的列之下。當列會在內容向下捲動時隱藏、向上捲動時回來([`diffClamp`](./animation.md#arithmetic-and-diffclamp)),標頭會黏在它的底部邊緣,無論它在哪裡:
+偏移量可以是[動畫值](./animation.md#animated-values)（Rust 中是 `.bind_sticky_header_offset(&node)`）：標題會在 UI 執行緒上每一幀跟隨它，因此能停留在會移動的列下方。當列在內容向下捲動時隱藏、向上捲動時重新出現（[`diffClamp`](./animation.md#arithmetic-and-diffclamp)），標題無論它在哪裡，都會黏附在它的底部邊緣：
 
 ```rust tabs
 let offset = animated_value(0.0);
@@ -317,9 +321,9 @@ const shown = hidden.mul(-1).add(56);
 
 <a id="chat-inverted-lists"></a>
 
-## 聊天:反轉列表
+## 聊天：反轉列表
 
-`inverted` 會從結尾開始排列列表:第 0 個項目在底部,列表一開始就捲動到結尾,並在項目變更時保持與結尾的距離。請讓最新的訊息排在最前面;在前面插入即可新增訊息,在後面附加則以 `onLoadMore` 載入較舊的訊息(反轉列表的「結尾」是頂端)。若聊天從一則舊訊息開啟,可用 [`onLoadMoreAtStart`](#loading-at-the-start-onloadmoreatstart) 載入較新的訊息;使用它時,列表位於底部時會保持與底部的距離,向上捲動時則會讓螢幕上的訊息保持原位。
+`inverted` 會從末端開始排列列表：項目 0 在底部，列表一開始就捲動到末端，並在項目改變時保持與末端的距離。請把最新的訊息放在最前面；在前面插入以新增訊息，在後面附加並以 `onLoadMore` 載入較舊的訊息（反轉列表的「末端」是頂部）。如果聊天是在一則舊訊息處打開的，可以使用 [`onLoadMoreAtStart`](#loading-at-the-start-onloadmoreatstart) 載入較新的訊息；使用後，列表在底部時會保持與底部的距離，向上捲動時則會讓螢幕上的訊息留在原處。
 
 ```rust tabs
 #[derive(Clone, PartialEq)]
@@ -474,13 +478,13 @@ function Chat() {
 mount(Chat);
 ```
 
-在反轉列表上,`scroll_to_end(..)` / `scrollToEnd()` 會捲動到它的開頭:也就是最新的訊息。
+在反轉列表上，`scroll_to_end(..)` / `scrollToEnd()` 會捲動到它的開頭：即最新的訊息。
 
 <a id="following-the-end-of-a-list-that-is-not-inverted"></a>
 
-### 跟隨未反轉列表的結尾
+### 跟隨未反轉列表的末端
 
-依閱讀順序排列(最舊的在前)的列表也可以跟隨它的結尾:在 Rust 中使用 `.follow_end(px(40.0))`、在 TSX 中使用 `maintainVisibleContentPosition={{ autoscrollToBottomThreshold: 40 }}`,當使用者位於結尾(或距離結尾 40 點以內)時,列表會在內容增長時停留在結尾:例如回覆串流進入最後一個項目、附加了新訊息、鍵盤縮小了列表。若已向上捲動較遠,可見的內容會留在原處,新內容則在其下方增長。在可見項目之上插入的項目永遠不會移動它們,無論是否使用此選項。
+按閱讀順序排列（最舊的在前）的列表同樣可以跟隨它的末端：在 Rust 中使用 `.follow_end(px(40.0))`，在 TSX 中使用 `maintainVisibleContentPosition={{ autoscrollToBottomThreshold: 40 }}`，當使用者位於末端（或距離末端 40 點以內）時，列表會在內容增長時停留在末端，例如回覆內容串流寫入最後一個項目、附加了新訊息，或鍵盤令列表縮小。如果已向上捲動較遠，可見內容會留在原處，新內容則在其下方增長。無論有沒有此選項，插入到可見項目上方的項目都不會移動它們。
 
 ```rust tabs
 virtual_list(move || messages.with(Vec::len), move |at| bubble(messages, at))
@@ -499,7 +503,7 @@ virtual_list(move || messages.with(Vec::len), move |at| bubble(messages, at))
 
 ## 橫向列表
 
-`horizontal` 會讓列表轉為橫向;儲存格會以列表的高度排列。搭配吸附(snapping)使用,就能做出任意長度的輪播:
+`horizontal` 會把列表轉為橫向；儲存格按列表的高度排列。結合對齊捲動（snapping），就能製作任意長度的輪播：
 
 ```rust tabs
 let count = cards.len();
@@ -536,13 +540,13 @@ virtual_list(count, move |at| {
 </List>
 ```
 
-在由右至左的排版中,橫向列表從右側開始並向左延伸。
+在由右至左的語言環境中，橫向列表由右側開始，向左延伸。
 
 <a id="lists-in-a-page-viewportparent"></a>
 
-## 頁面中的列表:viewport="parent"
+## 頁面中的列表：viewport="parent"
 
-頁面經常是整體捲動的:一個標頭、幾張卡片,然後是一個很長的列表,下方可能還有另一個列表。為列表設定 `viewport="parent"`(Rust 中為 `.viewport(ListViewport::Parent)`),並將它與頁面其餘內容一起放在 `Scroll` 中:列表會以完整長度置於頁面內,由頁面的捲動視圖與其他內容一起捲動。它仍然只會建立靠近頁面視埠的列並回收其儲存格,因此一個頁面可以容納多個很長的列表。
+頁面經常是整頁一起捲動的：一個標題、幾張卡片，然後是一個很長的列表，下面可能還有另一個列表。為列表設定 `viewport="parent"`（Rust 中是 `.viewport(ListViewport::Parent)`），並把它與頁面其餘內容一起放在 `Scroll` 中：列表會以完整長度置於頁面內，由頁面的捲動視圖與其他內容一起捲動。它仍然只會建立頁面可視區域附近的列並回收其儲存格，因此一個頁面可以容納多個長列表。
 
 ```rust tabs
 scroll()
@@ -567,19 +571,19 @@ scroll()
 </Scroll>
 ```
 
-- 列表的長度取決於它的列:其高度(橫向時為寬度)來自其內容,與一般視圖相同,且它的內距、邊框與外距的運作方式也與視圖相同。
-- 它的列會沿著自身的軸向跟隨周圍最近的捲動視圖,或其所在的螢幕。
-- 頁面會像瀏覽器一樣保持你正在閱讀的內容位置:完全位於視埠頂端之上的列若改變大小,頁面會移動相同的距離;當列表的開頭在視野內時,變高的列會將其下方的內容往下推。
-- `scrollToIndex`、`scrollToEnd` 與 `initialScrollIndex` 會在頁面內容範圍內,將頁面捲動到列表的各列;當列表的結尾接近視埠時會觸發 `onLoadMore`,而 `onViewableItemsChange` 則回報位於頁面視埠中的列。
-- `stickyHeaderIndices` 與 `stickyHeaderOffset` 會讓列黏在頁面頂端:分區標頭在其列從下方捲過時停留在頂端,直到下一個將它推出,而最後一個會隨著其列表的結尾一起離開。
-- 頁面如何捲動由它的捲動視圖決定:請在 `Scroll` 上設定 `onScroll` 與其他捲動事件、`scrollValue`、`refreshing` / `onRefresh`、分頁與吸附、`contentInset`、`scrollbar`、`scrollable` 以及 `keyboardDismissMode`。反轉列表與 `maintainVisibleContentPosition` 是擁有自己視埠的列表(`viewport="own"`,即預設值)的功能。
-- 視埠是在建立列表時選定的:若要切換,請繪製一個新的列表。
+- 列表的長度由它的列決定：它的高度（橫向時是寬度）來自其內容，與一般視圖相同，而它的內距、邊框和外距的運作方式也與視圖一樣。
+- 它的列會沿著軸向跟隨周圍最近的捲動視圖，或所在的螢幕。
+- 頁面會像瀏覽器一樣保持你正在閱讀的內容不動：完全位於可視區域頂部以上的列若改變大小，頁面會移動相同的幅度；當列表的開頭在可視範圍內時，增高的列會把其下方的內容往下推。
+- `scrollToIndex`、`scrollToEnd` 和 `initialScrollIndex` 會在頁面內容範圍內把頁面捲動到列表的列；`onLoadMore` 會在列表的末端接近可視區域時觸發，而 `onViewableItemsChange` 會回報位於頁面可視區域內的列。
+- `stickyHeaderIndices` 和 `stickyHeaderOffset` 會讓列黏附在頁面頂部：區段標題會停留在頂部，而它的列在其下捲動，直到下一個標題把它推走，最後一個標題則會隨著其列表的末端離開。
+- 頁面如何捲動由它的捲動視圖決定：請在 `Scroll` 上設定 `onScroll` 和其他捲動事件、`scrollValue`、`refreshing` / `onRefresh`、分頁與對齊捲動、`contentInset`、`scrollbar`、`scrollable` 和 `keyboardDismissMode`。反轉列表和 `maintainVisibleContentPosition` 是擁有自己可視區域的列表（`viewport="own"`，即預設值）的功能。
+- 可視區域在建立列表時選定：如要切換，請呈現一個新的列表。
 
 <a id="loading-more-onloadmore"></a>
 
-## 載入更多:onLoadMore
+## 載入更多：onLoadMore
 
-當視埠與結尾的距離進入 `loadMoreThreshold` 個視埠之內(預設為 1:提前一個螢幕)時,會觸發 `onLoadMore`(`.on_load_more(..)`)。請附加下一頁;當新的結尾接近時,列表會再次觸發。
+當可視區域與末端的距離在 `loadMoreThreshold` 個可視區域以內（預設為 1：即前方一個螢幕）時，`onLoadMore`（`.on_load_more(..)`）就會觸發。請附加下一頁；當新的末端接近時，列表會再次觸發。
 
 ```rust tabs
 let posts = signal(Vec::<Post>::new());
@@ -641,14 +645,14 @@ loadMore();
 </List>
 ```
 
-如上所示,請防範重疊的載入:在某一頁還在載入途中時,結尾可能會被再次回報。
+如上所示，請防止載入重疊：在某一頁仍在載入途中時，末端可能會被再次回報。
 <a id="loading-at-the-start-onloadmoreatstart"></a>
 
-## 從起點載入：onLoadMoreAtStart
+## 在開頭載入：onLoadMoreAtStart
 
-列表也可以從資料的中間開啟：聊天室從一則舊訊息開啟（例如搜尋結果或回覆的引用）時，會顯示該訊息前後的一頁內容，而較新的訊息仍待載入。當可視區域與起點（第 0 項所在的一側：一般列表的頂端，反向列表的底端）的距離進入 `loadMoreAtStartThreshold` 個可視區域高度之內（預設為 1）時，會觸發 `onLoadMoreAtStart`（`.on_load_more_at_start(..)`）。請將該頁資料前置（prepend）：新資料在畫面上列的前方載入時，目前顯示的列會維持原位（反向列表在捲離底端之後同樣如此），之後列表會在下一次接近起點時再次觸發；如果該頁載入後列表仍靠近起點，則會立即再次觸發。
+列表也可以從資料的中間開啟：例如聊天室開啟時定位到一則舊訊息（搜尋結果、回覆的引用），畫面顯示該訊息前後的一頁，較新的訊息仍待載入。當視口進入距離開頭 `loadMoreAtStartThreshold` 個視口以內（預設為 1）時，`onLoadMoreAtStart`（`.on_load_more_at_start(..)`）就會觸發；開頭指的是第 0 項所在的一側：一般列表的頂部，反向列表的底部。請把該頁資料加到前面：新資料在螢幕上方載入時，目前顯示的列會保持原位（反向列表在已離開底部後也一樣），之後列表會在下一次接近開頭時再次觸發，若該頁載入後仍然靠近開頭，則會立即再次觸發。
 
-當使用者捲動到該處，或捲動指令將列表帶到該處（包含 `initialScrollIndex`）時才會觸發，因此從最新項目開啟的列表不會請求任何資料，而使用 `initialScrollIndex` 在靠近起點處開啟的列表，則會立即請求其之前的那一頁。
+當使用者捲動到該處，或捲動指令將列表帶到該處時（包括 `initialScrollIndex`）便會觸發，因此從最新項目開啟的列表不會發出任何請求，而使用 `initialScrollIndex` 在靠近開頭處開啟的列表則會立即請求前一頁。
 
 ```rust tabs
 let messages = signal(page_around(target)); // newest first, ending at an old message
@@ -706,19 +710,21 @@ const loadNewer = async () => {
 </List>
 ```
 
-最新訊息載入完成後，請停止載入：之後新訊息會像在一般聊天室中一樣，從起點處進入。
+最新訊息載入完成後，就停止載入：之後新訊息會像一般聊天室一樣出現在開頭。
 
-## Viewability
+<a id="viewability"></a>
 
-`onViewableItemsChange`（`.on_viewable_items_change(..)`）會回報哪些項目顯示在畫面上，可用於數據分析、自動播放可見的影片，或將訊息標示為已讀。在 TSX 中，它會收到 `{ viewableItems, changed }`，即由 `{ item, key, index, isViewable }` 組成的陣列；在 Rust 中，則是 `ViewableItems`，其中包含第一個與最後一個可見的列（`viewable`），以及狀態有變化的列（`changed()`）。可見性（viewability）由原生端計算；你的程式碼只會收到變化的通知。
+## 可見性
+
+`onViewableItemsChange`（`.on_viewable_items_change(..)`）會回報哪些項目正顯示在螢幕上，可用於數據分析、自動播放可見的影片，或將訊息標記為已讀。在 TSX 中，它會收到 `{ viewableItems, changed }`，即由 `{ item, key, index, isViewable }` 組成的陣列；在 Rust 中，則是 `ViewableItems`，包含第一個和最後一個可見的列（`viewable`）以及狀態有變化的列（`changed()`）。可見性由原生端計算，你的程式碼只會收到變化的通知。
 
 | `viewabilityConfig` | Rust | 說明 |
 |---|---|---|
-| `itemVisibleThreshold` | `Viewability { item_visible_threshold, .. }` | 項目必須有多少比例可見，範圍從 0 到 1。 |
-| `viewAreaCoverageThreshold` | `Viewability { view_area_coverage_threshold, .. }` | 項目必須涵蓋可視區域的多少比例，範圍從 0 到 1。 |
-| `minimumViewTime` | `.minimum_view_time(Duration)` | 項目必須持續保持可見多少毫秒後才會被回報。 |
+| `itemVisibleThreshold` | `Viewability { item_visible_threshold, .. }` | 項目必須有多少部分可見，範圍為 0 至 1。 |
+| `viewAreaCoverageThreshold` | `Viewability { view_area_coverage_threshold, .. }` | 項目必須覆蓋視口的多少部分，範圍為 0 至 1。 |
+| `minimumViewTime` | `.minimum_view_time(Duration)` | 項目必須持續保持可見多少毫秒才會被回報。 |
 
-若未設定門檻，只要有任何一個像素可見就算數。
+若未設定門檻，則只要有任何一個像素可見就算作可見。
 
 ```rust tabs
 let playing = signal(None::<usize>);
@@ -753,14 +759,14 @@ virtual_list(count, move |at| video_card(videos.clone(), at))
 
 ## 以程式碼捲動
 
-為列表提供一個 ref（Rust 中為 `element_ref()` 與 `.element_ref(&list)`，TSX 中為 `ref`）：
+為列表指定 ref（Rust 中為 `element_ref()` 和 `.element_ref(&list)`，TSX 中為 `ref`）：
 
 | Rust | TSX | 說明 |
 |---|---|---|
-| `scroll_to_index(index, view_position, view_offset, animated)` | `scrollToIndex({ index, animated?, viewPosition?, viewOffset? })` | 將項目 `index` 捲動到可見範圍。由 view position 決定其位置：0 表示位於可視區域的起點（預設），0.5 表示置中，1 表示位於終點；view offset 則可進一步位移。 |
+| `scroll_to_index(index, view_position, view_offset, animated)` | `scrollToIndex({ index, animated?, viewPosition?, viewOffset? })` | 將第 `index` 項捲動到可見範圍。由 view position 決定其位置：0 為視口開頭（預設），0.5 為中間，1 為末端；view offset 可再進一步偏移。 |
 | `scroll_to_offset(offset, animated)` | `scrollToOffset({ offset, animated? })` | 沿列表的軸向捲動到指定的內容偏移量。 |
-| `scroll_to_end(animated)` | `scrollToEnd({ animated? })` | 捲動到內容的終點（反向列表則為起點）。 |
-| `scroll_to(point, animated)` | `scrollTo({ x?, y?, animated? })` | 捲動到指定的偏移量，與在 scroll view 上的做法相同。 |
+| `scroll_to_end(animated)` | `scrollToEnd({ animated? })` | 捲動到內容的末端（反向列表則為開頭）。 |
+| `scroll_to(point, animated)` | `scrollTo({ x?, y?, animated? })` | 捲動到指定的偏移量，與捲動視圖相同。 |
 
 ```rust tabs
 let list = element_ref();
@@ -780,13 +786,13 @@ let list!: ListRef;
 list.scrollToIndex({ index: 120, viewPosition: 0.5 });
 ```
 
-捲動到指定索引（以及捲動到終點）會由原生端依當下已知的尺寸來解析：已測量的列使用測量值，其餘使用預估尺寸。接著列表會在周圍列被測量的過程中持續追蹤目標，因此能精確落在目標位置，直到使用者捲動或項目變更為止。若要讓列表在某個項目處開啟，請使用 `initialScrollIndex`（`.initial_scroll_index(..)`），而不要在第一個影格之後再進行捲動。
+捲動到某個索引（以及捲動到末端）由原生端根據當時已知的尺寸解析：已測量的列使用測量值，其餘則使用預估尺寸。之後，列表會在周圍的列被測量時持續追蹤目標，因此能精確定位，直到使用者捲動或項目有所變更為止。若要讓列表在某個項目處開啟，請使用 `initialScrollIndex`（`.initial_scroll_index(..)`），而不要在第一個畫面之後才捲動。
 
 <a id="a-settings-style-list"></a>
 
 ## 設定風格的列表
 
-列表的外觀由應用程式自行決定：列表負責擺放並回收各列，而列、分隔線與表面（surface）都是你自己的 view。分組式的設定風格列表，就是具有內距、分隔線，且第一列與最後一列為圓角的列表。請將它做成你自己的元件，並在應用程式中任何需要列出設定的地方使用：
+列表的外觀由應用程式自行決定：列表負責排列和回收列，而列、分隔線和表面都是你自己的視圖。分組的設定風格列表，就是一個帶有內距、分隔線，且首尾列為圓角的列表。把它做成你自己的元件，在應用程式列出設定的地方都可以使用：
 
 ```rust tabs
 use std::rc::Rc;
@@ -868,15 +874,15 @@ function SettingsList(props: { each: Setting[]; onSelect: (s: Setting) => void }
 
 ## 效能注意事項
 
-- 每個儲存格都會獨立進行版面配置，因此捲動時只會重新配置有變動的儲存格。請保持列的層級淺，並避免在每個影格都會變動的列中讀取 signal。
-- 原生端會分批請求儲存格，每個影格最多可進行數輪，並合併為一次更新；快速甩動捲動時，可在一個影格內綁定大量儲存格，而不需要為每個儲存格呼叫一次你的程式碼。Rust 的列則是在核心內部、需要它們的 commit 中完成綁定。
-- 使用 [`nsh test --trace` 搭配 `scroll` 步驟](./testing-and-trace.md#scrolling)來衡量各列每個影格的成本。
+- 每個儲存格都是獨立進行版面配置，因此捲動時只會重新配置有變化的儲存格。請保持列的層級淺，並避免在每個畫面都會變化的列中讀取 signal。
+- 原生端會分批請求儲存格，每個畫面最多進行數輪，並合併為一次更新；快速甩動時可在一個畫面內綁定大量儲存格，而不需要為每個儲存格呼叫一次你的程式碼。Rust 的列則在核心內部、需要它們的那次提交中完成綁定。
+- 使用 [`nsh test --trace` 搭配 `scroll` 步驟](./testing-and-trace.md#scrolling)來測量各列在每個畫面的開銷。
 
 <a id="related"></a>
 
 ## 相關內容
 
 - [`List` 元素](../elements/list.md)：參考文件。
-- [捲動](./scrolling.md)：列表與 scroll view 共用的捲動屬性。
-- [響應式](./reactivity.md)：為什麼列要在綁定中讀取自己的位置。
-- [效能](./performance.md)：衡量列表效能。
+- [捲動](./scrolling.md)：列表與捲動視圖共用的捲動屬性。
+- [響應式](./reactivity.md)：為何列要在綁定中讀取其位置。
+- [效能](./performance.md)：測量列表。

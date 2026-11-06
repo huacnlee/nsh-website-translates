@@ -1,34 +1,36 @@
 ---
 title: "原生元件"
-description: "在 NSH 應用程式中使用宿主應用程式的 View(地圖、播放器、任何 UIView 或 Android View),並支援 props、事件、命令與尺寸設定。"
+description: "在 NSH 應用程式中使用宿主應用程式的視圖（地圖、播放器、任何 UIView 或 Android View），並支援 props、事件、指令及尺寸設定。"
 order: 18
 group: platforms
+source_hash: e798ebb6480fceba
 ---
+
 
 # 原生元件
 
-原生元件是**嵌入應用程式**以名稱註冊的檢視：地圖、相機預覽、圖表程式庫，或是 iOS 上的任何 `UIView`、Android 上的 `android.view.View`、macOS 上的 `NSView`、Linux 上的 `gtk::Widget`，以及 Windows 上的 Direct2D 繪圖或子 `HWND`。NSH 應用程式使用它的方式與其他元素相同：Rust 應用程式以 `nsh_core::prelude` 中的 `native(name)` 建立它，TSX 應用程式則以 [`nsh`](../modules/nsh.md#nativecomponent-and-nativemodule) 中的 `nativeComponent()` 宣告它。NSH 會將它與應用程式的其餘部分一起進行版面配置、傳送 props、把它的事件交給處理常式，並轉發來自 `ref` 的命令。
+原生元件（native component）是**嵌入應用程式**按名稱註冊的檢視：地圖、相機預覽、圖表程式庫，在 iOS 上可以是任何 `UIView`，在 Android 上是 `android.view.View`，在 macOS 上是 `NSView`，在 Linux 上是 `gtk::Widget`，在 Windows 上則是 Direct2D 繪圖或子 `HWND`。NSH 應用程式像使用其他元素一樣使用它：Rust 應用程式以 `nsh_core::prelude` 中的 `native(name)` 建立，TSX 應用程式則以 [`nsh`](../modules/nsh.md#nativecomponent-and-nativemodule) 中的 `nativeComponent()` 宣告。NSH 會把它與應用程式其餘部分一同排版、向它傳送 prop、把它的事件交給處理函式，並轉發來自 `ref` 的命令。
 
-由於 NSH 使用系統自己的檢視進行渲染，原生元件只是同一個階層中的另一個子檢視：不存在分層問題，它的裁切、捲動與接收觸控的行為都和 `<View>` 一樣。
+由於 NSH 使用系統本身的檢視進行渲染，原生元件只是同一檢視層級中的另一個子檢視：不存在圖層問題，它會像 `<View>` 一樣裁剪、捲動及接收觸控。
 
 > [!NOTE]
-> 原生元件由嵌入 NSH 的應用程式註冊（[iOS](./ios.md)、[Android](./android.md)、[macOS](./macos.md#embedding-in-a-mac-app)、[Linux](./linux.md#embedding-in-a-gtk-app)、[Windows](./windows.md#embedding-in-a-win32-app)）；在 Windows、macOS、Linux 與 iOS 上，也可以由應用程式自己的 Rust crate 註冊，開發主機與封裝後的應用程式（`nsh package`）會註冊該 crate 的元件（[從應用程式的 crate 註冊](#registering-from-the-apps-crate)）。沒有任何東西註冊的名稱會渲染為空檢視（該名稱會以未知名稱記錄一次）。
+> 原生元件由嵌入 NSH 的應用程式註冊（[iOS](./ios.md)、[Android](./android.md)、[macOS](./macos.md#embedding-in-a-mac-app)、[Linux](./linux.md#embedding-in-a-gtk-app)、[Windows](./windows.md#embedding-in-a-win32-app)）；在 Windows、macOS、Linux 及 iOS 上，也可以由應用程式自己的 Rust crate 註冊，開發主機和打包後的應用程式（`nsh package`）會註冊該 crate 的元件（[從應用程式的 crate 註冊](#registering-from-the-apps-crate)）。沒有任何程式註冊的名稱會渲染為空檢視（該名稱會以 unknown 記錄一次）。
 
 <a id="how-it-fits-together"></a>
 
-## 運作方式
+## 運作原理
 
-1. 主應用程式在其 `NshAppView`（iOS）或 `NshView`（Android）上，以名稱（例如 `"embed.badge"`）註冊一個 factory。每個檢視都有自己的註冊表，沒有任何全域的東西。
-2. NSH 應用程式為該名稱宣告一個元件，並指定它使用的 props 與事件。
-3. 建立元素時，NSH 會建立一個容器檢視（與任何檢視一樣可裝飾、設定框架與進行點擊測試），接著向 factory 要求一個元件，並將元件的檢視放入容器中，填滿容器。
-4. 元件在建立後會立即收到每一個 prop，之後每當 prop 變更時，會再次收到該 prop。
-5. 元件會發出事件，也可以回報自己的尺寸；應用程式則透過 `ref` 呼叫它的命令。
+1. 宿主應用程式在其 `NshAppView`（iOS）或 `NshView`（Android）上，以名稱（例如 `"embed.badge"`）註冊一個工廠。每個檢視各有自己的註冊表，沒有任何全域項目。
+2. NSH 應用程式為該名稱宣告一個元件，並指定它使用的 prop 和事件。
+3. 建立元素時，NSH 會建立一個容器檢視（與任何檢視一樣可裝飾、設定框架及進行點擊測試），然後向工廠要求一個元件，並把元件的檢視放進容器內，填滿容器。
+4. 元件在建立後會立即收到每個 prop，其後每當 prop 改變，便會再次收到該 prop。
+5. 元件發出事件，並可回報自己的尺寸；應用程式透過 `ref` 呼叫它的命令。
 
 <a id="using-the-component-in-the-app"></a>
 
 ## 在應用程式中使用元件
 
-在 Rust 中，`native(name)` 建立元素：`.prop(name, value)` 為它設定一個 prop（`serde_json::Value`，或其 signal，或回傳該值的閉包，變更時會重新傳送），`.on_native_event(..)` 以 `NativeEvent { name, data }` 接收它的事件，而透過 `.element_ref(&r)` 放到元素上的 `element_ref()` 方法則會傳送它的命令。在 TSX 中，`nativeComponent()` 為該名稱宣告一個元件，並指定它使用的 props 與事件。
+在 Rust 中，由 `native(name)` 建立元素：`.prop(name, value)` 為它設定 prop（一個 `serde_json::Value`，或一個 signal，或回傳 signal 的閉包，改變時會重新傳送），`.on_native_event(..)` 以 `NativeEvent { name, data }` 接收它的事件，而透過 `.element_ref(&r)` 掛在它上面的 `element_ref()` 的方法則傳送它的命令。在 TSX 中，`nativeComponent()` 為該名稱宣告一個元件，並指定它使用的 prop 和事件。
 
 ```rust tabs
 use nsh_core::prelude::*;
@@ -118,38 +120,38 @@ function nativeComponent<P extends object = {}, E extends object = {}>(
 ): (props: NativeComponentProps<P, E>) => JSX.Element;
 ```
 
-| 參數 | 型別 | 說明 |
+| 參數 | 類型 | 說明 |
 |---|---|---|
-| `name` | `string` | 主應用程式註冊的名稱。請使用自己的前綴（`"maps.view"`、`"acme.chart"`），讓名稱保持唯一。 |
-| `spec.props` | `readonly (keyof P & string)[]` | 元件自己的 props。只有這裡列出的 props 會傳送到原生端。 |
-| `spec.events` | `readonly (keyof E & string)[]` | 它發出的事件。選用。 |
+| `name` | `string` | 宿主應用程式註冊的名稱。請使用自己的前綴（`"maps.view"`、`"acme.chart"`），以確保名稱唯一。 |
+| `spec.props` | `readonly (keyof P & string)[]` | 元件本身的 prop。只有在此列出的 prop 才會傳送到原生端。 |
+| `spec.events` | `readonly (keyof E & string)[]` | 它發出的事件。可選。 |
 
-型別參數描述 props（`P`）以及每個事件的 payload（`E`）。回傳的元件接受：
+類型參數描述 prop（`P`）及每個事件的負載（`E`）。回傳的元件接受：
 
-- 元件自己的 props `P`；
-- 每個事件對應一個處理常式：事件 `tap` 由 `onTap` 處理，`regionChange` 由 `onRegionChange` 處理（首字母大寫並在前面加上 `on`）；
-- `<View>` 接受的所有內容（children 除外）：`style`、`class` / `classList`（[Tailwind](./tailwind.md)）、版面配置、無障礙 props、`testID`、`onLayout`、`ref`。這些屬於 NSH 繪製的容器，而不屬於元件。
+- 元件本身的 prop `P`；
+- 每個事件對應一個處理函式：事件 `tap` 由 `onTap` 處理，`regionChange` 由 `onRegionChange` 處理（首字母大寫，並在前面加上 `on`）；
+- `<View>` 接受的一切（children 除外）：`style`、`class` / `classList`（[Tailwind](./tailwind.md)）、版面配置、無障礙 prop、`testID`、`onLayout`、`ref`。這些屬於 NSH 繪製的容器，而不屬於元件。
 
 原生元件是葉節點：不接受 children。
 
 ## Props
 
-每個自有 prop 都以 JSON 傳送，因此它的值可以是任何 JSON 值：字串、數字、布林值、`null`、陣列與一般物件。Props 與其他 props 一樣是響應式的：當 Rust prop 的閉包（`.prop("text", move || json!(label.get()))`）或 TSX 的 `text={label()}` 讀取某個 signal 時，新值會在 signal 變更時傳送，而且只在那時傳送。
+每個自有 prop 都以 JSON 傳送，因此它的值可以是任何 JSON 值：字串、數字、布林值、`null`、陣列和純物件。Props 與其他 prop 一樣具反應性：當 Rust prop 的閉包（`.prop("text", move || json!(label.get()))`）或 TSX 的 `text={label()}` 讀取 signal 時，signal 改變後便會傳送新值，而且只在此時傳送。
 
 | 應用程式中發生的事 | 元件收到的內容 |
 |---|---|
-| 元素被建立 | 在元件建立後立即收到每一個已設定的自有 prop |
-| Prop 的值變更 | 該 prop 與其新值 |
-| Prop 變為 `undefined` | 該 prop 且沒有值（Swift 中為 `nil`，Java 中為 `null`） |
-| 綁定到動畫值的 prop 移動 | `setAnimatedNumber` / `setAnimatedColor`，在它變更的每個影格收到 |
+| 建立元素 | 在元件建立後，立即收到每個已設定的自有 prop |
+| prop 的值改變 | 該 prop 及其新值 |
+| prop 變為 `undefined` | 該 prop，但沒有值（Swift 中為 `nil`，Java 中為 `null`） |
+| 綁定到動畫值的 prop 移動 | `setAnimatedNumber` / `setAnimatedColor`，在它改變的每一幀傳送 |
 
-Props 攜帶的是 JSON 值；請讓介面只包含資料（函式與類別實例留在應用程式中）。
+Props 傳遞的是 JSON 值；介面應只包含資料（函式和類別實例留在應用程式內）。
 
 <a id="animated-props"></a>
 
-### 動畫 props
+### 動畫 prop
 
-Prop 也可以是動畫值：`AnimatedValue`，或由它衍生的節點（`interpolate`、捲動檢視的 `scrollValue` 或 `pullValue`）。此時它不會以 JSON 傳送：NSH 會綁定它，元件會在它變更的每個影格於 UI 執行緒上取得該值，而不經過 JS，因此它可以跟隨拖曳或下拉重新整理。
+prop 也可以是動畫值：`AnimatedValue`，或由它衍生的節點（`interpolate`、捲動檢視的 `scrollValue` 或 `pullValue`）。此時它不會以 JSON 傳送：NSH 會綁定它，而元件會在它改變的每一幀於 UI 執行緒上收到該值，無須經過 JS，因此可以跟隨拖曳或下拉重新整理。
 
 ```tsx
 const pull = createAnimatedValue(0);
@@ -158,13 +160,13 @@ const pull = createAnimatedValue(0);
 </Scroll>
 ```
 
-元件以 `setAnimatedNumber(name, value)` 接收數字，以 `setAnimatedColor(name, argb)`（`0xAARRGGBB`）接收顏色；預設情況下兩者都會以該數字呼叫 `setProp`，因此沒有實作它們的元件仍然能取得該值。Rust 元件實作 `set_animated_number` 與 `set_animated_color`，而 Rust 程式碼以 `native(name).bind_animated_prop("progress", &value)` 綁定 prop。再次給予 prop 一般值會解除綁定並傳送該值。Web 沒有已註冊的元件。
+元件以 `setAnimatedNumber(name, value)` 接收數字，以 `setAnimatedColor(name, argb)`（`0xAARRGGBB`）接收顏色；預設情況下兩者都會以該數字呼叫 `setProp`，因此沒有實作它們的元件仍然會收到該值。Rust 元件實作 `set_animated_number` 和 `set_animated_color`，而 Rust 程式碼以 `native(name).bind_animated_prop("progress", &value)` 綁定 prop。再次為 prop 提供普通值便會解除綁定，並傳送該值。Web 沒有已註冊的元件。
 
 <a id="events"></a>
 
 ## 事件
 
-元件以名稱發出事件，並可附帶選用的 JSON payload。NSH 會將它傳遞到引擎執行緒，並以該 payload 呼叫對應的處理常式（在 Rust 中，是帶有該事件的 `name` 與 `data` 的那個 `on_native_event` 監聽器）：
+元件以名稱發出事件，並可附帶選用的 JSON 負載。NSH 會把它傳遞到引擎執行緒，並以該負載呼叫對應的處理函式（在 Rust 中，是帶有事件的 `name` 和 `data` 的那個 `on_native_event` 監聽器）：
 
 ```rust tabs
 use serde_json::json;
@@ -201,13 +203,13 @@ const MapView = nativeComponent<
 />;
 ```
 
-事件是非同步的：主執行緒絕不會等待應用程式的程式碼。必須當場做出決定的元件（這個手勢是否可以開始、這個區域是否可以變更）必須在原生端根據先前收到的 props 自行決定。
+事件是非同步的：主執行緒絕不會等待應用程式的程式碼。必須當場作出決定的元件（例如這個手勢可否開始、這個區域可否改變），必須根據先前收到的 prop，在原生端自行決定。
 
 <a id="commands"></a>
 
 ## 命令
 
-命令式呼叫（縮放到某個點、開始播放、觸發動畫）透過元素的 ref（Rust 中為 `element_ref()`，TSX 中為 `ref`）進行：
+命令式呼叫（縮放到某一點、開始播放、觸發動畫脈衝）透過元素的 ref 進行（Rust 中為 `element_ref()`，TSX 中為 `ref`）：
 
 ```rust tabs
 let map = element_ref();
@@ -229,24 +231,24 @@ let map: NativeComponentRef | undefined;
 map?.command("zoomTo", { level: 3 });
 ```
 
-`command(name, args)`（TSX：`command(name, args?)`）會將名稱與引數（任何 JSON 值）傳送到元件的 `command` 方法。命令會與在它之前所做的變更依序套用，因此緊接在 prop 變更之後發出的命令會看到新的 prop。
+`command(name, args)`（TSX：`command(name, args?)`）會把名稱和參數（任何 JSON 值）傳送到元件的 `command` 方法。命令會連同在它之前所作的改變按順序套用，因此緊接在 prop 改變之後發出的命令會看到新的 prop。
 
 <a id="sizing"></a>
 
 ## 尺寸
 
-容器的版面配置方式與 `<View>` 相同：
+容器的排版方式與 `<View>` 相同：
 
-- 當樣式指定了某個維度（`width`、`height`、`flex: 1`、`alignSelf: "stretch"` 等）時，以該維度為準。
-- 當樣式未指定某個維度時，容器會採用元件以 `setSize` 回報的尺寸，就像圖片採用其原始尺寸一樣。從未回報尺寸的元件，在未指定的維度上測得的尺寸為 0。
+- 樣式指定了某個尺寸（`width`、`height`、`flex: 1`、`alignSelf: "stretch"` 等）時，以該尺寸為準。
+- 樣式未指定某個尺寸時，容器會採用元件以 `setSize` 回報的尺寸，就像圖片採用其原始尺寸一樣。從不回報尺寸的元件，在未指定的維度上量度為 0。
 
-每當內容變更時，請以點（iOS）或 dp（Android）回報尺寸。上方的徽章每次 `text` 變更時都會測量其標籤，並回報標籤尺寸加上內距，因此 `alignSelf: "flex-start"` 會讓徽章的寬度恰好等於其文字寬度。
+每當內容改變，請以點（iOS）或 dp（Android）回報尺寸。上方的徽章每次在 `text` 改變時都會量度其標籤，並回報標籤尺寸加上內距，因此 `alignSelf: "flex-start"` 會令徽章的闊度剛好等於其文字。
 
 <a id="registering-on-ios-swift"></a>
 
-## 在 iOS 上註冊（Swift）
+## 在 iOS 註冊（Swift）
 
-實作 `NshComponent`，並在 `NshAppView` 上註冊 factory：
+實作 `NshComponent`，並在 `NshAppView` 上註冊工廠：
 
 ```swift
 import NativeShell
@@ -299,21 +301,21 @@ final class Badge: NshComponent {
 app.register(component: "embed.badge") { context in Badge(context) }
 ```
 
-（`UIColor(hex:)` 是範例中的小型輔助函式，不屬於 NativeShell。）
+（`UIColor(hex:)` 是範例中的小型輔助程式，並非 NativeShell 的一部分。）
 
 | API | 說明 |
 |---|---|
-| `NshAppView.register(component:_:)` | 以名稱註冊 factory `(NshComponentContext) -> NshComponent`。從此之後，每建立一個元素就會建立一個元件。再次註冊同一個名稱會取代該 factory。 |
-| `protocol NshComponent` | `var view: UIView`（填滿容器）、`setProp(_:_:)`、`command(_:_:)`（選用：預設會忽略命令）。受 main actor 隔離。 |
-| `setProp(_ name: String, _ value: Any?)` | 值為 Foundation JSON 物件：`String`、`NSNumber`、`[Any]`、`[String: Any]`、`NSNull`；當 prop 被移除時為 `nil`。 |
+| `NshAppView.register(component:_:)` | 以名稱註冊工廠 `(NshComponentContext) -> NshComponent`。此後每建立一個元素，便會產生一個元件。以相同名稱再次註冊會取代原有工廠。 |
+| `protocol NshComponent` | `var view: UIView`（填滿容器）、`setProp(_:_:)`、`command(_:_:)`（可選：預設會忽略命令）。受 main actor 隔離。 |
+| `setProp(_ name: String, _ value: Any?)` | 值為 Foundation JSON 物件：`String`、`NSNumber`、`[Any]`、`[String: Any]`、`NSNull`；prop 被移除時為 `nil`。 |
 | `NshComponentContext.emit(_:_:)` | 發出事件；資料必須是 `JSONSerialization` 接受的內容（或 `nil`）。執行緒安全。 |
-| `NshComponentContext.setSize(_:)` | 以點回報元件自己的尺寸。執行緒安全。 |
+| `NshComponentContext.setSize(_:)` | 以點回報元件自身的尺寸。執行緒安全。 |
 
 <a id="registering-on-android-java--kotlin"></a>
 
-## 在 Android 上註冊（Java / Kotlin）
+## 在 Android 註冊（Java / Kotlin）
 
-實作 `com.longbridge.nsh.NshComponent`，並在 `NshView` 上註冊 factory：
+實作 `com.longbridge.nsh.NshComponent`，並在 `NshView` 上註冊工廠：
 
 ```java
 import com.longbridge.nsh.NshComponent;
@@ -372,17 +374,17 @@ nsh.registerComponent("embed.badge") { context -> Badge(this, context) }
 
 | API | 說明 |
 |---|---|
-| `NshView.registerComponent(String name, NshComponent.Factory factory)` | 以名稱註冊 factory；從此之後，每建立一個元素就會建立一個元件（UI 執行緒）。 |
-| `interface NshComponent` | `View view()`、`void setProp(String, Object)`、`default void command(String, Object)`、`default void destroy()`（元素已不存在：被移除、其應用程式被 `NshView.destroy()` 停止，或被另一次載入取代；每個元件只呼叫一次）。在 UI 執行緒上呼叫。 |
-| `setProp` 值 | `String`、`Number`、`Boolean`、`java.util.List`、`java.util.Map`，或在被移除時為 `null`（或 JSON `null`）。 |
-| `NshComponentContext.emit(String event, Object data)` | 發出事件；`data` 使用相同的 Java 型別，或 `null`。任何執行緒皆可。 |
-| `NshComponentContext.setSize(float width, float height)` | 以 dp 回報元件自己的尺寸。任何執行緒皆可。 |
+| `NshView.registerComponent(String name, NshComponent.Factory factory)` | 以名稱註冊工廠；此後每建立一個元素，便會產生一個元件（UI 執行緒）。 |
+| `interface NshComponent` | `View view()`、`void setProp(String, Object)`、`default void command(String, Object)`、`default void destroy()`（元素已不存在：被移除，或其應用程式被 `NshView.destroy()` 停止，或被另一次載入取代；每個元件只會呼叫一次）。在 UI 執行緒上呼叫。 |
+| `setProp` 的值 | `String`、`Number`、`Boolean`、`java.util.List`、`java.util.Map`，被移除時為 `null`（或 JSON `null`）。 |
+| `NshComponentContext.emit(String event, Object data)` | 發出事件；`data` 使用相同的 Java 類型，或 `null`。可在任何執行緒上呼叫。 |
+| `NshComponentContext.setSize(float width, float height)` | 以 dp 回報元件自身的尺寸。可在任何執行緒上呼叫。 |
 
 <a id="registering-from-rust"></a>
 
 ## 從 Rust 註冊
 
-從 Rust 嵌入 iOS 執行階段的應用程式（`nsh-platform-ios`）會在 `AppView` 上註冊 `NativeComponent`：
+從 Rust 嵌入 iOS 執行環境的應用程式（`nsh-platform-ios`）會在 `AppView` 上註冊 `NativeComponent`：
 
 ```rust
 use std::rc::Rc;
@@ -420,11 +422,11 @@ fn register(app: &AppView, make_view: impl Fn() -> objc2::rc::Retained<UIView> +
 }
 ```
 
-`ComponentContext::emit(name, data)` 傳送事件（`data` 是 `serde_json::Value`），`set_size(width, height)` 回報尺寸；兩者都可以從任何執行緒運作。
+`ComponentContext::emit(name, data)` 傳送事件（`data` 是 `serde_json::Value`），`set_size(width, height)` 回報尺寸；兩者都可在任何執行緒上使用。
 
 <a id="registering-on-macos-rust"></a>
 
-## 在 macOS 上註冊（Rust）
+## 在 macOS 註冊（Rust）
 
 在 macOS 上，元件是 `NSView`，註冊在 `nsh-platform-macos` 的 [`AppView`](./macos.md#embedding-in-a-mac-app) 上：
 
@@ -471,11 +473,11 @@ fn register(app: &AppView, mtm: MainThreadMarker) {
 }
 ```
 
-檢視會填滿 NSH 配置出的容器；`ComponentContext::emit` 與 `set_size`（點）可以從任何執行緒運作，與 iOS 相同。請在 `AppView::load` 之前註冊；一個註冊表屬於一個 `AppView`（以及由同一個 `AppOptions` 建立的檢視）。
+檢視會填滿 NSH 排版的容器；`ComponentContext::emit` 和 `set_size`（以點計）可在任何執行緒上使用，與 iOS 相同。請在 `AppView::load` 之前註冊；一個註冊表屬於一個 `AppView`（以及由同一個 `AppOptions` 建立的檢視）。
 
 <a id="registering-on-linux-rust"></a>
 
-## 在 Linux 上註冊（Rust）
+## 在 Linux 註冊（Rust）
 
 在 Linux 上，元件是 GTK widget，註冊在 `nsh-platform-linux` 的 [`AppView`](./linux.md#embedding-in-a-gtk-app) 上：
 
@@ -517,13 +519,13 @@ fn register(app: &AppView) {
 }
 ```
 
-Widget 會填滿 NSH 配置出的容器；`ComponentContext::emit` 與 `set_size`（點）可以從任何執行緒運作，與 iOS 相同。請在 `AppView::load` 之前註冊。一個註冊表屬於一個 `AppView`（以及由同一個 `AppOptions` 建立的檢視，其 `components` 欄位即為該註冊表）。
+Widget 會填滿 NSH 排版的容器；`ComponentContext::emit` 和 `set_size`（以點計）可在任何執行緒上使用，與 iOS 相同。請在 `AppView::load` 之前註冊。一個註冊表屬於一個 `AppView`（以及由同一個 `AppOptions` 建立的檢視，註冊表正是它的 `components` 欄位）。
 
 <a id="registering-on-windows-rust"></a>
 
-## 在 Windows 上註冊（Rust）
+## 在 Windows 註冊（Rust）
 
-在 Windows 上，NSH 以 Direct2D 自行繪製每個檢視，因此元件可以用 Direct2D 繪製到其容器中（`draw`），或自備一個視窗（`window`：地圖控制項、第三方檢視），註冊在 `nsh-platform-windows` 的 [`AppView`](./windows.md#embedding-in-a-win32-app) 上：
+在 Windows 上，NSH 以 Direct2D 自行繪製每個檢視，因此元件可以用 Direct2D 在其容器內繪圖（`draw`），也可以自備視窗（`window`：地圖控制項、第三方檢視），並註冊在 `nsh-platform-windows` 的 [`AppView`](./windows.md#embedding-in-a-win32-app) 上：
 
 ```rust
 use std::rc::Rc;
@@ -581,9 +583,9 @@ fn register(app: &AppView) {
 }
 ```
 
-`draw` 會在視窗的每個影格執行，使用檢視的座標（點），並裁切到其邊界；當它顯示的內容變更時，請呼叫 `ComponentContext::redraw`。繪製式元件與任何檢視一樣會被覆蓋、裁切與變形，並由其容器接收觸控。從 `window` 回傳子視窗的元件會隨其檢視移動、裁切與隱藏，接收自己的輸入，並位於 NSH 繪製的所有內容之上（覆蓋在它上方的 NSH 內容會被隱藏，與 web view 相同）。`ComponentContext::emit`、`set_size`（點）與 `redraw` 可以從任何執行緒運作。請在 `AppView::load` 之前註冊；一個註冊表屬於一個 `AppView`（以及由同一個 `AppOptions` 建立的檢視）。
+`draw` 會在視窗的每一幀執行，使用檢視的座標（點），並裁剪至其邊界；當所顯示的內容改變時，請呼叫 `ComponentContext::redraw`。繪製型元件與任何檢視一樣會被覆蓋、裁剪和變形，其容器負責接收觸控。從 `window` 回傳子視窗的元件，會隨其檢視移動、裁剪和隱藏，接收自己的輸入，並位於 NSH 繪製的所有內容之上（覆蓋其上的 NSH 內容會被隱藏，與 web 檢視相同）。`ComponentContext::emit`、`set_size`（以點計）和 `redraw` 可在任何執行緒上使用。請在 `AppView::load` 之前註冊；一個註冊表屬於一個 `AppView`（以及由同一個 `AppOptions` 建立的檢視）。
 
-元件也可以透過 `wheel` 接收其上方的滑鼠滾輪與觸控板捲動（圖片檢視器用它們來縮放）。它收到的 `Wheel` 包含指標位置（`x`、`y`，以元件的點為單位）、以點為單位的距離（`dx`、`dy`，向右與向下為正，與捲動檢視移動其內容的方式相同）、以滾輪刻度為單位的距離（`notches_x`、`notches_y`，精密觸控板與高解析度滾輪會帶有小數）、是否以細微步進送達（`precise`），以及按下的修飾鍵（`shift`、`ctrl`、`alt`）。對於它處理的捲動，它回傳 `true`；其周圍的捲動檢視會與其餘部分一起捲動，預設是全部都會捲動。捲動檢視已開始的捲動會停留在該檢視上。Ctrl + 滾輪也是精密觸控板的捏合手勢，而 Shift + 滾輪則依滾輪送出的方式送達（`dy`，搭配 `shift`）：
+元件也可以透過 `wheel` 接收其上的滑鼠滾輪和觸控板捲動（圖片檢視器以此進行縮放）。它收到的 `Wheel` 包含指標位置（`x`、`y`，以元件的點計）、以點計的距離（`dx`、`dy`，向右和向下為正，與捲動檢視移動其內容的方式一致）、以滾輪刻度計的距離（`notches_x`、`notches_y`，精確觸控板和高解析度滾輪會帶有小數）、是否以細微步進送達（`precise`），以及按住的修飾鍵（`shift`、`ctrl`、`alt`）。對於它已處理的捲動，它回傳 `true`；其周圍的捲動檢視會與其餘捲動一同捲動，預設情況下與所有捲動檢視一同捲動。捲動檢視已開始的捲動會留在該檢視上。Ctrl + 滾輪同時也是精確觸控板的捏合手勢，而 Shift + 滾輪則按滾輪傳送的原樣送達（`dy`，並帶有 `shift`）：
 
 ```rust
 use nsh_platform_windows::Wheel;
@@ -608,7 +610,7 @@ impl NativeComponent for ImageView {
 
 ## 從應用程式的 crate 註冊
 
-擁有自己 Rust crate 的應用程式（`nsh.json` `"rust"`，[Rust](./rust.md)）可以在該 crate 中註冊原生元件，讓它們在 NSH 為該應用程式建置的主機中運作：`nsh run` 與 `nsh test --target` 的開發主機，以及 `nsh package` 產生的應用程式。位於 crate 根目錄、帶有 `#[native_components(<platform>)]` 的函式（`lib.rs`）會將它們註冊到該平台的 `Components` 上，主機在建立每個檢視時都會呼叫它，就像嵌入應用程式在其 `AppView` 上註冊一樣：
+擁有自己 Rust crate 的應用程式（`nsh.json` `"rust"`，[Rust](./rust.md)）可在該 crate 中註冊原生元件，使它們能在 NSH 為該應用程式建立的宿主中運作：`nsh run` 和 `nsh test --target` 的開發主機，以及 `nsh package` 製作的應用程式。在 crate 根部帶有 `#[native_components(<platform>)]` 的函式（`lib.rs`）會把它們註冊到該平台的 `Components` 上，宿主會為其建立的每個檢視呼叫該函式，就像嵌入應用程式在其 `AppView` 上註冊一樣：
 
 ```rust
 use std::rc::Rc;
@@ -626,7 +628,7 @@ fn components(components: &nsh_platform_windows::Components) {
 }
 ```
 
-平台是 `windows`、`macos`、`linux` 或 `ios`，元件則是 `nsh_platform_windows`、`nsh_platform_macos`、`nsh_platform_linux` 或 `nsh_platform_ios` 的元件（見上述各節）。該函式只會在其平台上編譯，因此 crate 為其支援的每個平台各有一個函式，且各自註冊相同的名稱，並僅針對該平台依賴對應平台的 crate，其版本與來源須與其他 NSH crate（`nsh-core` 及其餘）相同（CLI 會檢查它們是否全部一致）：
+平台是 `windows`、`macos`、`linux` 或 `ios`，而元件則是 `nsh_platform_windows`、`nsh_platform_macos`、`nsh_platform_linux` 或 `nsh_platform_ios` 的元件（見上文各節）。該函式只會在其所屬平台上編譯，因此 crate 對其支援的每個平台各有一個函式，且每個函式都註冊相同的名稱；crate 只為相應平台依賴該平台的 crate，版本和來源須與其他 NSH crate（`nsh-core` 及其餘 crate）一致（CLI 會檢查它們是否全部相符）：
 
 ```toml
 [target.'cfg(windows)'.dependencies]
@@ -636,22 +638,22 @@ nsh-platform-windows = { version = "0.3", default-features = false }
 nsh-platform-macos = { version = "0.3", default-features = false }
 ```
 
-主機會在建立每個檢視時註冊該 crate 的元件，早於持有該檢視的程式碼註冊自己的元件：之後在檢視上註冊的名稱（`AppView::register_component`）會取代該 crate 註冊的同名元件。
+宿主在建立每個檢視時註冊該 crate 的元件，早於持有該檢視的程式碼註冊自己的元件：此後在檢視上註冊的名稱（`AppView::register_component`）會取代 crate 中的同名項目。
 <a id="rules-and-limits"></a>
 
 ## 規則與限制
 
-- **載入前先註冊。** Factory 只會套用於註冊之後建立的元素。請在 `loadBundle` / `loadAssetBundle` / `run` 之前註冊所有名稱,這樣第一個畫面才能找到它們。
-- **容器負責裝飾與觸控。** 背景、邊框、圓角半徑、陰影、不透明度、transform 與 `overflow: "hidden"` 都會套用在 NSH 繪製的容器上。你的 view 會填滿該容器,並接收落在容器內的觸控。
-- **Capabilities 不適用。** 已註冊的元件是宿主 app 自己的程式碼;app 所宣告的 [capabilities](./sandbox-and-capabilities.md) 並不會限制它的行為。如果你嵌入了不受信任的 app,請只註冊對它們而言安全可用的元件。
-- **介面只傳遞資料。** Props、事件 payload 與命令引數都以 JSON 文字的形式傳遞;每次變更時請傳送識別碼與小型數值,而不是大型 blob。
-- **一份 bundle,兩個平台。** 在 iOS 與 Android 上以相同的 props 與事件註冊相同的名稱,這樣一份 bundle 就能在兩個平台上執行。
-- **`nsh/` 底下的名稱屬於 NSH。** NSH 自己的元件(`nsh/mobile` 的 `TabBar` 的系統 tab bar)是以 `nsh/` 註冊的;請以你的 app 或公司來命名你的元件(`embed.badge`),若在 `nsh/` 之下註冊,會記錄一則警告,並保留 NSH 的版本。
+- **載入前先註冊。** Factory 只會套用於註冊之後才建立的元素。請在 `loadBundle` / `loadAssetBundle` / `run` 之前註冊所有名稱，讓第一個畫面就能找到它們。
+- **容器負責裝飾與觸控。** 背景、邊框、圓角、陰影、不透明度、transform 及 `overflow: "hidden"` 都會套用於 NSH 繪製的容器。你的 view 會填滿容器，並接收落在容器內的觸控。
+- **Capabilities 並不適用。** 已註冊的元件屬於宿主 app 本身的程式碼；app 所宣告的 [capabilities](./sandbox-and-capabilities.md) 並不會限制它的行為。如果你嵌入的是不受信任的 app，請只註冊對它們而言安全的元件。
+- **介面只傳遞資料。** Props、事件 payload 及指令參數都以 JSON 文字傳遞；每次變更時請傳送識別碼和小型數值，而不是大型 blob。
+- **一個 bundle，兩個平台。** 在 iOS 與 Android 上使用相同的名稱、相同的 props 與事件註冊，一個 bundle 就能在兩個平台上運行。
+- **`nsh/` 之下的名稱屬於 NSH。** NSH 自身的元件（`nsh/mobile` 的 `TabBar` 的系統分頁列）註冊於 `nsh/` 之下；請以你的 app 或公司名稱來命名（`embed.badge`），若在 `nsh/` 下註冊，會記錄一則警告，並保留 NSH 的版本。
 
 <a id="see-also"></a>
 
-## 另請參閱
+## 另見
 
-- [`nativeComponent` 參考文件](../modules/nsh.md#nativecomponent-and-nativemodule)
-- [嵌入 iOS app](./ios.md) 與[嵌入 Android app](./android.md)
-- [Architecture](./architecture.md):props 與事件如何跨執行緒傳遞
+- [`nativeComponent` 參考](../modules/nsh.md#nativecomponent-and-nativemodule)
+- [嵌入 iOS app](./ios.md) 及[嵌入 Android app](./android.md)
+- [Architecture](./architecture.md)：props 與事件如何跨執行緒傳遞
