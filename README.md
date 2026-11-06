@@ -1,11 +1,13 @@
 # NSH website translations
 
-Machine translations of the [Native Shell](https://nsh.dev) documentation, for
+Machine translations of the [Native Shell](https://nsh.dev) documentation and home page, for
 every language other than English and Chinese. Those two live in
 [longbridge/nsh](https://github.com/longbridge/nsh) and are written by hand; a
 change there never has to touch this repository.
 
 - `<code>/docs`, `<code>/elements`, `<code>/modules`: the translated pages.
+- `<code>/home.json`: the home page (nsh.dev/`<code>`), `{ "source_hash", "strings" }`, its
+  `strings` in the keys of NSH's `website/src/home/en.json`.
 - `<code>/ui.json`: the strings around them.
 - `locales.json`: the languages, each a BCP 47 `code` and the language's own `name`;
   `"dir": "rtl"` marks one written right to left (Arabic), which nsh.dev lays out
@@ -14,8 +16,11 @@ change there never has to touch this repository.
 ## How it runs
 
 `.github/workflows/translate.yml` runs daily and on demand. It takes the English
-pages of NSH's latest release and translates the pages whose source hash changed,
-so a day with no release calls no model. Code, HTML, link targets and callout
+pages of NSH's latest release, and the home page's words from NSH's `main` (the
+home page is built from `main`), and translates what changed since its source
+hash, so a day with no change calls no model. The home page's words are one JSON
+object, answered in the same keys and lists; numbers, commands and code stay in
+NSH's `Home.astro`. Code, HTML, link targets and callout
 markers are masked first, and a page's leading `# Title` is written back from
 its translated frontmatter title. An answer that loses or repeats a masked part
 or changes the headings is sent back to the model with what it got wrong, then

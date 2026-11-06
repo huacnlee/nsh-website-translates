@@ -1,13 +1,13 @@
-// Machine translation of the Native Shell documentation (see the README). Only pages whose English changed are sent; a page that fails its
-// checks keeps its previous translation, or falls back to the English.
+// Machine translation of the Native Shell documentation and home page (see the README). Only pages whose English changed are sent; a page
+// that fails its checks keeps its previous translation, or falls back to the English.
 //
 //   TRANSLATE_API_KEY=… TRANSLATE_API_URL=https://…/v1 TRANSLATE_MODEL=… \
-//     bun scripts/translate.js --source <dir with docs, elements, modules> --out <dir>
+//     bun scripts/translate.js --source <dir with docs, elements, modules> [--home <website/src/home/en.json>] --out <dir>
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chunks, keepAnchors, mask, reject, splitPage, takeTitle, unmask } from '../lib/translate.js';
+import { chunks, keepAnchors, mask, reject, rejectStrings, splitPage, takeTitle, unmask } from '../lib/translate.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const flag = (name, fallback) => {
@@ -15,6 +15,7 @@ const flag = (name, fallback) => {
   return at === -1 ? fallback : process.argv[at + 1];
 };
 const source = flag('source');
+const homeFile = flag('home');
 const out = flag('out', root);
 const only = flag('locale');
 const limit = Number(flag('limit', Infinity));
@@ -99,6 +100,35 @@ async function translatePage(name, content) {
   return `${lines.join('\n')}\n${title}${unmask(keepAnchors(rest, parts.join('\n')), kept)}\n`;
 }
 
+// The home page's words (website/src/home/en.json): one JSON object, answered in the same shape.
+async function translateHome(name, strings) {
+  const prompt = `${system(name)}
+The input is a JSON object, the words of the Native Shell home page: answer with the same keys, lists of the same length and translated values, as JSON.
+Keep numbers, units, commands (nsh …), file names and code as they are, and leave an empty string empty.`;
+  const input = JSON.stringify(strings, null, 2);
+  const parse = (text) => {
+    try {
+      return JSON.parse(stripFence(text));
+    } catch {
+      return undefined;
+    }
+  };
+  let text = await complete(prompt, input);
+  let answer = parse(text);
+  let why = answer === undefined ? 'not valid JSON' : rejectStrings(strings, answer);
+  if (why) {
+    text = await complete(prompt, input, text, `Your translation is wrong (${why}). Answer again with the whole corrected JSON: the same keys, lists of the same length.`);
+    answer = parse(text);
+    why = answer === undefined ? 'not valid JSON' : rejectStrings(strings, answer);
+  }
+  if (why) {
+    answer = parse(await complete(prompt, input));
+    why = answer === undefined ? 'not valid JSON' : rejectStrings(strings, answer);
+  }
+  if (why) throw new Error(why);
+  return answer;
+}
+
 const stripFence = (text) => text.replace(/^```(?:json)?\s*|\s*```$/g, '');
 const hash = (text) => createHash('sha256').update(text).digest('hex').slice(0, 16);
 
@@ -110,6 +140,7 @@ async function pool(items, size, run) {
 }
 
 const locales = JSON.parse(readFileSync(join(root, 'locales.json'), 'utf8'));
+const homeSource = homeFile ? readFileSync(homeFile, 'utf8') : undefined;
 let failed = 0;
 let done = 0;
 let budget = limit;
@@ -131,9 +162,19 @@ for (const { code, name: native } of locales) {
     const own = join(out, code, section);
     if (existsSync(own)) for (const file of readdirSync(own)) if (!files.includes(file)) rmSync(join(own, file));
   }
-  await pool(todo, 4, async ({ content, target, label }) => {
+  // The home page: `{ source_hash, strings }`, translated again when the English changes.
+  if (homeSource) {
+    const target = join(out, code, 'home.json');
+    const current = existsSync(target) ? JSON.parse(readFileSync(target, 'utf8')).source_hash : undefined;
+    if (current !== hash(homeSource) && budget-- > 0) {
+      todo.push({ content: homeSource, target, label: `${code}/home.json`, home: true });
+    }
+  }
+  await pool(todo, 4, async ({ content, target, label, home }) => {
     try {
-      const page = await translatePage(name, content);
+      const page = home
+        ? `${JSON.stringify({ source_hash: hash(content), strings: await translateHome(name, JSON.parse(content)) }, null, 2)}\n`
+        : await translatePage(name, content);
       mkdirSync(dirname(target), { recursive: true });
       writeFileSync(target, page);
       done++;
