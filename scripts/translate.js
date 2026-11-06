@@ -146,7 +146,7 @@ let done = 0;
 let budget = limit;
 for (const { code, name: native } of locales) {
   if (only && only !== code) continue;
-  // The code tells the model which variant: zh-TW is Traditional Chinese as written in Taiwan.
+  // The code tells the model which variant: zh-HK is Traditional Chinese as written in Hong Kong.
   const name = `${native} (${code})`;
   const todo = [];
   for (const section of SECTIONS) {

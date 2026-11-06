@@ -9,7 +9,9 @@ change there never has to touch this repository.
 - `<code>/home.json`: the home page (nsh.dev/`<code>`), `{ "source_hash", "strings" }`, its
   `strings` in the keys of NSH's `website/src/home/en.json`.
 - `<code>/ui.json`: the strings around them.
-- `locales.json`: the languages, each a BCP 47 `code` and the language's own `name`;
+- `locales.json`: the languages, each a BCP 47 `code` and the language's own `name`,
+  in the order nsh.dev's language menu lists them after English and Simplified Chinese
+  (most read first: Traditional Chinese, `zh-HK`, leads);
   `"dir": "rtl"` marks one written right to left (Arabic), which nsh.dev lays out
   mirrored. To add a language, add a line here and its `ui.json`.
 
